@@ -112,19 +112,19 @@ const DoseList: React.FC = () => {
 
 // --- Màn hình chính ---
 const ScheduleScreen: React.FC = () => {
-  const { selectedDate, fetchDosesForDate, isLoading } = useScheduleStore();
+  const { selectedDate, fetchDosesInWeek, isLoading } = useScheduleStore();
   // TODO: Lấy user từ một store auth
   const user = { id: 'user-id-placeholder', name: 'Lina' };
 
   useEffect(() => {
     if (user.id) {
-      fetchDosesInWeek(user.id, selectedDate);
+      fetchDosesInWeek();
     }
-  }, [user.id, selectedDate, fetchDosesForDate]);
+  }, [user.id, selectedDate]);
 
   const onRefresh = () => {
     if (user.id) {
-      fetchDosesForDate();
+      fetchDosesInWeek();
     }
   };
 
