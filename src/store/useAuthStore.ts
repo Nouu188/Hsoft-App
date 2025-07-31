@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         // TODO: Có thể gọi query `me()` để lấy thông tin user đầy đủ hơn
         const user: User = { id: decoded.sub, email: decoded.email, roles: decoded.roles };
         set({ accessToken: token, user });
-      }
+      }    
     } catch (e) {
       // Token không hợp lệ hoặc có lỗi, đảm bảo logout
       set({ user: null, accessToken: null });

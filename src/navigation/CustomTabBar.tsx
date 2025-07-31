@@ -46,7 +46,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
             case 'Record':
               iconName = isFocused ? 'stats-chart' : 'stats-chart-outline';
               break;
-            case 'Profile':
+            case 'ProfileStack':
               iconName = isFocused ? 'person' : 'person-outline';
               break;
           }

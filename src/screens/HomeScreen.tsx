@@ -38,7 +38,7 @@ const HeartProgress = ({ percentage = 60 }) => {
                 </G>
             </Svg>
             <View style={styles.heartCenter}>
-                <Ionicons name="heart" size={30} color={COLORS.red} />
+                <Ionicons name="heart" size={30} color={COLORS.danger} />
                 <Text style={styles.heartPercentage}>{percentage}%</Text>
             </View>
         </View>
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SIZES.padding },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.textDark },
-  card: { backgroundColor: COLORS.card, borderRadius: SIZES.radius * 1.5, padding: SIZES.padding, margin: SIZES.padding, marginTop: 0 },
+  card: { backgroundColor: COLORS.lightGray, borderRadius: SIZES.radius * 1.5, padding: SIZES.padding, margin: SIZES.padding, marginTop: 0 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.textDark },
   cardSubtitle: { fontSize: 14, color: COLORS.textLight },

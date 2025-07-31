@@ -4,19 +4,32 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES, FONTS, SHADOWS } from '../constants/theme'; // Import theme đầy đủ
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ProfileStackParamList } from '@/navigation/ProfileStackNavigator';
 
+type ProfileScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
 // --- Component con: Header ---
-const ProfileHeader = () => (
-  <View style={styles.header}>
-    <TouchableOpacity style={styles.headerButton}>
-      <Ionicons name="menu-outline" size={28} color={COLORS.textDark} />
-    </TouchableOpacity>
-    <Text style={styles.headerTitle}>My Profile</Text>
-    <TouchableOpacity style={styles.headerButton}>
-      <Ionicons name="settings-outline" size={24} color={COLORS.textDark} />
-    </TouchableOpacity>
-  </View>
-);
+const ProfileHeader = () => {
+  // Sử dụng hook useNavigation để lấy đối tượng navigation
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
+
+  return (
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.headerButton}>
+        <Ionicons name="menu-outline" size={28} color={COLORS.textDark} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>My Profile</Text>
+      {/* Thêm sự kiện onPress để điều hướng */}
+      <TouchableOpacity 
+        style={styles.headerButton} 
+        onPress={() => navigation.navigate('Settings')}
+      >
+        <Ionicons name="settings-outline" size={24} color={COLORS.textDark} />
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 // --- Component con: Thông tin cá nhân ---
 const UserInfo = () => (
