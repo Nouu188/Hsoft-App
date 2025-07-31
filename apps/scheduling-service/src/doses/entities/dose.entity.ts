@@ -1,0 +1,59 @@
+// src/modules/doses/entities/dose.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+
+export enum DoseStatus {
+  PENDING = 'PENDING',
+  TAKEN = 'TAKEN',
+  SKIPPED = 'SKIPPED',
+}
+
+registerEnumType(DoseStatus, { name: 'DoseStatus' });
+
+@ObjectType()
+@Entity('doses')
+export class Dose {
+  @Field(() => ID)
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Field({ description: 'ID của y lệnh từ bệnh viện' })
+  @Column()
+  ylenh_id: string;
+
+  @Field({ nullable: true, description: 'Số thứ tự thuốc trong y lệnh' })
+  @Column({ nullable: true })
+  ylenh_stt?: string;
+
+  @Field()
+  @Column({ type: 'timestamptz' })
+  due_at: Date;
+
+  @Field()
+  @Column({ type: 'timestamptz' })
+  notify_at: Date;
+
+  @Field(() => DoseStatus)
+  @Column({ type: 'enum', enum: DoseStatus, default: DoseStatus.PENDING })
+  status: DoseStatus;
+  
+  @Field(() => ID, { description: 'ID của người dùng sở hữu liều uống này' })
+  @Column()
+  user_id: string;
+
+  @Field({ nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
+  taken_at?: Date;
+
+  @Field({ description: 'Tên thuốc được sao chép từ y lệnh' })
+  @Column()
+  medication_name: string;
+
+  @Field({ nullable: true, description: 'Hướng dẫn liều dùng từ y lệnh' })
+  @Column({ nullable: true })
+  dosage_instructions?: string;
+
+  @Field({ nullable: true, description: 'Hướng dẫn cách dùng từ y lệnh' })
+  @Column({ nullable: true })
+  usage_instructions?: string;
+}

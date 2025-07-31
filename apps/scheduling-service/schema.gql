@@ -1,0 +1,12 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Mutation {
+  """Mô phỏng việc bệnh viện gửi yêu cầu đồng bộ y lệnh cho một bệnh nhân."""
+  triggerReminderForPatient(mabn: String, ngay: String!, socmnd: String, sodienthoai: String): Boolean!
+}
+
+type Query {
+  pingSchedulingService: String!
+}

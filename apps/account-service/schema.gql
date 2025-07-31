@@ -1,0 +1,59 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateServiceClientInput {
+  client_id: String!
+  client_secret: String!
+  name: String!
+  scopes: [String!]!
+}
+
+input LoginInput {
+  identifier: String!
+  password: String!
+}
+
+type LoginResponse {
+  accessToken: String!
+  user: User!
+}
+
+type Mutation {
+  admin_createServiceClient(input: CreateServiceClientInput!): ServiceClient!
+  login(loginInput: LoginInput!): LoginResponse!
+  registerFcmToken(token: String!, user_id: String!): Boolean!
+
+  """Mô phỏng việc bệnh viện gửi yêu cầu đồng bộ y lệnh cho một bệnh nhân."""
+  triggerReminderForPatient(mabn: String, ngay: String!, socmnd: String, sodienthoai: String): Boolean!
+}
+
+type Query {
+  findByIdentifier(identifier: String!): User!
+  me: User!
+  pingSchedulingService: String!
+}
+
+type ServiceClient {
+  """ID duy nhất của service, ví dụ: scheduling-service"""
+  client_id: ID!
+
+  """Tên của service"""
+  name: String!
+
+  """Các quyền hạn được cấp"""
+  scopes: [String!]!
+}
+
+type User {
+  apn_tokens: [String!]
+  diachi: String
+  fcm_tokens: [String!]
+  hoTen: String!
+  id: ID!
+  mabn: String!
+  ngaysinh: String
+  roles: [String!]!
+  socmnd: String!
+  sodienthoai: String!
+}
