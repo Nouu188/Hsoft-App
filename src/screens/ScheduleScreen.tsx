@@ -118,7 +118,7 @@ const ScheduleScreen: React.FC = () => {
 
   useEffect(() => {
     if (user.id) {
-      fetchDosesForDate(user.id, selectedDate);
+      fetchDosesInWeek(user.id, selectedDate);
     }
   }, [user.id, selectedDate, fetchDosesForDate]);
 

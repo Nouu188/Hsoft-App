@@ -22,6 +22,7 @@
     "@react-navigation/native": "^7.1.16",
     "dayjs": "^1.11.13",
     "graphql": "^16.11.0",
+    "jwt-decode": "^4.0.0",
     "react": "19.1.0",
     "react-native": "0.80.2",
     "react-native-safe-area-context": "^5.5.2",

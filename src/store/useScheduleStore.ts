@@ -13,7 +13,7 @@ interface ScheduleState {
   isLoading: boolean;
   error: string | null;
   setSelectedDate: (date: dayjs.Dayjs) => void;
-  fetchDosesForDate: () => Promise<void>; // <-- Không cần userId
+  fetchDosesInWeek: () => Promise<void>; // <-- Không cần userId
   updateDoseStatus: (doseId: string, status: 'TAKEN' | 'SKIPPED') => Promise<void>;
 }
 
@@ -26,10 +26,10 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
   setSelectedDate: (date) => {
     set({ selectedDate: date });
     // Tự động fetch lại doses khi đổi ngày
-    get().fetchDosesForDate();
+    get().fetchDosesInWeek();
   },
 
-  fetchDosesForDate: async () => {
+  fetchDosesInWeek: async () => {
     // Lấy user từ AuthStore
     const user = useAuthStore.getState().user;
     if (!user) {
