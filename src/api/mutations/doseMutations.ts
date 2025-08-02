@@ -1,5 +1,4 @@
-// src/graphql/mutations.ts
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const UPDATE_DOSE_STATUS = gql`
   mutation UpdateDoseStatus($doseId: ID!, $status: DoseStatus!) {

@@ -1,0 +1,48 @@
+import { COLORS, FONTS, SHADOWS, SIZES } from "@/constants/theme";
+import Ionicons from "@react-native-vector-icons/ionicons";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+interface ProfileMenuItemProps {
+  icon: string;
+  text: string;
+  onPress?: () => void;
+}
+
+const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({ icon, text, onPress }) => (
+  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+    <View style={styles.menuItemIconContainer}>
+      <Ionicons name={icon as any} size={22} color={COLORS.primary} />
+    </View>
+    <Text style={styles.menuItemText}>{text}</Text>
+    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textLight} />
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius,
+    padding: SIZES.base * 1.5,
+    marginBottom: SIZES.base * 1.5,
+    ...SHADOWS.light,
+  },
+  menuItemIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuItemText: {
+    ...FONTS.body3,
+    flex: 1,
+    marginLeft: SIZES.padding,
+    fontWeight: '600',
+    color: COLORS.textDark,
+  },
+});
+
+export default ProfileMenuItem;

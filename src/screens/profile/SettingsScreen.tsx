@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useNavigation } from '@react-navigation/native';
-import { COLORS, SIZES, FONTS, SHADOWS } from '../constants/theme';
+import { COLORS, FONTS, SHADOWS, SIZES } from '@/constants/theme';
 
 
 const SettingsHeader = () => {

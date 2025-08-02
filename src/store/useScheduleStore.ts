@@ -2,10 +2,10 @@
 import { create } from 'zustand';
 import dayjs from 'dayjs';
 import { Dose } from '../types';
-import { GET_MY_DOSES } from '../graphql/queries';
 import { useAuthStore } from './useAuthStore'; // <-- Import auth store
-import { schedulingClient } from '@/services/apoloClient';
-import { UPDATE_DOSE_STATUS } from '@/graphql/mutations';
+import { schedulingClient } from '@/api/apoloClient';
+import { GET_MY_DOSES } from '@/api/queries/doseQueries';
+import { UPDATE_DOSE_STATUS } from '@/api/mutations/doseMutations';
 
 interface ScheduleState {
   selectedDate: dayjs.Dayjs;
@@ -13,7 +13,7 @@ interface ScheduleState {
   isLoading: boolean;
   error: string | null;
   setSelectedDate: (date: dayjs.Dayjs) => void;
-  fetchDosesInWeek: () => Promise<void>; // <-- Không cần userId
+  fetchDosesInWeek: () => Promise<void>; 
   updateDoseStatus: (doseId: string, status: 'TAKEN' | 'SKIPPED') => Promise<void>;
 }
 
@@ -30,7 +30,6 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
   },
 
   fetchDosesInWeek: async () => {
-    // Lấy user từ AuthStore
     const user = useAuthStore.getState().user;
     if (!user) {
       set({ error: 'User not authenticated.', dosesForDay: [] });
@@ -46,7 +45,6 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
 
       const { data } = await schedulingClient.query({
         query: GET_MY_DOSES,
-        // Không cần truyền userId nữa, backend sẽ tự lấy từ token
         variables: { startDate, endDate },
         fetchPolicy: 'network-only',
       });

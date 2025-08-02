@@ -5,9 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import dayjs from 'dayjs';
 
-import { COLORS, SIZES } from '../constants/theme';
-import { useScheduleStore } from '../store/useScheduleStore';
-import { Dose } from '../types';
+import { COLORS, SIZES } from '@/constants/theme';
+import { useScheduleStore } from '@/store/useScheduleStore';
+import { Dose } from '@/types';
 
 // --- Component con: DateSelector ---
 const DateSelector: React.FC = () => {

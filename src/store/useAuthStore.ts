@@ -1,7 +1,8 @@
-// src/store/useAuthStore.ts
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { jwtDecode } from 'jwt-decode'; // Cần cài đặt: npm install jwt-decode
+import { jwtDecode } from 'jwt-decode'; 
+import { LOGIN_MUTATION } from '@/api/mutations/authMutations';
+import { accountClient } from '../api/apoloClient';
 
 interface AuthState {
   user: User | null;
@@ -9,11 +10,9 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   
-  // Actions
   login: (credentials: LoginInput) => Promise<void>;
-  register: (details: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
-  hydrate: () => Promise<void>; // Action để load token từ bộ nhớ khi app khởi động
+  hydrate: () => Promise<void>; 
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -25,22 +24,28 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (credentials) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('[AuthStore] Attempting to login with credentials:', credentials);
+
       const { data } = await accountClient.mutate({
         mutation: LOGIN_MUTATION,
-        variables: { loginInput: credentials },
+        variables: {
+          identifier: credentials.identifier,
+          password: credentials.password,
+        },
       });
+
+      console.log('[AuthStore] Login API call successful. Response data:', data);
+
       const { accessToken, user } = data.login;
 
       await AsyncStorage.setItem('accessToken', accessToken);
       set({ accessToken, user, isLoading: false });
     } catch (e: any) {
-      set({ error: e.message, isLoading: false });
-      throw e; // Ném lại lỗi để màn hình login có thể bắt và hiển thị
-    }
-  },
+      console.error('[AuthStore] Login failed in store. Error:', e);
 
-  register: async (details) => {
-    // Tương tự logic login
+      set({ error: e.message, isLoading: false });
+      throw e;
+    }
   },
 
   logout: async () => {
@@ -52,10 +57,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const token = await AsyncStorage.getItem('accessToken');
       if (token) {
-        // Giải mã token để lấy thông tin user (sub, email, roles)
-        const decoded: { sub: string; email: string; roles: string[] } = jwtDecode(token);
+        const decoded: { sub: string; identifier: string; roles: string[] } = jwtDecode(token);
         // TODO: Có thể gọi query `me()` để lấy thông tin user đầy đủ hơn
-        const user: User = { id: decoded.sub, email: decoded.email, roles: decoded.roles };
+        const user: User = { id: decoded.sub, identifier: decoded.identifier, roles: decoded.roles };
         set({ accessToken: token, user });
       }    
     } catch (e) {

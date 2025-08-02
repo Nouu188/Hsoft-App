@@ -5,24 +5,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, LinearTransition } from 'react-native-reanimated';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
-import { COLORS, SIZES, FONTS, SHADOWS } from '../constants/theme';
-import AuthInput from '../components/AuthInput';
-import { useAuthStore } from '../store/useAuthStore'; // Import store
+import { COLORS, SIZES, FONTS, SHADOWS } from '../../constants/theme';
+import AuthInput from '../../components/AuthInput';
+import { useAuthStore } from '../../store/useAuthStore'; 
 
 const { width } = Dimensions.get('window');
 
 const AuthScreen: React.FC = () => {
   const [isLoginView, setIsLoginView] = useState(true);
   
-  // Lấy state và actions từ AuthStore
-  const { login, register, isLoading, error } = useAuthStore();
+  const { login, isLoading, error } = useAuthStore();
 
-  // State cục bộ cho các input
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Giá trị animation cho thanh trượt
   const formPosition = useSharedValue(0);
 
   const formAnimatedStyle = useAnimatedStyle(() => {
@@ -43,26 +40,16 @@ const AuthScreen: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      await login({ email, password });
-      // Navigation đến màn hình chính sẽ được xử lý ở App.tsx
+      // === THÊM LOG DEBUG 4 ===
+      console.log('[AuthScreen] handleLogin triggered. Calling login action...');
+      // ========================
+      await login({ identifier, password });
+      // === THÊM LOG DEBUG 5 ===
+      console.log('[AuthScreen] Login action completed successfully.');
+      // ========================
     } catch (e) {
-      // Lỗi đã được set trong store, có thể hiển thị toast/alert ở đây
-      console.error("Login failed:", e);
-    }
-  };
-
-  const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      // TODO: Set lỗi validation cục bộ
-      console.error("Passwords don't match");
-      return;
-    }
-    try {
-      await register({ email, password });
-      // Có thể tự động chuyển sang màn hình login sau khi đăng ký thành công
-      switchToLogin();
-    } catch (e) {
-      console.error("Registration failed:", e);
+      // Lỗi đã được log trong store, ở đây có thể hiển thị Alert
+      console.error("[AuthScreen] Caught error from login action.");
     }
   };
 
@@ -101,12 +88,10 @@ const AuthScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Container để ẩn phần bị tràn */}
             <View style={{ overflow: 'hidden' }}>
               <Animated.View style={[styles.animatedForm, formAnimatedStyle]}>
-                {/* Login Form */}
                 <View style={styles.formPage}>
-                  <AuthInput icon="mail-outline" placeholder="Email" value={email} onChangeText={setEmail} />
+                  <AuthInput icon="mail-outline" placeholder="identifier" value={identifier} onChangeText={setIdentifier} />
                   <AuthInput icon="lock-closed-outline" placeholder="Password" value={password} onChangeText={setPassword} isPassword />
                   <TouchableOpacity>
                     <Text style={styles.forgotPassword}>Forgot Password?</Text>
@@ -116,12 +101,11 @@ const AuthScreen: React.FC = () => {
                   </TouchableOpacity>
                 </View>
 
-                {/* Register Form */}
                 <View style={styles.formPage}>
-                  <AuthInput icon="mail-outline" placeholder="Email" value={email} onChangeText={setEmail} />
+                  <AuthInput icon="mail-outline" placeholder="identifier" value={identifier} onChangeText={setIdentifier} />
                   <AuthInput icon="lock-closed-outline" placeholder="Password" value={password} onChangeText={setPassword} isPassword />
                   <AuthInput icon="lock-closed-outline" placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} isPassword />
-                  <TouchableOpacity style={styles.submitButton} onPress={handleRegister} disabled={isLoading}>
+                  <TouchableOpacity style={styles.submitButton} disabled={isLoading}>
                     {isLoading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.submitButtonText}>Create Account</Text>}
                   </TouchableOpacity>
                 </View>
@@ -137,12 +121,12 @@ const AuthScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC', // Màu nền sáng hơn một chút
+    backgroundColor: '#F8FAFC', 
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: SIZES.padding, // Áp dụng padding ở đây
+    paddingHorizontal: SIZES.padding,
   },
   header: {
     alignItems: 'center',
@@ -191,13 +175,12 @@ const styles = StyleSheet.create({
   },
   animatedForm: {
     flexDirection: 'row',
-    width: width * 2, // Rộng gấp đôi màn hình
-    // Dịch chuyển sang trái bằng padding của scrollContainer
+    width: width * 2, 
     marginLeft: -SIZES.padding, 
   },
   formPage: {
-    width: width, // Chiếm đúng 100% chiều rộng màn hình
-    paddingHorizontal: SIZES.padding, // Padding bên trong mỗi trang
+    width: width, 
+    paddingHorizontal: SIZES.padding, 
   },
   forgotPassword: {
     ...FONTS.body4,

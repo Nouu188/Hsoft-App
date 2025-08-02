@@ -3,10 +3,11 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES, FONTS, SHADOWS } from '../constants/theme'; // Import theme đầy đủ
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ProfileStackParamList } from '@/navigation/ProfileStackNavigator';
+import { COLORS, FONTS, SHADOWS, SIZES } from '@/constants/theme';
+import ProfileMenuItem from '@/components/specific/profile/ProfileMenuItem';
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
 // --- Component con: Header ---
@@ -67,23 +68,6 @@ const QuickActions = () => {
     </View>
   );
 };
-
-// --- Component con: Các mục trong danh sách cài đặt ---
-interface ProfileMenuItemProps {
-  icon: string;
-  text: string;
-  onPress?: () => void;
-}
-
-const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({ icon, text, onPress }) => (
-  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-    <View style={styles.menuItemIconContainer}>
-      <Ionicons name={icon as any} size={22} color={COLORS.primary} />
-    </View>
-    <Text style={styles.menuItemText}>{text}</Text>
-    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textLight} />
-  </TouchableOpacity>
-);
 
 // --- Màn hình chính ---
 const ProfileScreen: React.FC = () => {
@@ -176,30 +160,6 @@ const styles = StyleSheet.create({
   menuList: {
     marginTop: SIZES.padding * 2,
     paddingHorizontal: SIZES.padding,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    padding: SIZES.base * 1.5,
-    marginBottom: SIZES.base * 1.5,
-    ...SHADOWS.light,
-  },
-  menuItemIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuItemText: {
-    ...FONTS.body3,
-    flex: 1,
-    marginLeft: SIZES.padding,
-    fontWeight: '600',
-    color: COLORS.textDark,
   },
 });
 
