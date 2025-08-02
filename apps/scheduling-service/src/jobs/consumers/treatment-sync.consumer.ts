@@ -32,8 +32,7 @@ export class SyncConsumer {
         }
 
         const identifier = sodienthoai || mabn || socmnd;
-        console.log(identifier)
-
+        
         const user = await this.userApiClient.fetchUserByIdentifier(identifier!);
         if(!user) {
             return new UnauthorizedException("User not found");

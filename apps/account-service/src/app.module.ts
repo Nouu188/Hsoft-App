@@ -5,10 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
-import { AuthModule } from './auth/auth.module';
 import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
 import { User } from './users/entities/user.entity';
-import { ServiceClient } from './auth/entities/service-client.entity';
+import { ServiceClient } from '../../../libs/auth/src/entities/service-client.entity';
+import { AuthLibModule } from '@app/auth';
 
 @Module({
   imports: [
@@ -38,7 +38,7 @@ import { ServiceClient } from './auth/entities/service-client.entity';
       }),
     }),    
     UsersModule, 
-    AuthModule,
+    AuthLibModule,
     HospitalApiClientModule,
   ],
 })

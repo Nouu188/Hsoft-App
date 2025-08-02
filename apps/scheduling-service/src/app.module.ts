@@ -33,7 +33,7 @@ import { HospitalModule } from './hospital/hospital.module';
         port: +(configService.get<number>('POSTGRES_PORT') as number),
         username: configService.get<string>('POSTGRES_USER'),
         password: configService.get<string>('POSTGRES_PASSWORD'),
-        database: configService.get<string>('POSTGRES_DATABASE'),
+        database: configService.get<string>('POSTGRES_DB'),
         entities: [Dose],
         synchronize: true,
       }),

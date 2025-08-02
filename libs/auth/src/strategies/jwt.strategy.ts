@@ -2,7 +2,6 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../../users/users.service';
 import { AuthPayload } from '../dtos/auth.payload';
 
 @Injectable()
@@ -11,7 +10,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   constructor(
     configService: ConfigService,
-    private usersService: UsersService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -27,14 +25,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         throw new UnauthorizedException('Invalid token payload.');
     }
 
-    const user = await this.usersService.findOne({ user_id: payload.sub });
-
-    if (!user) {
-      this.logger.error(`[JwtStrategy] User not found in DB for ID: ${payload.sub}. Token is likely stale.`);
-      throw new UnauthorizedException('User not found.'); // Ném lỗi rõ ràng hơn
-    }
-    this.logger.debug(`[JwtStrategy] User found successfully:`, { id: user.id });
-
-    return user;
+    return { id: payload.sub, identifier: payload.scopes, roles: payload.roles };
   }
 }

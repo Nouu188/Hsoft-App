@@ -1,10 +1,11 @@
 import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CurrentUser } from '../../../../libs/auth/src/decorators/current-user.decorator';
 import { UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { M2MJwtGuard } from '../auth/guards/m2m-jwt.guard';
+import { JwtAuthGuard } from '@app/auth/guards/jwt-auth.guard';
+import { M2MJwtGuard } from '@app/auth/guards/m2m-jwt.guard';
+
 
 @Resolver(() => User)
 export class UsersResolver {

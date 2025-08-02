@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { Dose, DoseStatus } from './entities/dose.entity';
 
-@Injectable()
 export class DosesService {
   constructor(
     @InjectRepository(Dose)
@@ -16,26 +15,48 @@ export class DosesService {
     });
   }
 
-  async updateUserDoseStatus(user_id: string, dose_id: string, status: DoseStatus): Promise<Dose> {
-    if (status !== DoseStatus.TAKEN && status !== DoseStatus.SKIPPED) {
-      throw new Error('Invalid status update. Only TAKEN or SKIPPED are allowed.');
-    }
-    
-    const dose = await this.doseRepository.findOneBy({ id: dose_id });
-    if (!dose) {
-      throw new NotFoundException(`Dose with ID ${dose_id} not found.`);
+  async findDosesByDateRange(
+    user_id: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<Dose[]> {
+    if (!user_id || !startDate || !endDate) {
+      throw new BadRequestException('userId, startDate, and endDate are required.');
     }
 
-    if (dose.user_id !== user_id) {
-      throw new UnauthorizedException('You are not authorized to update this dose.');
+    if (startDate > endDate) {
+        throw new BadRequestException('startDate cannot be after endDate.');
+    }
+
+    const dosesInRange = await this.doseRepository.find({
+      where: {
+        user_id,
+        due_at: Between(startDate, endDate),
+      },
+      order: {
+        due_at: 'ASC',
+      },
+    });
+
+    return dosesInRange;
+  }
+
+  async updateUserDoseStatus(user_id: string, dose_id: string, status: DoseStatus): Promise<Dose> {
+    if (status !== DoseStatus.TAKEN && status !== DoseStatus.SKIPPED) {
+      throw new BadRequestException('Invalid status. Only TAKEN or SKIPPED are allowed.');
+    }
+    
+    const dose = await this.doseRepository.findOneBy({ 
+        id: dose_id,
+        user_id,
+    });
+
+    if (!dose) {
+      throw new UnauthorizedException(`Dose not found or you don't have permission to access it.`);
     }
 
     dose.status = status;
-    if (status === DoseStatus.TAKEN) {
-      dose.taken_at = new Date(); 
-    } else {
-      dose.taken_at = undefined;
-    }
+    dose.taken_at = (status === DoseStatus.TAKEN) ? new Date() : undefined; 
     
     return this.doseRepository.save(dose);
   }

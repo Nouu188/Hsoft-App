@@ -33,7 +33,7 @@ export class NotificationApiClientService {
                     'notification.exchange',
                     'notification.send.grouped',
                     group, 
-                    { headers: { 'x-delay': delay }, persistent: true },
+                    { headers: { 'x-delay': delay  }, persistent: true },
                 );
                 publishedCount++;
             }

@@ -6,7 +6,6 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    
     "//--- CORE COMMANDS ---//": "",
     "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
@@ -52,8 +51,11 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "firebase-admin": "^13.4.0",
     "graphql": "^16.11.0",
+    "libphonenumber-js": "^1.12.10",
     "moment": "^2.30.1",
     "moment-timezone": "^0.6.0",
     "passport": "^0.7.0",
@@ -113,6 +115,7 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^@app/api-clients(|/.*)$": "<rootDir>/libs/api-clients/src/$1",
+      "^@app/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
       "^src/(.*)$": "<rootDir>/$1"
     },

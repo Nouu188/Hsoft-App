@@ -1,15 +1,15 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { LoginInput } from './dtos/login.input';
-import { User } from '../users/entities/user.entity';
+import { User } from '../../../apps/account-service/src/users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
-import { AuthPayload } from './dtos/auth.payload';
-import { Role } from './enums/role.enum';
-import { UsersService } from '../users/users.service';
-import { ServiceClient } from './entities/service-client.entity';
-import { CreateServiceClientInput } from './dtos/create-service-client.input';
+import { UsersService } from '../../../apps/account-service/src/users/users.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ServiceClient } from './entities/service-client.entity';
+import { LoginInput } from './dtos/login.input';
+import { AuthPayload } from './dtos/auth.payload';
+import { Role } from './enums/role.enum';
+import { CreateServiceClientInput } from './dtos/create-service-client.input';
 
 @Injectable()
 export class AuthService {

@@ -18,25 +18,22 @@
         "tsConfigPath": "apps/account-service/tsconfig.app.json"
       }
     },
-    "scheduling-service": {
-      "type": "application",
-      "root": "apps/scheduling-service",
-      "entryFile": "main",
-      "sourceRoot": "apps/scheduling-service/src",
+    "api-clients": {
+      "type": "library",
+      "root": "libs/api-clients",
+      "entryFile": "index",
+      "sourceRoot": "libs/api-clients/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/scheduling-service/tsconfig.app.json"
+        "tsConfigPath": "libs/api-clients/tsconfig.lib.json"
       }
     },
-    "notification-service": {
-      "type": "application",
-      "root": "apps/notification-service",
-      "entryFile": "main",
-      "sourceRoot": "apps/notification-service/src",
+    "auth": {
+      "type": "library",
+      "root": "libs/auth",
+      "entryFile": "index",
+      "sourceRoot": "libs/auth/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/notification-service/tsconfig.app.json",
-        "assets": [
-          { "include": "firebase-service-account.json", "outDir": "./" }
-        ]
+        "tsConfigPath": "libs/auth/tsconfig.lib.json"
       }
     },
     "common": {
@@ -48,13 +45,28 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "api-clients": {
-      "type": "library",
-      "root": "libs/api-clients",
-      "entryFile": "index",
-      "sourceRoot": "libs/api-clients/src",
+    "notification-service": {
+      "type": "application",
+      "root": "apps/notification-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification-service/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/api-clients/tsconfig.lib.json"
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json",
+        "assets": [
+          {
+            "include": "firebase-service-account.json",
+            "outDir": "./"
+          }
+        ]
+      }
+    },
+    "scheduling-service": {
+      "type": "application",
+      "root": "apps/scheduling-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/scheduling-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/scheduling-service/tsconfig.app.json"
       }
     }
   }

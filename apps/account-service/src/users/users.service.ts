@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import * as moment from 'moment';
 import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import { User } from './entities/user.entity';
-import { Role } from '../auth/enums/role.enum';
+import { Role } from '../../../../libs/auth/src/enums/role.enum';
 
 @Injectable()
 export class UsersService {

@@ -1,11 +1,12 @@
 version: '3.8'
 services:
   rabbitmq:
-    image: rabbitmq:4.1
-    container_name: med-rabbitmq
     build: ./docker/rabbitmq
+    container_name: med-rabbitmq
     restart: always
     environment:
+      # Vẫn cần các biến này để tạo user/pass
+      # Dùng đúng tên biến của image rabbitmq chính thức
       RABBITMQ_DEFAULT_USER: myuser
       RABBITMQ_DEFAULT_PASS: mypassword
       TZ: Asia/Ho_Chi_Minh
@@ -36,8 +37,7 @@ services:
     container_name: med-db-schedules
     restart: always
     environment:
-      POSTGRES_USERNAME: postgres
-      POSTGRES_HOST: localhost
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1
       POSTGRES_DB: schedules_db
       TZ: Asia/Ho_Chi_Minh
@@ -45,8 +45,27 @@ services:
       - "5433:5432" 
     volumes:
       - postgres_schedules_data:/var/lib/postgresql/data
+    healthcheck: 
+      test: ["CMD-SHELL", "pg_isready -U schedules_user -d schedules_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  db-auth:
+    image: postgres:17
+    container_name: med-db-auth
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: auth_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
 
 volumes:
   postgres_account_data:
   postgres_schedules_data:
+  postgres_auth_data:
   rabbitmq_data: {}

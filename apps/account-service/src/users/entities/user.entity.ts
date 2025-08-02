@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
-import { Role } from '../../auth/enums/role.enum';
 import * as bcrypt from 'bcrypt'
+import { Role } from '@app/auth/enums/role.enum';
 
 @ObjectType()
 @Entity('users')

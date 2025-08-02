@@ -18,6 +18,12 @@
       "@app/api-clients/*": [
         "libs/api-clients/src/*"
       ],
+      "@app/auth": [
+        "libs/auth/src"
+      ],
+      "@app/auth/*": [
+        "libs/auth/src/*"
+      ],
       "@app/common": [
         "libs/common/src"
       ],

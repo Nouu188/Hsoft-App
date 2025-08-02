@@ -1,5 +1,4 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { Role } from '../enums/role.enum';
 
 @InputType()
 export class CreateServiceClientInput {
