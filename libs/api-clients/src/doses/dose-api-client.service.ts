@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -17,6 +17,38 @@ export class DoseApiClientService {
     if (!this.schedulingServiceUrl) {
         throw new Error('SCHEDULING_SERVICE_URL is not defined in environment variables.');
     }
+  }
+
+  async syncDosesFromHospital(
+    user_id: string
+  ): Promise<Boolean> {
+    if(!user_id) {
+      throw new UnauthorizedException("Invalid user_id");
+    }
+
+    const mutation = `
+      mutation($user_id: String!) {
+        syncDosesFromHospital(user_id: $user_id)
+      }
+    `;
+
+    const variables = { user_id: user_id};
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(this.schedulingServiceUrl, { mutation, variables })
+      );
+
+      if (response.data.errors) {
+        throw new Error(JSON.stringify(response.data.errors));
+      }
+
+      return true;
+
+    } catch (error) {
+      this.logger.error(`Failed to synchronize doses from Scheduling Service`, error.message);
+      return false; 
+    }    
   }
 
   async fetchAndVerifyDoses(

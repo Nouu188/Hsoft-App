@@ -3,8 +3,8 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, timeout } from 'rxjs';
 import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { YLenhThuoc } from './dto/ylenhthuoc.dto';
 import { HospitalPatient } from './dto/hospitalPatient.dto';
+import { YLenhThuoc } from 'apps/scheduling-service/src/doses/dto/ylenhthuoc.payload';
 
 @Injectable()
 export class HospitalApiClientService {
@@ -14,7 +14,7 @@ export class HospitalApiClientService {
         private readonly configService: ConfigService,
     ) { }
 
-    async fetchYLenhThuoc(user: User, date: string): Promise<YLenhThuoc[]> {
+    async fetchYLenhThuoc(user: User, ngay: string = ""): Promise<YLenhThuoc[]> {
         if(!user.sodienthoai && !user.socmnd && !user.mabn) {
             throw new Error('Either "mabn" or "sodienthoai" or "socmnd" must be provided.');
         }
@@ -32,11 +32,11 @@ export class HospitalApiClientService {
             mabn: user.mabn || null,
             sodienthoai: user.sodienthoai || null,
             socmnd: user.socmnd || null,
-            ngay: date,
+            ngay: ngay,
             namsinh: user.namsinh,
         };
 
-        this.logger.debug(`Fetching treatments for mabn: ${user.mabn} on date: ${date}`);
+        this.logger.debug(`Fetching treatments for mabn: ${user.mabn} on date: ${ngay}`);
 
         try {
             const response = await firstValueFrom(

@@ -10,7 +10,6 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { ApiClientsModule } from '@app/api-clients';
 import { JobsModule } from './jobs/jobs.module';
-import { HospitalModule } from './hospital/hospital.module';
 import { AuthLibModule } from '@app/auth';
 
 @Module({
@@ -40,7 +39,6 @@ import { AuthLibModule } from '@app/auth';
       }),
     }),
     AppRabbitMQModule, 
-    HospitalModule,
     HttpModule,
     DosesModule,
     ApiClientsModule,

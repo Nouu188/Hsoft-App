@@ -5,7 +5,8 @@ import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
 
 interface SyncRequestPayload {
-    ngay: string;
+    ngay?: string;
+    user_id?: string;
     sodienthoai?: string;
     mabn?: string;
     socmnd?: string;
@@ -25,8 +26,8 @@ export class SyncConsumer {
         queue: 'sync.requests.queue',
     })
     public async handleSyncRequest(payload: SyncRequestPayload) {
-        const { sodienthoai, mabn, socmnd , ngay } = payload;
-        if(!sodienthoai && !mabn && !socmnd) {
+        const { user_id, sodienthoai, mabn, socmnd , ngay } = payload;
+        if(!sodienthoai && !mabn && !socmnd && !user_id) {
             throw new Error('Either "mabn" or "sodienthoai" or "socmnd" must be provided.');
         }
 

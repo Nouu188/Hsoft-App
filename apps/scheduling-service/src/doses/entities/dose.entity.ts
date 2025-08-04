@@ -1,5 +1,5 @@
 // src/modules/doses/entities/dose.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
 
 export enum DoseStatus {
@@ -16,6 +16,10 @@ export class Dose {
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Index({ unique: true })
+  @Column()
+  external_id: string;
 
   @Field({ description: 'ID của y lệnh từ bệnh viện' })
   @Column()

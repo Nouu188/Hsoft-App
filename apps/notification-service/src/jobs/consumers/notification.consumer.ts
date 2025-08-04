@@ -5,12 +5,14 @@ import { AccountApiClientService } from '@app/api-clients/account/account-api-cl
 import { DoseApiClientService } from '@app/api-clients/doses/dose-api-client.service';
 import { DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
 import { FirebaseService } from '../../firebase/firebase.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { NotificationHistory } from '../../history/notification-history.entity';
+import { Repository } from 'typeorm';
 
 interface GroupedNotificationPayload {
     user_id: string;
     dose_ids: string[];
 }
-
 @Injectable()
 export class NotificationConsumer {
     private readonly logger = new Logger(NotificationConsumer.name);
@@ -19,6 +21,8 @@ export class NotificationConsumer {
         private readonly doseApiClient: DoseApiClientService,
         private readonly userApiClient: AccountApiClientService,
         private firebaseService: FirebaseService,
+        @InjectRepository(NotificationHistory, 'notificationConnection') 
+        private historyRepository: Repository<NotificationHistory>,
     ) {}
 
     @RabbitSubscribe({
@@ -52,7 +56,14 @@ export class NotificationConsumer {
             });
 
             this.logger.log(`Successfully processed notification for user ${user_id}.`);
-
+            
+            const historyEntry = this.historyRepository.create({
+                user_id: user_id,
+                title,
+                body,
+                dose_ids: dose_ids,
+            });
+            await this.historyRepository.save(historyEntry);
         } catch (error) {
             this.logger.error(`CRITICAL error processing notification for user ${user_id}. Message will be NACKed.`, error.stack);
             return new Nack(false);

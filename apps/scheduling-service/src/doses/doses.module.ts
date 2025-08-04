@@ -3,11 +3,13 @@ import { DosesService } from './doses.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Dose } from './entities/dose.entity';
 import { DosesResolver } from './dose.resolver';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   providers: [DosesService, DosesResolver],
   imports: [
-    TypeOrmModule.forFeature([ Dose ])
+    TypeOrmModule.forFeature([ Dose ]),
+    AppRabbitMQModule,
   ]
 })
 export class DosesModule {}

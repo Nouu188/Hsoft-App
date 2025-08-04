@@ -39,12 +39,19 @@ enum DoseStatus {
 }
 
 type Mutation {
-  """Mô phỏng việc bệnh viện gửi yêu cầu đồng bộ y lệnh cho một bệnh nhân."""
-  triggerReminderForPatient(mabn: String, ngay: String!, socmnd: String, sodienthoai: String): Boolean!
+  """Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân"""
+  syncDosesFromHospital(
+    mabn: String
+
+    """Ngày bệnh nhân đi khám"""
+    ngay: String!
+    socmnd: String
+    sodienthoai: String
+    user_id: String
+  ): Boolean!
 }
 
 type Query {
   dosesByDateRange(endDate: String!, startDate: String!): [Dose!]!
   dosesByIds(dose_ids: [ID!]!): [Dose!]!
-  pingSchedulingService: String!
 }

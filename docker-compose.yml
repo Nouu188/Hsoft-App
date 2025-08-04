@@ -30,6 +30,21 @@ services:
       - "5435:5432" 
     volumes:
       - postgres_account_data:/var/lib/postgresql/data
+  
+  # Database cho Notification-service
+  db-notification:
+    image: postgres:17
+    container_name: med-db-notification
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: notification_db
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5436:5432" 
+    volumes:
+      - postgres_notification_data:/var/lib/postgresql/data
 
   # Database cho Scheduling-service
   db-schedules:
@@ -68,4 +83,5 @@ volumes:
   postgres_account_data:
   postgres_schedules_data:
   postgres_auth_data:
+  postgres_notification_data:
   rabbitmq_data: {}
