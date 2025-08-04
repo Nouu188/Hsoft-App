@@ -70,7 +70,6 @@ export class DosesSyncService {
             }
         }
 
-        // LẤY CÁC LIỀU UỐNG PENDING HIỆN TẠI TRONG DB 
         const existingPendingDoses = await this.doseRepository.find({
             where: {
                 user_id: user.id,
@@ -102,6 +101,12 @@ export class DosesSyncService {
                 user_id: dose.user_id,
                 notify_at: dose.notify_at,
             })));
+
+            await this.notificationClient.scheduleNotifications(savedDoses.map(dose => ({
+                id: dose.id,
+                user_id: dose.user_id,
+                notify_at: dose.due_at,
+            })))
         }
 
         if (dosesToCreate.length === 0 && dosesToDelete.length === 0) {

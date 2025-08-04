@@ -45,7 +45,7 @@ export class Dose {
   @Column()
   user_id: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: 'Thời điểm người dùng nhấn nút đã uống' })
   @Column({ type: 'timestamptz', nullable: true })
   taken_at?: Date;
 

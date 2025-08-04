@@ -17,6 +17,8 @@ type Dose {
   medication_name: String!
   notify_at: DateTime!
   status: DoseStatus!
+
+  """Thời điểm người dùng nhấn nút đã uống"""
   taken_at: DateTime
 
   """Hướng dẫn cách dùng từ y lệnh"""
