@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as moment from 'moment';
-import { HospitalApiClientService, HospitalPatient } from '@app/api-clients/hospital/hospital-api.service';
+import { IsNull, Not, Repository } from 'typeorm';
+import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import { User } from './entities/user.entity';
 import { Role } from '../../../../libs/auth/src/enums/role.enum';
+import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
 
 @Injectable()
 export class UsersService {
@@ -62,6 +62,13 @@ export class UsersService {
         { socmnd: identifier },
       ],
     }) ?? undefined;
+  }
+
+  async findAllUser(): Promise<User[]> {
+    return await this.usersRepository.find({
+      where: { mabn: Not(IsNull()) },
+      select: ['id'],
+    })
   }
 
   async fetchPatientFromHospital(identifier: string) {

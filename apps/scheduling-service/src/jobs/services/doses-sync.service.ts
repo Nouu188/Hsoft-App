@@ -30,7 +30,7 @@ export class DosesSyncService {
         private readonly notificationClient: NotificationApiClientService,
     ) {}
 
-    public async syncDoses(user: User, ngay: string): Promise<void> {
+    public async syncDosesForUser(user: User, ngay: string): Promise<void> {
         const today = moment().tz('Asia/Ho_Chi_Minh');
         const todayString = today.format('DD/MM/YYYY');
 
@@ -55,7 +55,7 @@ export class DosesSyncService {
             }
 
             const startDate = moment.tz(ylenh.ngay, 'DD/MM/YYYY', 'Asia/Ho_Chi_Minh');
-            const numberOfDays = parseInt(ylenh.ngay, 10);
+            const numberOfDays = parseInt(ylenh.songay);
             const timeOfDay = ylenh.thoidiem; 
 
             if (isNaN(numberOfDays) || numberOfDays <= 0) {

@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 export const NOTIFICATION_EXCHANGE = 'notification.exchange';
 export const SYNC_EXCHANGE = 'sync.exchange';
+export const BATCH_SYNC_EXCHANGE = 'batch.sync.exchange'
 
 @Global()
 @Module({
@@ -11,34 +12,43 @@ export const SYNC_EXCHANGE = 'sync.exchange';
     RabbitMQModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-useFactory: (configService: ConfigService) => {
-  const uri = configService.get<string>('RABBITMQ_URI')!;
-  const logger = new Logger('RabbitMQConfig');
+      useFactory: (configService: ConfigService) => {
+        const uri = configService.get<string>('RABBITMQ_URI')!;
+        const logger = new Logger('RabbitMQConfig');
 
-  logger.debug(`Connecting to RabbitMQ at URI: ${uri}`);
+        logger.debug(`Connecting to RabbitMQ at URI: ${uri}`);
 
-  return {
-    exchanges: [
-      {
-        name: NOTIFICATION_EXCHANGE,
-        type: 'x-delayed-message',
-        options: {
-          durable: true,
-          arguments: {
-            'x-delayed-type': 'topic',
-          },
-        },
-      },
-      {
-        name: SYNC_EXCHANGE,
-        type: 'direct',
-      },
-    ],
-    uri,
-    connectionInitOptions: { wait: false },
-    enableControllerDiscovery: true,
-  };
-}
+        return {
+          exchanges: [
+            {
+              name: NOTIFICATION_EXCHANGE,
+              type: 'x-delayed-message',
+              options: {
+                durable: true,
+                arguments: {
+                  'x-delayed-type': 'topic',
+                },
+              },
+            },
+            {
+              name: SYNC_EXCHANGE,
+              type: 'direct',
+            },
+            {
+              name: BATCH_SYNC_EXCHANGE,
+              type: 'x-delayed-message',
+              options: {
+                durable: true,
+                arguments: { 'x-delayed-type': 'direct' },
+              }
+            }
+          ],
+          uri,
+          prefetchCount: 10,
+          connectionInitOptions: { wait: false },
+          enableControllerDiscovery: true,
+        };
+      }
     }),
   ],
   exports: [RabbitMQModule],

@@ -26,6 +26,7 @@ type Mutation {
 }
 
 type Query {
+  findAllUser: User!
   findByIdentifier(identifier: String!): User!
   me: User!
 }

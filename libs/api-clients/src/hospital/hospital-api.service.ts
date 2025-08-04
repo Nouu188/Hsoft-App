@@ -1,29 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-
-interface YLenhThuoc {
-    id: string;
-    stt: string;
-    ngay: string; 
-    sott: string;
-    tenthuoc: string;
-    thuchien: string;
-    soluong: string;
-    songay: string;
-    lieudung: string; 
-    thoidiem: string; 
-}
-
-export interface HospitalPatient {
-    mabn: string;
-    hoten: string;
-    namsinh: string;
-    sodienthoai: string;
-    socmnd: string;
-}
+import { YLenhThuoc } from './dto/ylenhthuoc.dto';
+import { HospitalPatient } from './dto/hospitalPatient.dto';
 
 @Injectable()
 export class HospitalApiClientService {
@@ -31,14 +12,18 @@ export class HospitalApiClientService {
     constructor(
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
-    ) {}
-    
+    ) { }
+
     async fetchYLenhThuoc(user: User, date: string): Promise<YLenhThuoc[]> {
+        if(!user.sodienthoai && !user.socmnd && !user.mabn) {
+            throw new Error('Either "mabn" or "sodienthoai" or "socmnd" must be provided.');
+        }
+
         const apiUrl = this.configService.get<string>('HOSPITAL_API_URL');
-        
+
         const query = `
-            query GetYLenhThuoc($mabn: String, $sodienthoai: String, $socmnd: String, $ngay: String!) {
-                ylenhthuoc(mabn: $mabn, sodienthoai: $sodienthoai, ngay: $ngay) {
+            query GetYLenhThuoc($mabn: String, $sodienthoai: String, $socmnd: String, $ngay: String) {
+                ylenhthuoc(mabn: $mabn, sodienthoai: $sodienthoai, socmnd: $socmnd, ngay: $ngay) {
                     id, stt, ngay, sott, tenthuoc, thuchien, soluong, lieudung, thoidiem
                 }
             }
@@ -48,10 +33,11 @@ export class HospitalApiClientService {
             sodienthoai: user.sodienthoai || null,
             socmnd: user.socmnd || null,
             ngay: date,
+            namsinh: user.namsinh,
         };
 
         this.logger.debug(`Fetching treatments for mabn: ${user.mabn} on date: ${date}`);
-        
+
         try {
             const response = await firstValueFrom(
                 this.httpService.post(apiUrl!, { query, variables }, { timeout: 15000 })
@@ -70,7 +56,7 @@ export class HospitalApiClientService {
     async fetchPatientFromHospital(identifier: string): Promise<HospitalPatient | null> {
         const apiUrl = this.configService.get<string>('HOSPITAL_API_URL');
 
-        let mabn = '', sodienthoai = '', socmnd = '', sothe = '';
+        let mabn = '', sodienthoai = '', socmnd = '';
 
         if (/^0\d{9,10}$/.test(identifier)) {
             sodienthoai = identifier;
@@ -97,10 +83,10 @@ export class HospitalApiClientService {
 
         try {
             const response = await firstValueFrom(
-                this.httpService.post(apiUrl!, { query })
+                this.httpService.post(apiUrl!, { query }, { timeout: 15000 })
             );
 
-            const patientData = response.data?.data?.btdbn?.[0];
+            const patientData = response.data?.data?.ylenhthuoc?.[0];
             return patientData || null;
         } catch (error) {
             this.logger.error('Failed to fetch patient from hospital API', error);

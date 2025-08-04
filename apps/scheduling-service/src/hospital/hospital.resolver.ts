@@ -21,7 +21,7 @@ export class HospitalResolver {
         description: 'Mô phỏng việc bệnh viện gửi yêu cầu đồng bộ y lệnh cho một bệnh nhân.'
     })
     async triggerReminderForPatient(
-        @Args('ngay') ngay: string,
+        @Args('ngay') ngay?: string,
         @Args('mabn', { nullable: true }) mabn?: string,
         @Args('sodienthoai', { nullable: true }) sodienthoai?: string,
         @Args('socmnd', { nullable: true }) socmnd?: string,

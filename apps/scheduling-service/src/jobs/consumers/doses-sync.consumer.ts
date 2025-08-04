@@ -10,14 +10,13 @@ interface SyncRequestPayload {
     mabn?: string;
     socmnd?: string;
 }
-
 @Injectable()
 export class SyncConsumer {
     private readonly logger = new Logger(SyncConsumer.name);
 
     constructor(
         private readonly dosesSyncService: DosesSyncService,
-        private readonly userApiClient: AccountApiClientService,
+        private readonly accountApiClient: AccountApiClientService,
     ) {}
 
     @RabbitSubscribe({
@@ -27,19 +26,19 @@ export class SyncConsumer {
     })
     public async handleSyncRequest(payload: SyncRequestPayload) {
         const { sodienthoai, mabn, socmnd , ngay } = payload;
-        if(!sodienthoai && !mabn && !socmnd && !ngay) {
-            throw new Error("Invalid input");
+        if(!sodienthoai && !mabn && !socmnd) {
+            throw new Error('Either "mabn" or "sodienthoai" or "socmnd" must be provided.');
         }
 
         const identifier = sodienthoai || mabn || socmnd;
         
-        const user = await this.userApiClient.fetchUserByIdentifier(identifier!);
+        const user = await this.accountApiClient.fetchUserByIdentifier(identifier!);
         if(!user) {
             return new UnauthorizedException("User not found");
         }
         
         try {
-            await this.dosesSyncService.syncDoses(user, ngay);
+            await this.dosesSyncService.syncDosesForUser(user, ngay);
         } catch (error) {
             this.logger.error(`Failed to process sync request for user_id ${identifier}`, error.stack);
             return new Nack(false);

@@ -6,6 +6,8 @@ import { Dose } from '../doses/entities/dose.entity';
 import { DosesSyncService } from './services/doses-sync.service';
 import { SyncConsumer } from './consumers/doses-sync.consumer';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { BatchCreationConsumer } from './consumers/batch-doses-creation.consumer';
+import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
 
 @Module({
   imports: [
@@ -16,7 +18,9 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
   ],
   providers: [
     DosesSyncService,
-    SyncConsumer
+    SyncConsumer,
+    BatchCreationConsumer,
+    BatchSyncConsumer
   ],
 })
 export class JobsModule {}

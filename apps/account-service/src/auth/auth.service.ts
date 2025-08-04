@@ -30,6 +30,7 @@ export class AuthService {
             const isPasswordMatching = await bcrypt.compare(password!, user.password);
             if(isPasswordMatching) {
                 this.logger.log(`User ${user.sodienthoai} logged in from internal DB.`);
+                
                 const accessToken = this.generateToken(user.id, user.roles);
                 return { accessToken, user };
             }
