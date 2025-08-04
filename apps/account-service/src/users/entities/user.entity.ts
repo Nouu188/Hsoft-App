@@ -32,7 +32,7 @@ export class User {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  ngaysinh?: string; 
+  namsinh?: string; 
 
   @Column()
   password: string;

@@ -48,16 +48,3 @@ type Query {
   dosesByIds(dose_ids: [ID!]!): [Dose!]!
   pingSchedulingService: String!
 }
-
-type User {
-  apn_tokens: [String!]
-  diachi: String
-  fcm_tokens: [String!]
-  hoTen: String!
-  id: ID!
-  mabn: String!
-  ngaysinh: String
-  roles: [String!]!
-  socmnd: String!
-  sodienthoai: String!
-}

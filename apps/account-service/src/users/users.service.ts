@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as moment from 'moment';
-import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
+import { HospitalApiClientService, HospitalPatient } from '@app/api-clients/hospital/hospital-api.service';
 import { User } from './entities/user.entity';
 import { Role } from '../../../../libs/auth/src/enums/role.enum';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
+    @InjectRepository(User, 'accountConnection')
     private usersRepository: Repository<User>,
 
     private readonly hospitalClient: HospitalApiClientService,
@@ -68,25 +68,16 @@ export class UsersService {
     return await this.hospitalClient.fetchPatientFromHospital(identifier);
   }
 
-  async createUser(payload: {
-    mabn: string,
-    hoten: string,
-    ngaysinh: string,
-    diachi: string,
-    sodienthoai: string,
-    socmnd: string,
-  }): Promise<User> {
-    const { mabn, hoten, ngaysinh, diachi, sodienthoai, socmnd } = payload;
-    const yearOfBirth = ngaysinh.split('/')[2];
+  async createUser(payload: HospitalPatient): Promise<User> {
+    const { mabn, hoten, namsinh, sodienthoai, socmnd } = payload;
 
     const newUser = this.usersRepository.create({
       mabn: mabn,
       sodienthoai: sodienthoai,
       socmnd: socmnd,
       hoTen: hoten,
-      ngaysinh: moment(ngaysinh, 'DD/MM/YYYY').format('YYYY-MM-DD'),
-      diachi: diachi,
-      password: yearOfBirth, 
+      namsinh: namsinh,
+      password: namsinh, 
       roles: [Role.USER],
     });
 

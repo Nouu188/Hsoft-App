@@ -3,8 +3,8 @@ import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApiClientsModule } from '@app/api-clients';
 import { Dose } from '../doses/entities/dose.entity';
-import { TreatmentSyncService } from './services/treatment-sync.service';
-import { SyncConsumer } from './consumers/treatment-sync.consumer';
+import { DosesSyncService } from './services/doses-sync.service';
+import { SyncConsumer } from './consumers/doses-sync.consumer';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
@@ -15,7 +15,7 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
     AppRabbitMQModule,
   ],
   providers: [
-    TreatmentSyncService,
+    DosesSyncService,
     SyncConsumer
   ],
 })

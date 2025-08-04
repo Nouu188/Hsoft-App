@@ -1,15 +1,15 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../../../apps/account-service/src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from '../../../apps/account-service/src/users/users.service';
+import { UsersService } from '../users/users.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ServiceClient } from './entities/service-client.entity';
-import { LoginInput } from './dtos/login.input';
-import { AuthPayload } from './dtos/auth.payload';
-import { Role } from './enums/role.enum';
-import { CreateServiceClientInput } from './dtos/create-service-client.input';
+import { LoginInput } from './dto/login.input';
+import { AuthPayload } from '../../../../libs/auth/src/dtos/auth.payload';
+import { Role } from '../../../../libs/auth/src/enums/role.enum';
+import { CreateServiceClientInput } from './dto/create-service-client.input';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
-        @InjectRepository(ServiceClient)
+        @InjectRepository(ServiceClient, 'authConnection')
         private serviceClientRepository: Repository<ServiceClient>,
     ) {}
 
@@ -44,7 +44,7 @@ export class AuthService {
             throw new UnauthorizedException('Patient information not found in hospital system.');
         }
 
-        const yearOfBirth = hospitalPatient.ngaysinh.split('/')[2];
+        const yearOfBirth = hospitalPatient.namsinh;
         if (loginInput.password !== yearOfBirth) {
             throw new UnauthorizedException('Invalid credentials.');
         }

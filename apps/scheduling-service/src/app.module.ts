@@ -11,6 +11,7 @@ import { join } from 'path';
 import { ApiClientsModule } from '@app/api-clients';
 import { JobsModule } from './jobs/jobs.module';
 import { HospitalModule } from './hospital/hospital.module';
+import { AuthLibModule } from '@app/auth';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { HospitalModule } from './hospital/hospital.module';
     HttpModule,
     DosesModule,
     ApiClientsModule,
+    AuthLibModule,
     JobsModule
   ],
   providers: [],

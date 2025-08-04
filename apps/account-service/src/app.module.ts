@@ -7,8 +7,9 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
 import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
 import { User } from './users/entities/user.entity';
-import { ServiceClient } from '../../../libs/auth/src/entities/service-client.entity';
 import { AuthLibModule } from '@app/auth';
+import { ServiceClient } from './auth/entities/service-client.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -24,21 +25,38 @@ import { AuthLibModule } from '@app/auth';
       playground: true, 
     }),
     TypeOrmModule.forRootAsync({
+      name: 'accountConnection',
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('POSTGRES_HOST'),
-        port: +(configService.get<number>('POSTGRES_PORT') as number),
-        username: configService.get<string>('POSTGRES_USER'),
-        password: configService.get<string>('POSTGRES_PASSWORD'),
-        database: configService.get<string>('POSTGRES_DB'),
-        entities: [ User, ServiceClient ], 
+        host: configService.get<string>('ACCOUNTS_DB_HOST'),
+        port: +(configService.get<number>('ACCOUNTS_DB_PORT') as number),
+        username: configService.get<string>('ACCOUNTS_DB_USER'),
+        password: configService.get<string>('ACCOUNTS_DB_PASS'),
+        database: configService.get<string>('ACCOUNTS_DB_NAME'),
+        entities: [ User ], 
         synchronize: true,
       }),
     }),    
+    TypeOrmModule.forRootAsync({
+      name: 'authConnection',
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('AUTH_DB_HOST'),
+        port: +(configService.get<number>('AUTH_DB_PORT') as number),
+        username: configService.get<string>('AUTH_DB_USER'),
+        password: configService.get<string>('AUTH_DB_PASS'),
+        database: configService.get<string>('AUTH_DB_NAME'),
+        entities: [ ServiceClient ], 
+        synchronize: true,
+      }),
+    }),  
     UsersModule, 
     AuthLibModule,
+    AuthModule,
     HospitalApiClientModule,
   ],
 })

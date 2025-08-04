@@ -20,8 +20,7 @@ interface YLenhThuoc {
 export interface HospitalPatient {
     mabn: string;
     hoten: string;
-    ngaysinh: string;
-    diachi: string;
+    namsinh: string;
     sodienthoai: string;
     socmnd: string;
 }
@@ -68,50 +67,44 @@ export class HospitalApiClientService {
         }
     }
 
-async fetchPatientFromHospital(identifier: string): Promise<HospitalPatient | null> {
-    const apiKey = this.configService.get<string>('HOSPITAL_API_KEY');
-    const apiUrl = this.configService.get<string>('HOSPITAL_API_URL');
+    async fetchPatientFromHospital(identifier: string): Promise<HospitalPatient | null> {
+        const apiUrl = this.configService.get<string>('HOSPITAL_API_URL');
 
-    let mabn = '', sodienthoai = '', socmnd = '', sothe = '';
+        let mabn = '', sodienthoai = '', socmnd = '', sothe = '';
 
-    if (/^0\d{9,10}$/.test(identifier)) {
-        sodienthoai = identifier;
-    } else if (/^\d{12}$/.test(identifier)) {
-        socmnd = identifier;
-    } else if (/^\d{6,8}$/.test(identifier)) {
-        mabn = identifier;
-    }
-
-    const query = `
-        query {
-            btdbn(
-                key: "${apiKey}", 
-                mabn: "${mabn}", 
-                sodienthoai: "${sodienthoai}", 
-                socmnd: "${socmnd}", 
-                sothe: "${sothe}"
-            ) {
-                mabn
-                hoten
-                ngaysinh
-                diachi
-                sodienthoai
-                socmnd
-            }
+        if (/^0\d{9,10}$/.test(identifier)) {
+            sodienthoai = identifier;
+        } else if (/^\d{12}$/.test(identifier)) {
+            socmnd = identifier;
+        } else if (/^\d{6,8}$/.test(identifier)) {
+            mabn = identifier;
         }
-    `;
 
-    try {
-        const response = await firstValueFrom(
-            this.httpService.post(apiUrl!, { query })
-        );
+        const query = `
+            query {
+                ylenhthuoc(
+                    mabn: "${mabn}", 
+                    sodienthoai: "${sodienthoai}", 
+                    socmnd: "${socmnd}", 
+                ) {
+                    mabn,
+                    sodienthoai,
+                    socmnd,
+                    namsinh
+                }
+            }
+        `;
 
-        const patientData = response.data?.data?.btdbn?.[0];
-        return patientData || null;
-    } catch (error) {
-        this.logger.error('Failed to fetch patient from hospital API', error);
-        return null;
+        try {
+            const response = await firstValueFrom(
+                this.httpService.post(apiUrl!, { query })
+            );
+
+            const patientData = response.data?.data?.btdbn?.[0];
+            return patientData || null;
+        } catch (error) {
+            this.logger.error('Failed to fetch patient from hospital API', error);
+            return null;
+        }
     }
-}
-
 }

@@ -41,7 +41,11 @@ export class DosesService {
     return dosesInRange;
   }
 
-  async updateUserDoseStatus(user_id: string, dose_id: string, status: DoseStatus): Promise<Dose> {
+  // async updateDoses(user_id: string): Promise<Boolean> {
+
+  // }
+
+  async updateDoseStatus(user_id: string, dose_id: string, status: DoseStatus): Promise<Dose> {
     if (status !== DoseStatus.TAKEN && status !== DoseStatus.SKIPPED) {
       throw new BadRequestException('Invalid status. Only TAKEN or SKIPPED are allowed.');
     }

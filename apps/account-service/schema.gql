@@ -23,15 +23,11 @@ type Mutation {
   admin_createServiceClient(input: CreateServiceClientInput!): ServiceClient!
   login(loginInput: LoginInput!): LoginResponse!
   registerFcmToken(token: String!, user_id: String!): Boolean!
-
-  """Mô phỏng việc bệnh viện gửi yêu cầu đồng bộ y lệnh cho một bệnh nhân."""
-  triggerReminderForPatient(mabn: String, ngay: String!, socmnd: String, sodienthoai: String): Boolean!
 }
 
 type Query {
   findByIdentifier(identifier: String!): User!
   me: User!
-  pingSchedulingService: String!
 }
 
 type ServiceClient {
@@ -52,7 +48,7 @@ type User {
   hoTen: String!
   id: ID!
   mabn: String!
-  ngaysinh: String
+  namsinh: String
   roles: [String!]!
   socmnd: String!
   sodienthoai: String!

@@ -11,7 +11,7 @@ export class ClientCredentialsStrategy extends PassportStrategy(Strategy, 'clien
   private readonly logger = new Logger(ClientCredentialsStrategy.name);
 
   constructor(
-    @InjectRepository(ServiceClient)
+    @InjectRepository(ServiceClient, 'authConnection')
     private serviceClientRepository: Repository<ServiceClient>,
   ) {
     super({ usernameField: 'client_id', passwordField: 'client_secret' });

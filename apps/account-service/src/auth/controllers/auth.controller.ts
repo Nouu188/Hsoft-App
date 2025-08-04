@@ -1,8 +1,8 @@
 import { Controller, Post, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { Request } from 'express';
-import { AuthService } from './auth.service';
-import { ServiceClient } from './entities/service-client.entity';
-import { M2MAuthGuard } from './guards/m2m-auth.guard';
+import { M2MAuthGuard } from '../guards/m2m-auth.guard';
+import { AuthService } from '../auth.service';
+import { ServiceClient } from '../entities/service-client.entity';
 
 @Controller('auth')
 export class AuthController {

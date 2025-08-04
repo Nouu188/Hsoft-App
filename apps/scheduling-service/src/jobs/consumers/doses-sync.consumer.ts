@@ -1,7 +1,7 @@
 import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { SYNC_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
-import { TreatmentSyncService } from '../services/treatment-sync.service';
+import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
 
 interface SyncRequestPayload {
@@ -16,7 +16,7 @@ export class SyncConsumer {
     private readonly logger = new Logger(SyncConsumer.name);
 
     constructor(
-        private readonly treatmentSyncService: TreatmentSyncService,
+        private readonly dosesSyncService: DosesSyncService,
         private readonly userApiClient: AccountApiClientService,
     ) {}
 
@@ -39,7 +39,7 @@ export class SyncConsumer {
         }
         
         try {
-            await this.treatmentSyncService.syncUserTreatments(user, ngay);
+            await this.dosesSyncService.syncDoses(user, ngay);
         } catch (error) {
             this.logger.error(`Failed to process sync request for user_id ${identifier}`, error.stack);
             return new Nack(false);

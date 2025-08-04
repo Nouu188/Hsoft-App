@@ -11,10 +11,10 @@ import { M2MJwtGuard } from '@app/auth/guards/m2m-jwt.guard';
 export class UsersResolver {
   constructor(
     private readonly usersService: UsersService,
-  ) {}
+  ) { }
 
   @Query(() => User, { name: 'me' })
-  @UseGuards(JwtAuthGuard) 
+  @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: User): User {
     return user;
   }

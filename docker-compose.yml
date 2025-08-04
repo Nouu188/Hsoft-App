@@ -17,14 +17,14 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
 
   # Database cho Account-service
-  db-account:
+  db-accounts:
     image: postgres:17
     container_name: med-db-account
     restart: always
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: accounts_user
       POSTGRES_PASSWORD: 1
-      POSTGRES_DB: account_db
+      POSTGRES_DB: accounts_db
       TZ: Asia/Ho_Chi_Minh
     ports:
       - "5435:5432" 
@@ -56,7 +56,7 @@ services:
     container_name: med-db-auth
     restart: always
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: auth_user
       POSTGRES_PASSWORD: 1
       POSTGRES_DB: auth_db
     ports:

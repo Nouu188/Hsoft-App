@@ -21,8 +21,8 @@ interface YLenhThuoc {
 }
 
 @Injectable()
-export class TreatmentSyncService {
-    private readonly logger = new Logger(TreatmentSyncService.name);
+export class DosesSyncService {
+    private readonly logger = new Logger(DosesSyncService.name);
 
     constructor(
         @InjectRepository(Dose) private doseRepository: Repository<Dose>,
@@ -30,7 +30,7 @@ export class TreatmentSyncService {
         private readonly notificationClient: NotificationApiClientService,
     ) {}
 
-    public async syncUserTreatments(user: User, ngay: string): Promise<void> {
+    public async syncDoses(user: User, ngay: string): Promise<void> {
         const today = moment().tz('Asia/Ho_Chi_Minh');
         const todayString = today.format('DD/MM/YYYY');
 

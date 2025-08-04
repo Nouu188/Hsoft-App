@@ -9,7 +9,7 @@ import { AuthLibModule } from '@app/auth';
 @Module({
   providers: [UsersResolver, UsersService],
   imports: [
-    TypeOrmModule.forFeature([ User ]),
+    TypeOrmModule.forFeature([ User ], 'accountConnection'),
     HospitalApiClientModule,
     AuthLibModule
   ],
