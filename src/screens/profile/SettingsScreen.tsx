@@ -5,12 +5,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import SettingsHeader from '@/components/specific/profile/setting/SettingHeader';
 import SettingsMenuItem from '@/components/specific/profile/setting/SettingMenuItem';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
     <Text style={styles.sectionHeader}>{title}</Text>
 );
 
 const SettingsScreen: React.FC = () => {
+    const { logout } = useAuthStore();
+
+    const handleLogout = async () => {
+        try {
+        console.log('[AuthScreen] handleLogout triggered. Calling logout action...');
+        await logout();
+
+        console.log('[AuthScreen] Logout action completed successfully.');
+        } catch (e) {
+        console.error("[AuthScreen] Caught error from logout action.");
+        }
+    };
+
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             <SettingsHeader />
@@ -26,6 +40,7 @@ const SettingsScreen: React.FC = () => {
                     <SettingsMenuItem icon="document-text-outline" text="Essential settings" />
                     <SettingsMenuItem icon="cloud-upload-outline" text="Back up / Restore data" />
                     <SettingsMenuItem icon="refresh-outline" text="Restore subscription" />
+                    <SettingsMenuItem icon="log-out-outline" text="Log out" onPress={handleLogout}/>
                 </View>
             </ScrollView>
         </SafeAreaView>

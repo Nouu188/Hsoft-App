@@ -10,17 +10,15 @@ import DateSelector from '@/components/specific/schedule/DateSelector';
 
 const ScheduleScreen: React.FC = () => {
   const selectedDate = useScheduleStore(state => state.selectedDate);
-  const fetchDosesByDateRange = useScheduleStore(state => state.fetchDosesByDateRange);
+  const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
   const isLoading = useScheduleStore(state => state.isLoading);
   const user = useAuthStore(state => state.user);
 
   const onFetch = useCallback(() => {
     if (user) {
-      const startOfWeek = selectedDate.startOf('isoWeek' as any);
-      const endOfWeek = selectedDate.endOf('isoWeek' as any);
-      fetchDosesByDateRange(startOfWeek, endOfWeek);
+      fetchDosesBySelectedDate();
     }
-  }, [user, selectedDate, fetchDosesByDateRange]);
+  }, [user, selectedDate, fetchDosesBySelectedDate]);
 
   useEffect(() => {
     onFetch();

@@ -4,7 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import DoseCard from "./DoseCard";
 
 const DoseList: React.FC = () => {
-  const dosesInDateRange = useScheduleStore(state => state.dosesInDateRange);
+  const dosesForSelectedDay = useScheduleStore(state => state.dosesForSelectedDay);
   const isLoading = useScheduleStore(state => state.isLoading);
   const error = useScheduleStore(state => state.error);
 
@@ -14,13 +14,13 @@ const DoseList: React.FC = () => {
   if (error) {
     return <Text style={[styles.centeredMessage, styles.errorText]}>Lỗi: {error}</Text>;
   }
-  if (dosesInDateRange.length === 0) {
+  if (dosesForSelectedDay.length === 0) {
     return <Text style={[styles.centeredMessage, styles.emptyText]}>Không có lịch uống thuốc cho ngày này.</Text>;
   }
 
   return (
     <View style={styles.medCardContainer}>
-      {dosesInDateRange.map(dose => (
+      {dosesForSelectedDay.map(dose => (
         <DoseCard key={dose.id} dose={dose} />
       ))}
     </View>

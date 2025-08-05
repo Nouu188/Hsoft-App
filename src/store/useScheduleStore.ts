@@ -3,11 +3,13 @@ import { create } from 'zustand';
 import dayjs from 'dayjs';
 import { Dose } from '../types';
 import { useAuthStore } from './useAuthStore';
-import { GET_MY_DOSES } from '@/api/queries/doseQueries';
 import { UPDATE_DOSE_STATUS } from '@/api/mutations/doseMutations';
 
 import isBetween from 'dayjs/plugin/isBetween';
 import { schedulingClient } from '@/api/apoloClient';
+import { GET_DOSES_BY_DATE_RANGE, GET_DOSES_BY_SELECTED_DATE } from '@/api/queries/doseQueries';
+
+
 dayjs.extend(isBetween);
 
 interface ScheduleState {
@@ -18,6 +20,7 @@ interface ScheduleState {
   error: string | null;
   setSelectedDate: (date: dayjs.Dayjs) => void;
   fetchDosesByDateRange: (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs) => Promise<void>; 
+  fetchDosesBySelectedDate: () => Promise<void>;
   updateDoseStatus: (doseId: string, status: 'TAKEN' | 'SKIPPED') => Promise<void>;
 }
 
@@ -42,6 +45,47 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     });
   },
 
+  fetchDosesBySelectedDate: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) {
+      console.warn('[ScheduleStore] Action: fetchDosesByDateRange skipped. Reason: User not authenticated.');
+      set({ error: 'User not authenticated.', dosesInDateRange: [], dosesForSelectedDay: [] });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    console.log(`[ScheduleStore] Action: fetchDosesBySelectedDate called. Fetching in ${get().selectedDate.format('YYYY-MM-DD')}`);
+
+    console.log("alo", get().selectedDate.toISOString());
+    try {
+      const { data, loading, error } = await schedulingClient.query({
+        query: GET_DOSES_BY_SELECTED_DATE,
+        variables: { 
+          selectedDate: get().selectedDate.toISOString()
+        },
+        fetchPolicy: 'network-only',
+      });
+
+
+      if (error) {
+        // Ném lỗi để khối catch bên dưới có thể bắt được
+        throw error;
+      }
+
+      const fetchedDoses: Dose[] = data.dosesBySelectedDate || [];
+      console.log(`[ScheduleStore] API Success: Fetched ${fetchedDoses.length} doses.`);
+
+      set({ 
+        dosesForSelectedDay: fetchedDoses,
+        isLoading: false 
+      });
+
+    } catch (e: any) {
+      console.error('[ScheduleStore] API Failure: Failed to fetch doses.', e);
+      set({ error: e.message, isLoading: false, dosesInDateRange: [], dosesForSelectedDay: [] });
+    }
+  },
+
   fetchDosesByDateRange: async (startDate, endDate) => {
     const user = useAuthStore.getState().user;
     if (!user) {
@@ -55,7 +99,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
 
     try {
       const { data, loading, error } = await schedulingClient.query({
-        query: GET_MY_DOSES,
+        query: GET_DOSES_BY_DATE_RANGE,
         variables: { 
           startDate: startDate.toISOString(), 
           endDate: endDate.toISOString() 
@@ -67,19 +111,13 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
         // Ném lỗi để khối catch bên dưới có thể bắt được
         throw error;
       }
+      console.log(startDate.toISOString())
 
       const fetchedDoses: Dose[] = data.myDoses || [];
       console.log(`[ScheduleStore] API Success: Fetched ${fetchedDoses.length} doses.`);
 
-      const currentSelectedDate = get().selectedDate;
-      const dosesForCurrentDay = fetchedDoses.filter(dose => 
-        dayjs(dose.due_at).isSame(currentSelectedDate, 'day')
-      );
-      console.log(`[ScheduleStore] Derived State: Filtering for selected date ${currentSelectedDate.format('YYYY-MM-DD')}, found ${dosesForCurrentDay.length} doses.`);
-
       set({ 
         dosesInDateRange: fetchedDoses,
-        dosesForSelectedDay: dosesForCurrentDay,
         isLoading: false 
       });
 
