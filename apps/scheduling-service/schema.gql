@@ -46,7 +46,7 @@ type Mutation {
     mabn: String
 
     """Ngày bệnh nhân đi khám"""
-    ngay: String!
+    ngay: String
     socmnd: String
     sodienthoai: String
     user_id: String

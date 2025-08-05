@@ -20,17 +20,17 @@ export class AuthService {
         private jwtService: JwtService,
         @InjectRepository(ServiceClient, 'authConnection')
         private serviceClientRepository: Repository<ServiceClient>,
-    ) {}
+    ) { }
 
-    async login(loginInput: LoginInput): Promise<{user: User, accessToken: string}> {
+    async login(loginInput: LoginInput): Promise<{ user: User, accessToken: string }> {
         const { identifier, password } = loginInput;
 
         let user = await this.usersService.findByIdentifier(identifier);
         if (user) {
             const isPasswordMatching = await bcrypt.compare(password!, user.password);
-            if(isPasswordMatching) {
+            if (isPasswordMatching) {
                 this.logger.log(`User ${user.sodienthoai} logged in from internal DB.`);
-                
+
                 const accessToken = this.generateToken(user.id, user.roles);
                 return { accessToken, user };
             }
@@ -39,7 +39,7 @@ export class AuthService {
         }
 
         this.logger.log(`User with identifier "${identifier}" not found. Attempting to fetch from hospital API...`);
-        
+
         const hospitalPatient = await this.usersService.fetchPatientFromHospital(identifier);
         if (!hospitalPatient) {
             throw new UnauthorizedException('Patient information not found in hospital system.');
@@ -56,7 +56,7 @@ export class AuthService {
         const { password: _password, ...userResult } = user;
         const accessToken = this.generateToken(userResult.id, userResult.roles);
 
-        return { accessToken, user: userResult as User}
+        return { accessToken, user: userResult as User }
     }
 
     private generateToken(user_id: string, roles: Role[]): string {
@@ -75,12 +75,12 @@ export class AuthService {
         return { accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }) };
     }
 
-  async createServiceClient(input: CreateServiceClientInput): Promise<Partial<ServiceClient>> {
-    const newClient = this.serviceClientRepository.create(input);
-    // Mật khẩu sẽ được hash tự động bởi hook @BeforeInsert trong entity
-    await this.serviceClientRepository.save(newClient);
-    const { client_secret, ...res } = newClient;
+    async createServiceClient(input: CreateServiceClientInput): Promise<Partial<ServiceClient>> {
+        const newClient = this.serviceClientRepository.create(input);
+        // Mật khẩu sẽ được hash tự động bởi hook @BeforeInsert trong entity
+        await this.serviceClientRepository.save(newClient);
+        const { client_secret, ...res } = newClient;
 
-    return res;
-  }
+        return res;
+    }
 }

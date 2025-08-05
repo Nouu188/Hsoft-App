@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { AccountApiClientService } from "./account-api-client.service";
 import { HttpModule } from "@nestjs/axios";
 import { ConfigModule } from "@nestjs/config";
+import { AuthApiClientModule } from "../auth/auth-api-client.module";
 
 @Module({
     imports:[
@@ -12,7 +13,7 @@ import { ConfigModule } from "@nestjs/config";
             isGlobal: true,
             envFilePath: './libs/api-clients/.env.local',
         }),
-        
+        AuthApiClientModule
     ],
     providers: [AccountApiClientService,],
     exports: [AccountApiClientService],

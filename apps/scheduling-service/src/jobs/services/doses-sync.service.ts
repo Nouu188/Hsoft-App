@@ -27,7 +27,7 @@ export class DosesSyncService {
         try {
             ylenhthuoc = await this.hospitalClient.fetchYLenhThuoc(user, ngay);
         } catch (error) {
-            this.logger.error(`Failed to get treatment data for user ${user.id}. Error: ${error.message}`);
+            this.logger.error(`Failed to get y lenh thuoc for user ${user.id}. Error: ${error.message}`);
             throw error; 
         }
 

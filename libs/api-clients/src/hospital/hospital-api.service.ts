@@ -15,37 +15,37 @@ export class HospitalApiClientService {
     ) { }
 
     async fetchYLenhThuoc(user: User, ngay: string = ""): Promise<YLenhThuoc[]> {
-        if(!user.sodienthoai && !user.socmnd && !user.mabn) {
-            throw new Error('Either "mabn" or "sodienthoai" or "socmnd" must be provided.');
+        if (!user.sodienthoai && !user.socmnd) {
+            throw new Error('Either "sodienthoai" or "socmnd" must be provided.');
         }
 
         const apiUrl = this.configService.get<string>('HOSPITAL_API_URL');
 
         const query = `
-            query GetYLenhThuoc($mabn: String, $sodienthoai: String, $socmnd: String, $ngay: String) {
-                ylenhthuoc(mabn: $mabn, sodienthoai: $sodienthoai, socmnd: $socmnd, ngay: $ngay) {
-                    id, stt, ngay, sott, tenthuoc, thuchien, soluong, lieudung, thoidiem
+            query {
+                ylenhthuoc(
+                    mabn: "",
+                    sodienthoai: "${user.sodienthoai || ""}",
+                    socmnd: "${user.socmnd || ""}",
+                    ngay: "${ngay}",
+                    namsinh: "${user.namsinh || ""}"
+                ) {
+                    mabn, hoten, namsinh, socmnd, sodienthoai,
+                    id, stt, ngay, sott, tenthuoc, thuchien,
+                    songay, soluong, lieudung, thoidiem
                 }
             }
         `;
-        const variables = {
-            mabn: user.mabn || null,
-            sodienthoai: user.sodienthoai || null,
-            socmnd: user.socmnd || null,
-            ngay: ngay,
-            namsinh: user.namsinh,
-        };
-
-        this.logger.debug(`Fetching treatments for mabn: ${user.mabn} on date: ${ngay}`);
 
         try {
             const response = await firstValueFrom(
-                this.httpService.post(apiUrl!, { query, variables }, { timeout: 15000 })
+                this.httpService.post(apiUrl!, { query }, { timeout: 15000 })
             );
 
             if (response.data.errors) {
                 throw new Error(JSON.stringify(response.data.errors));
             }
+
             return response.data.data.ylenhthuoc || [];
         } catch (error) {
             this.logger.error(`Failed to fetch ylenhthuoc from hospital API for user ${user.id}`, error.stack);
@@ -72,6 +72,8 @@ export class HospitalApiClientService {
                     mabn: "${mabn}", 
                     sodienthoai: "${sodienthoai}", 
                     socmnd: "${socmnd}", 
+                    namsinh: "",
+                    ngay: "",
                 ) {
                     mabn,
                     sodienthoai,

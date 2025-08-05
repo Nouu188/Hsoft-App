@@ -19,8 +19,8 @@ export class M2MJwtStrategy extends PassportStrategy(Strategy, 'm2m-jwt') {
   async validate(payload: AuthPayload) {
     this.logger.debug(`[M2MJwtStrategy] Validating M2M payload:`, payload);
 
-    if (payload.sub) {
-        this.logger.error('[M2MJwtStrategy] Token has an "email" claim, this is a user token, not an M2M token.');
+    if (!payload.sub) {
+        this.logger.error('[M2MJwtStrategy] Token has an "sub" claim, this is a user token, not an M2M token.');
         throw new UnauthorizedException('Invalid token type for M2M authentication.');
     }
 
