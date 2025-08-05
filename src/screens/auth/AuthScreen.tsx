@@ -1,4 +1,3 @@
-// src/screens/AuthScreen.tsx
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,15 +39,12 @@ const AuthScreen: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      // === THÊM LOG DEBUG 4 ===
       console.log('[AuthScreen] handleLogin triggered. Calling login action...');
-      // ========================
+console.log(identifier, password)
       await login({ identifier, password });
-      // === THÊM LOG DEBUG 5 ===
+
       console.log('[AuthScreen] Login action completed successfully.');
-      // ========================
     } catch (e) {
-      // Lỗi đã được log trong store, ở đây có thể hiển thị Alert
       console.error("[AuthScreen] Caught error from login action.");
     }
   };

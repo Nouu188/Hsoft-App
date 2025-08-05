@@ -1,9 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GET_MY_DOSES = gql`
-  # Query này không cần userId nữa
-  query GetMyDoses($date: DateTime!) {
-    dosesInWeek(date: $date) {
+  query GetMyDoses($startDate: String!, $endDate: String!) {
+    dosesByDateRange(startDate: $startDate, endDate: $endDate) {
       id
       due_at
       status
@@ -12,4 +11,4 @@ export const GET_MY_DOSES = gql`
       usage_instructions
     }
   }
-`;
+`;  

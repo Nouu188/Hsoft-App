@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useEffect } from 'react';
-import { StatusBar, View, ActivityIndicator } from 'react-native';
+import { StatusBar, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { COLORS } from './src/constants/theme';
 
@@ -11,7 +11,7 @@ import { useAuthStore } from './src/store/useAuthStore';
 const App: React.FC = () => {
   // Lắng nghe các state cần thiết từ store
   const accessToken = useAuthStore(state => state.accessToken);
-  const isLoading = useAuthStore(state => state.isLoading); // Thêm state này vào store
+  const isLoadingAuth = useAuthStore(state => state.isLoading);
   const hydrateAuth = useAuthStore(state => state.hydrate);
 
   // Chạy một lần duy nhất khi app khởi động để load token từ bộ nhớ
@@ -20,9 +20,9 @@ const App: React.FC = () => {
   }, [hydrateAuth]);
 
   // Hiển thị màn hình loading trong khi đang kiểm tra token
-  if (isLoading) {
+  if (isLoadingAuth) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -36,5 +36,14 @@ const App: React.FC = () => {
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+});
 
 export default App;

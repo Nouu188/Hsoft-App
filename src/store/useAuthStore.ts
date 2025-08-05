@@ -1,31 +1,39 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { jwtDecode } from 'jwt-decode'; 
-import { LOGIN_MUTATION } from '@/api/mutations/authMutations';
-import { accountClient } from '../api/apoloClient';
+import { jwtDecode } from 'jwt-decode';
+import { LOGIN_MUTATION } from '../api/mutations/authMutations';
+import { accountClient } from '@/api/apoloClient';
+
+interface JwtPayload {
+  sub: string;
+  identifier: string;
+  roles: string[];
+  iat: number;
+  exp: number;
+}
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
-  isLoading: boolean;
+  isLoading: boolean; 
   error: string | null;
-  
   login: (credentials: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
-  hydrate: () => Promise<void>; 
+  hydrate: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: null,
-  isLoading: false,
+  isLoading: true,
   error: null,
 
   login: async (credentials) => {
+    console.log('[AuthStore][login] Starting login with credentials:', credentials);
+
     set({ isLoading: true, error: null });
     try {
-      console.log('[AuthStore] Attempting to login with credentials:', credentials);
-
+      console.log('[AuthStore][login] Sending login mutation to accountClient...');
       const { data } = await accountClient.mutate({
         mutation: LOGIN_MUTATION,
         variables: {
@@ -33,41 +41,76 @@ export const useAuthStore = create<AuthState>((set) => ({
           password: credentials.password,
         },
       });
-
-      console.log('[AuthStore] Login API call successful. Response data:', data);
+      console.log('[AuthStore][login] Login response:', data);
 
       const { accessToken, user } = data.login;
 
-      await AsyncStorage.setItem('accessToken', accessToken);
-      set({ accessToken, user, isLoading: false });
-    } catch (e: any) {
-      console.error('[AuthStore] Login failed in store. Error:', e);
+      console.log('[AuthStore][login] AccessToken:', accessToken, 'User:', user);
 
+      await AsyncStorage.setItem('accessToken', accessToken);
+
+      console.log('[AuthStore][login] AccessToken saved to AsyncStorage');
+
+      set({ accessToken, user, isLoading: false });
+
+      console.log('[AuthStore][login] Login successful, state updated');
+    } catch (e: any) {
+      console.error('[AuthStore][login] Login failed:', e.message, e);
       set({ error: e.message, isLoading: false });
       throw e;
     }
   },
 
   logout: async () => {
-    await AsyncStorage.removeItem('accessToken');
-    set({ user: null, accessToken: null });
+    console.log('[AuthStore][logout] Starting logout process...');
+    try {
+      await AsyncStorage.removeItem('accessToken');
+      console.log('[AuthStore][logout] AccessToken removed from AsyncStorage');
+
+      // Reset Apollo Client cache để xóa dữ liệu cũ
+      await accountClient.resetStore();
+      console.log('[AuthStore][logout] Apollo Client cache reset');
+
+      set({ user: null, accessToken: null });
+      console.log('[AuthStore][logout] State reset, logout complete');
+    } catch (e: any) {
+      console.error('[AuthStore][logout] Logout failed:', e.message, e);
+    }
   },
 
   hydrate: async () => {
+    console.log('[AuthStore][hydrate] Starting hydration process...');
     try {
       const token = await AsyncStorage.getItem('accessToken');
+      console.log('[AuthStore][hydrate] Retrieved token from AsyncStorage:', token);
       if (token) {
-        const decoded: { sub: string; identifier: string; roles: string[] } = jwtDecode(token);
-        // TODO: Có thể gọi query `me()` để lấy thông tin user đầy đủ hơn
-        const user: User = { id: decoded.sub, identifier: decoded.identifier, roles: decoded.roles };
-        set({ accessToken: token, user });
-      }    
-    } catch (e) {
-      // Token không hợp lệ hoặc có lỗi, đảm bảo logout
-      set({ user: null, accessToken: null });
+        const decoded: JwtPayload = jwtDecode(token);
+        console.log('[AuthStore][hydrate] Decoded JWT:', decoded);
+        
+        // KIỂM TRA THỜI GIAN HẾT HẠN
+        const currentTime = Date.now();
+        const tokenExpiry = decoded.exp * 1000;
+        console.log('[AuthStore][hydrate] Current time:', currentTime, 'Token expiry:', tokenExpiry);
+        
+        if (tokenExpiry < currentTime) {
+          console.log('[AuthStore][hydrate] Token expired. Triggering logout.');
+          useAuthStore.getState().logout();
+        } else {
+          console.log('[AuthStore][hydrate] Token is valid. Setting user state.');
+          const user: User = { id: decoded.sub, identifier: decoded.identifier, roles: decoded.roles };
+          
+          set({ accessToken: token, user });
+          console.log('[AuthStore][hydrate] User state updated:', user);
+        }
+      } else {
+        console.log('[AuthStore][hydrate] No token found in AsyncStorage.');
+      }
+    } catch (e: any) {
+      console.error('[AuthStore][hydrate] Hydration failed:', e.message, e);
+      useAuthStore.getState().logout();
+    } finally {
+      console.log('[AuthStore][hydrate] Hydration complete, setting isLoading to false');
+      set({ isLoading: false });
     }
   },
 }));
-
-// Tự động hydrate khi store được tạo lần đầu
-useAuthStore.getState().hydrate();
