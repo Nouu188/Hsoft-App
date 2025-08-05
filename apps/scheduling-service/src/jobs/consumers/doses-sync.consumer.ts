@@ -39,7 +39,7 @@ export class SyncConsumer {
         }
         
         try {
-            await this.dosesSyncService.syncDosesForUser(user, ngay);
+            await this.dosesSyncService.syncDosesInFuture(user, ngay);
         } catch (error) {
             this.logger.error(`Failed to process sync request for user_id ${identifier}`, error.stack);
             return new Nack(false);

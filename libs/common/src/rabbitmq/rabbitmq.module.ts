@@ -4,7 +4,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 export const NOTIFICATION_EXCHANGE = 'notification.exchange';
 export const SYNC_EXCHANGE = 'sync.exchange';
-export const BATCH_SYNC_EXCHANGE = 'batch.sync.exchange'
+export const BATCH_SYNC_EXCHANGE = 'batch.sync.exchange';
+export const USER_EVENTS_EXCHANGE = 'user.first_login';
 
 @Global()
 @Module({
@@ -41,6 +42,10 @@ export const BATCH_SYNC_EXCHANGE = 'batch.sync.exchange'
                 durable: true,
                 arguments: { 'x-delayed-type': 'direct' },
               }
+            },
+            {
+              name: USER_EVENTS_EXCHANGE,
+              type: 'direct',
             }
           ],
           uri,

@@ -5,6 +5,7 @@ import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api
 import { User } from './entities/user.entity';
 import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
+import { isUUID } from 'class-validator';
 
 @Injectable()
 export class UsersService {
@@ -55,6 +56,10 @@ export class UsersService {
   }
 
   async findByIdentifier(identifier: string): Promise<User | undefined> {
+    if (isUUID(identifier)) {
+      return await this.usersRepository.findOne({ where: { id: identifier } }) ?? undefined;
+    }
+
     return await this.usersRepository.findOne({
       where: [
         { mabn: identifier },

@@ -10,6 +10,8 @@ import { LoginInput } from './dto/login.input';
 import { AuthPayload } from '../../../../libs/auth/src/dtos/auth.payload';
 import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { CreateServiceClientInput } from './dto/create-service-client.input';
+import { USER_EVENTS_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +20,7 @@ export class AuthService {
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
+        private readonly amqpConnection: AmqpConnection,
         @InjectRepository(ServiceClient, 'authConnection')
         private serviceClientRepository: Repository<ServiceClient>,
     ) { }
@@ -52,6 +55,13 @@ export class AuthService {
 
         this.logger.log(`First-time login successful for mabn ${hospitalPatient.mabn}. Creating local user...`);
         user = await this.usersService.createUser(hospitalPatient);
+
+        this.logger.log(`Publishing 'user.first_login' event for user ${user.id}`);
+        this.amqpConnection.publish(
+            USER_EVENTS_EXCHANGE,
+            'user.first_login',
+            { user_id: user.id }, 
+        );  
 
         const { password: _password, ...userResult } = user;
         const accessToken = this.generateToken(userResult.id, userResult.roles);

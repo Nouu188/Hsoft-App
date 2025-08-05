@@ -83,8 +83,6 @@ export class AccountApiClientService {
                     id
                     mabn
                     sodienthoai
-                    fcm_tokens
-                    apn_tokens
                 }
             }
       `;

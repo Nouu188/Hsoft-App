@@ -33,7 +33,7 @@ export class BatchSyncConsumer {
                 // Lấy thông tin user đầy đủ từ Account Service
                 const user = await this.accountApiClient.fetchUserByIdentifier(userId);
                 if (user) {
-                    await this.dosesSyncService.syncDosesForUser(user);
+                    await this.dosesSyncService.syncDosesInFuture(user);
                 }
             } catch (error) {
                 this.logger.error(`Failed to sync user ${userId} within batch.`, error.stack);

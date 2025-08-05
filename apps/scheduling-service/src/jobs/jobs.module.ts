@@ -8,6 +8,7 @@ import { SyncConsumer } from './consumers/doses-sync.consumer';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { BatchCreationConsumer } from './consumers/batch-doses-creation.consumer';
 import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
+import { UserEventsConsumer } from './consumers/user-events.consumer';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
     DosesSyncService,
     SyncConsumer,
     BatchCreationConsumer,
+    UserEventsConsumer,
     BatchSyncConsumer
   ],
 })

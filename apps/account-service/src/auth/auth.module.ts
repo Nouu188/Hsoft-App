@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
 import { AuthController } from './controllers/auth.controller';
 import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ClientCredentialsStrategy } from './strategies/client-credentials.strat
         signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN', '1d') },
       }),
     }),
+    AppRabbitMQModule
   ],
   controllers: [AuthController],
   providers: [

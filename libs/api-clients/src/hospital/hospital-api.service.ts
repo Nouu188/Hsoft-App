@@ -56,20 +56,18 @@ export class HospitalApiClientService {
     async fetchPatientFromHospital(identifier: string): Promise<HospitalPatient | null> {
         const apiUrl = this.configService.get<string>('HOSPITAL_API_URL');
 
-        let mabn = '', sodienthoai = '', socmnd = '';
+        let sodienthoai = '', socmnd = '';
 
         if (/^0\d{9,10}$/.test(identifier)) {
             sodienthoai = identifier;
         } else if (/^\d{12}$/.test(identifier)) {
             socmnd = identifier;
-        } else if (/^\d{6,8}$/.test(identifier)) {
-            mabn = identifier;
-        }
+        } 
 
         const query = `
             query {
                 ylenhthuoc(
-                    mabn: "${mabn}", 
+                    mabn: "", 
                     sodienthoai: "${sodienthoai}", 
                     socmnd: "${socmnd}", 
                     namsinh: "",

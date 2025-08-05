@@ -19,7 +19,7 @@ export class DosesSyncService {
     ) {}
 
     // Trường "ngay" là ngày đi khám của bệnh nhân, cũng như ngày bắt đầu uống thuốc 
-    public async syncDosesForUser(user: User, ngay: string = ""): Promise<void> {
+    public async syncDosesInFuture(user: User, ngay: string = ""): Promise<void> {
         const today = moment().tz('Asia/Ho_Chi_Minh');
         const todayString = today.format('DD/MM/YYYY');
 
@@ -34,7 +34,7 @@ export class DosesSyncService {
         if (ylenhthuoc.length === 0) {
             this.logger.log(`No treatments found for user ${user.id} on ${todayString}.`);
             return;
-        }
+        }  
 
         const newDosesMap = new Map<string, Partial<Dose>>();
 
@@ -95,7 +95,6 @@ export class DosesSyncService {
             const savedDoses = await this.doseRepository.save(dosesToCreate);
             this.logger.log(`Created ${savedDoses.length} new doses for user ${user.id}.`);
             
-            // Chỉ lên lịch thông báo cho các liều MỚI được tạo
             await this.notificationClient.scheduleNotifications(savedDoses.map(dose => ({
                 id: dose.id,
                 user_id: dose.user_id,
@@ -112,5 +111,81 @@ export class DosesSyncService {
         if (dosesToCreate.length === 0 && dosesToDelete.length === 0) {
             this.logger.log(`No changes in schedule for user ${user.id}. Sync complete.`);
         }
+    }
+
+    public async syncAllDoses(user: User): Promise<void> {
+        this.logger.log(`Starting full history sync for user ${user.id}...`);
+        let allYlenhthuoc: YLenhThuoc[];
+        try {
+            allYlenhthuoc = await this.hospitalClient.fetchYLenhThuoc(user);
+        } catch (error) {
+            this.logger.error(`Failed to fetch ALL treatment data for user ${user.id}.`, error);
+            throw error; 
+        }
+
+        if (allYlenhthuoc.length === 0) {
+            this.logger.log(`No doses found in from the hospital for user ${user.id}`);
+            return;
+        }  
+        
+        const allDosesToCreate = new Map<string, Partial<Dose>>();
+
+        for (const ylenh of allYlenhthuoc) {
+            if (!ylenh.tenthuoc || !ylenh.thoidiem || !ylenh.songay) continue;
+
+            const startDate = moment.tz(ylenh.ngay, 'DD/MM/YYYY', 'Asia/Ho_Chi_Minh');
+            const numberOfDays = parseInt(ylenh.songay, 10);
+            if (isNaN(numberOfDays) || numberOfDays <= 0) continue;
+
+            for (let i = 0; i < numberOfDays; i++) {
+                const currentDate = startDate.clone().add(i, 'days');
+                const dueAt = moment.tz(`${currentDate.format('DD/MM/YYYY')} ${ylenh.thoidiem}`, 'DD/MM/YYYY HH:mm', 'Asia/Ho_Chi_Minh');
+                
+                // Không lọc theo isAfter(moment()) nữa vì chúng ta cần cả lịch sử
+                const externalId = `${ylenh.id}-${ylenh.stt}-${dueAt.format('YYYYMMDDHHmm')}`;
+                
+                // Dùng Map để tự động loại bỏ các liều trùng lặp nếu API trả về lỗi
+                if (!allDosesToCreate.has(externalId)) {
+                    allDosesToCreate.set(externalId, {
+                        external_id: externalId,
+                        user_id: user.id,
+                        due_at: dueAt.toDate(),
+                        notify_at: dueAt.clone().subtract(15, 'minutes').toDate(),
+                        status: dueAt.isBefore(moment()) ? DoseStatus.SKIPPED : DoseStatus.PENDING,
+                        ylenh_id: ylenh.id,
+                        ylenh_stt: ylenh.stt,
+                        medication_name: ylenh.tenthuoc,
+                        dosage_instructions: ylenh.lieudung,
+                        usage_instructions: ylenh.thuchien,
+                    });
+                }
+            }
+        }
+
+        if (allDosesToCreate.size === 0) {
+            this.logger.log(`No doses to create after processing history for user ${user.id}.`);
+            return;
+        }
+
+        // Xóa toàn bộ dữ liệu cũ của user để đảm bảo đồng bộ sạch
+        await this.doseRepository.delete({ user_id: user.id });
+        this.logger.log(`Cleared all previous doses for user ${user.id} before full sync.`);
+
+        const dosesToSaveInChunks = Array.from(allDosesToCreate.values());
+        // Lưu theo từng chunk nhỏ để tránh quá tải DB
+        for (let i = 0; i < dosesToSaveInChunks.length; i += 100) {
+            const chunk = dosesToSaveInChunks.slice(i, i + 100);
+            await this.doseRepository.save(chunk);
+        }
+        
+        this.logger.log(`Created ${dosesToSaveInChunks.length} total doses for user ${user.id}.`);
+
+        // Lên lịch thông báo chỉ cho các liều PENDING
+        const futureDoses = dosesToSaveInChunks.filter(d => d.status === DoseStatus.PENDING);
+        await this.notificationClient.scheduleNotifications(futureDoses.map(dose => ({
+            id: dose.id!, 
+            user_id: dose.user_id!,
+            notify_at: dose.notify_at!,
+        })));
     }
 }

@@ -2,7 +2,7 @@ import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../../../../libs/auth/src/decorators/current-user.decorator';
-import { UseGuards } from '@nestjs/common';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '@app/auth/guards/jwt-auth.guard';
 import { M2MJwtGuard } from '@app/auth/guards/m2m-jwt.guard';
 
@@ -25,12 +25,18 @@ export class UsersResolver {
     return this.usersService.findAllUser()
   }
 
-  @Query(() => User, { name: 'findByIdentifier' })
+  @Query(() => User, { name: 'findByIdentifier', nullable: true })
   @UseGuards(M2MJwtGuard)
-  findByIdentifier(
+  async findByIdentifier(
     @Args('identifier', { type: () => String }) identifier: string,
   ): Promise<User | undefined> {
-    return this.usersService.findByIdentifier(identifier)
+    const user = await this.usersService.findByIdentifier(identifier);
+
+    if (!user) {
+      throw new NotFoundException(`User not found for identifier: ${identifier}`);
+    }
+
+    return user;
   }
 
   @Mutation(() => Boolean)
