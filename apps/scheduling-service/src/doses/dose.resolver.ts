@@ -30,8 +30,15 @@ export class DosesResolver {
     @Args('startDate', { type: () => String }) startDateString: string,
     @Args('endDate', { type: () => String }) endDateString: string,
   ) {
+    const logger = new Logger('DosesResolver');
+
+    logger.log(`Called getDosesByDateRange for user: ${user.id}`);
+    logger.log(`Start: ${startDateString} | End: ${endDateString}`);
+
     const startDate = new Date(startDateString);
     const endDate = new Date(endDateString);
+
+    logger.log(`Parsed date range: ${startDate.toISOString()} → ${endDate.toISOString()}`);
 
     return this.dosesService.findDosesByDateRange(user.id, startDate, endDate);
   }
@@ -42,13 +49,19 @@ export class DosesResolver {
     @CurrentUser() user: User,
     @Args('selectedDate', { type: () => String }) selectedDateString: string,
   ) {
+    const logger = new Logger('DosesResolver');
+
+    logger.log(`Called getDosesBySelectedDate for user: ${user.id}`);
+    logger.log(`Input date string: ${selectedDateString}`);
+
     const date = new Date(selectedDateString);
-  
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
+
+    logger.log(`Fetching doses from ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
 
     return this.dosesService.findDosesByDateRange(user.id, startOfDay, endOfDay);
   }
@@ -58,7 +71,7 @@ export class DosesResolver {
     description: 'Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân'
   })
   async syncDosesFromHospital(
-    @Args('ngay',  { description: "Ngày bệnh nhân đi khám", nullable: true }) ngay?: string,
+    @Args('ngay', { description: "Ngày bệnh nhân đi khám", nullable: true }) ngay?: string,
     @Args('mabn', { nullable: true }) mabn?: string,
     @Args('sodienthoai', { nullable: true }) sodienthoai?: string,
     @Args('socmnd', { nullable: true }) socmnd?: string,
