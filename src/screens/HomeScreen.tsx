@@ -1,50 +1,9 @@
-// src/screens/HomeScreen.js
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import Svg, { Circle, G, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { COLORS, SIZES } from '../constants/theme';
-
-const HeartProgress = ({ percentage = 60 }) => {
-    const radius = 60;
-    const strokeWidth = 10;
-    const circumference = 2 * Math.PI * radius;
-    const progress = circumference - (percentage / 100) * circumference;
-
-    return (
-        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <Svg width={radius * 2 + strokeWidth} height={radius * 2 + strokeWidth}>
-                <G rotation="-90" origin={`${radius + strokeWidth / 2}, ${radius + strokeWidth / 2}`}>
-                    <Circle
-                        cx={radius + strokeWidth / 2}
-                        cy={radius + strokeWidth / 2}
-                        r={radius}
-                        stroke={COLORS.lightGray}
-                        fill="transparent"
-                        strokeWidth={strokeWidth}
-                    />
-                    <Circle
-                        cx={radius + strokeWidth / 2}
-                        cy={radius + strokeWidth / 2}
-                        r={radius}
-                        stroke={COLORS.primary}
-                        fill="transparent"
-                        strokeWidth={strokeWidth}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={progress}
-                        strokeLinecap="round"
-                    />
-                </G>
-            </Svg>
-            <View style={styles.heartCenter}>
-                <Ionicons name="heart" size={30} color={COLORS.danger} />
-                <Text style={styles.heartPercentage}>{percentage}%</Text>
-            </View>
-        </View>
-    );
-};
-
+import HeartProgress from '@/components/specific/home/HeartProgress';
 
 const HomeScreen = () => {
   return (
@@ -125,7 +84,6 @@ const HomeScreen = () => {
   );
 };
 
-// Styles (dài, nên đặt ở cuối file)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SIZES.padding },
@@ -143,8 +101,6 @@ const styles = StyleSheet.create({
   listButtonText: { color: COLORS.primary, fontWeight: '600' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.textDark, padding: SIZES.padding },
   addButton: { backgroundColor: COLORS.lightGray, padding: 5, borderRadius: 20 },
-  heartCenter: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  heartPercentage: { fontSize: 22, fontWeight: 'bold', color: COLORS.textDark, marginTop: 5 },
 });
 
 export default HomeScreen;
