@@ -56,4 +56,5 @@ type Mutation {
 type Query {
   dosesByDateRange(endDate: String!, startDate: String!): [Dose!]!
   dosesByIds(dose_ids: [ID!]!): [Dose!]!
+  dosesBySelectedDate(selectedDate: String!): [Dose!]!
 }

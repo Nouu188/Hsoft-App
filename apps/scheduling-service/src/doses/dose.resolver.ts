@@ -36,6 +36,23 @@ export class DosesResolver {
     return this.dosesService.findDosesByDateRange(user.id, startDate, endDate);
   }
 
+  @Query(() => [Dose], { name: 'dosesBySelectedDate' })
+  @UseGuards(JwtAuthGuard)
+  getDosesBySelectedDate(
+    @CurrentUser() user: User,
+    @Args('selectedDate', { type: () => String }) selectedDateString: string,
+  ) {
+    const date = new Date(selectedDateString);
+  
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return this.dosesService.findDosesByDateRange(user.id, startOfDay, endOfDay);
+  }
+
   @Mutation(() => Boolean, {
     name: 'syncDosesFromHospital',
     description: 'Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân'
