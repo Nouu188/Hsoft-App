@@ -1,4 +1,3 @@
-// src/types.ts
 export interface Dose {
   id: string;
   due_at: string; // ISO Date String

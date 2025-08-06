@@ -36,8 +36,8 @@ const DateSelector: React.FC = () => {
 
 const styles = StyleSheet.create({
   dateSelectorContainer: { paddingHorizontal: SIZES.padding, paddingBottom: SIZES.padding },
-  dateButton: { backgroundColor: COLORS.white, borderRadius: 25, paddingBottom: 9, paddingTop: 4, paddingHorizontal: 6, marginRight: 10, alignItems: 'center', justifyContent: 'space-between', minWidth: 54, borderWidth: 1, borderColor: '#E2E8F0' },
-  dateButtonActive: { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary, borderRadius: 100, paddingHorizontal: 14, paddingVertical: 6, alignItems: 'center'  },
+  dateButton: { backgroundColor: COLORS.white, borderRadius: 25, paddingBottom: 10, paddingTop: 4, paddingHorizontal: 6, marginRight: 10, alignItems: 'center', justifyContent: 'space-between', minWidth: 54, borderWidth: 1, borderColor: '#E2E8F0' },
+  dateButtonActive: { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary, borderRadius: 100, paddingHorizontal: 10, paddingVertical: 6, minWidth: 38, alignItems: 'center'  },
   dot: { position: 'absolute', top: -2, width: 6, height: 6, borderRadius: 2.5, backgroundColor: COLORS.primary },
   dateNumber: { fontSize: 16, fontWeight: 'bold', color: COLORS.textDark, marginBottom: 4 },
   dateDay: { fontSize: 12, color: COLORS.textLight },

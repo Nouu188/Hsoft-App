@@ -1,74 +1,116 @@
-import { COLORS, SIZES } from "@/constants/theme";
-import { useScheduleStore } from "@/store/useScheduleStore";
-import { Dose } from "@/types";
+import { COLORS } from "@/constants/theme";
+import { Dose } from "@/types/dtos/dose/dose.dto";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import dayjs from "dayjs";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, StyleProp, ViewStyle } from "react-native";
 
-const DoseCard: React.FC<{ dose: Dose }> = ({ dose }) => {
-  const updateDoseStatus = useScheduleStore(state => state.updateDoseStatus);
-  const isTaken = dose.status === 'TAKEN';
-  const isSkipped = dose.status === 'SKIPPED';
-  const isPending = dose.status === 'PENDING';
-  const isPastDue = dayjs().isAfter(dayjs(dose.due_at));
+const SIZES = {
+  padding: 20,
+  radius: 12,
+};
 
-  const handleUpdateStatus = (newStatus: 'TAKEN' | 'SKIPPED') => {
-    // Chỉ cho phép cập nhật nếu trạng thái hiện tại khác
-    if (dose.status !== newStatus) {
-      updateDoseStatus(dose.id, newStatus);
-    }
-  };
+// Thêm prop `style` để nhận kích thước từ component cha
+interface DoseCardProps {
+  dose: Dose;
+  style?: StyleProp<ViewStyle>;
+}
 
+const DoseCard: React.FC<DoseCardProps> = ({ dose, style }) => {
   return (
-    <View style={[styles.medCard, (isTaken || isSkipped) && styles.medCardCompleted]}>
-      <View style={styles.medCardHeader}>
-        <Text style={styles.medTitle}>{dose.medication_name}</Text>
-        <View style={styles.timeContainer}>
-          <Ionicons name="alarm-outline" size={16} color={COLORS.textLight} />
-          <Text style={styles.timeText}>{dayjs(dose.due_at).format('h:mm A')}</Text>
+    // Sử dụng TouchableOpacity để toàn bộ card có thể được nhấn vào
+    <TouchableOpacity style={[styles.card, style]}>
+      {/* Phần trên: Icon và Tên thuốc */}
+      <View style={styles.topSection}>
+        <View style={styles.iconContainer}>
+          {/* Icon hoa thị như trong ảnh */}
+          <Ionicons name="sparkles-outline" size={18} color={COLORS.textDark} />
+        </View>
+        <View style={styles.medInfo}>
+          <Text style={styles.medTitle} numberOfLines={1}>{dose.medication_name}</Text>
+          <Text style={styles.medSubtitle} numberOfLines={2}>{dose.usage_instructions}</Text>
         </View>
       </View>
-      <Text style={styles.medSubtitle}>{dose.dosage_instructions}</Text>
-      {dose.usage_instructions && <Text style={styles.medUsage}>{dose.usage_instructions}</Text>}
-      
-      <View style={styles.medCardActions}>
-        <TouchableOpacity 
-          style={[styles.actionChip, isSkipped && styles.actionChipSkipped]}
-          onPress={() => handleUpdateStatus('SKIPPED')}
-        >
-          <Ionicons name="close-outline" size={20} color={isSkipped ? COLORS.white : COLORS.danger} />
-          <Text style={[styles.actionChipText, isSkipped && styles.actionChipTextActive]}>Bỏ qua</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionChip, isTaken && styles.actionChipTaken]}
-          onPress={() => handleUpdateStatus('TAKEN')}
-        >
-          <Ionicons name="checkmark-outline" size={20} color={isTaken ? COLORS.white : COLORS.success} />
-          <Text style={[styles.actionChipText, isTaken && styles.actionChipTextActive]}>Đã uống</Text>
-        </TouchableOpacity>
+
+      {/* Phần dưới: Thời gian và Nút chi tiết */}
+      <View style={styles.bottomSection}>
+        <View style={styles.timeContainer}>
+          <Ionicons name="volume-medium-outline" size={18} color={COLORS.textDark} />
+          <Text style={styles.timeText}>{dayjs(dose.due_at).format('h:mm a')}</Text>
+        </View>
+
+        <View style={styles.detailsButton}>
+          <Ionicons name="arrow-forward-outline" size={20} color={COLORS.textDark} />
+        </View>
       </View>
-      {isPending && isPastDue && <View style={styles.missedIndicator} />}
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  medCardContainer: { paddingHorizontal: SIZES.padding },
-  medCard: { backgroundColor: COLORS.white, borderRadius: SIZES.radius * 1.5, padding: SIZES.padding, marginBottom: SIZES.padding, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, borderWidth: 1, borderColor: '#E2E8F0' },
-  medCardCompleted: { backgroundColor: '#F8F9FA', opacity: 0.8 },
-  medCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.padding / 2 },
-  medTitle: { fontSize: 18, fontWeight: '600', color: COLORS.textDark, flex: 1 },
-  timeContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: SIZES.radius },
-  timeText: { marginLeft: 5, color: COLORS.textDark, fontWeight: '500' },
-  medSubtitle: { fontSize: 14, color: COLORS.textLight, marginTop: 4 },
-  medUsage: { fontSize: 14, color: COLORS.textDark, marginTop: 8, fontStyle: 'italic' },
-  medCardActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: SIZES.padding, gap: 10 },
-  actionChip: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1 },
-  actionChipText: { marginLeft: 6, fontWeight: '600' },
-  actionChipTaken: { backgroundColor: COLORS.success, borderColor: COLORS.success },
-  actionChipSkipped: { backgroundColor: COLORS.danger, borderColor: COLORS.danger },
-  actionChipTextActive: { color: COLORS.white },
-  missedIndicator: { position: 'absolute', top: 10, left: 10, width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.warning },
+  card: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: SIZES.radius * 2, 
+    padding: SIZES.padding * 0.7, 
+    justifyContent: 'space-between',
+    height: 180,
+    width: 180,
+  },
+  topSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SIZES.padding * 1.5,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 24,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SIZES.padding / 2,
+  },
+  medInfo: {
+    flex: 1,
+  },
+  medTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textDark,
+  },
+  medSubtitle: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    marginTop: 4,
+  },
+  bottomSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 30, // Bo góc lớn để có hình viên thuốc
+  },
+  timeText: {
+    marginLeft: 8,
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textDark,
+    textTransform: 'lowercase',
+  },
+  detailsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default DoseCard;
