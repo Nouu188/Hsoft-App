@@ -8,7 +8,7 @@ const { width, height } = Dimensions.get('window');
 export const COLORS = {
   // Màu chủ đạo
   primary: '#5A8D9E', // Màu xanh xám chính, dùng cho các nút active, icon, điểm nhấn
-  primaryLight: '#EBF2F5', // Một phiên bản rất nhạt của màu primary, dùng cho nền card
+  primaryLight: '#E5F3F9', // Một phiên bản rất nhạt của màu primary, dùng cho nền card
   
   // Màu phụ trợ
   secondary: '#475569', // Màu xám đậm cho các yếu tố phụ

@@ -19,12 +19,14 @@ const DateSelector: React.FC = () => {
         return (
           <TouchableOpacity
             key={index} 
-            style={[styles.dateButton, isActive && styles.dateButtonActive]}
+            style={[styles.dateButton]}
             onPress={() => setSelectedDate(date)}
           >
-            {isActive && <View style={styles.dot} />}
-            <Text style={[styles.dateNumber, isActive && styles.dateTextActive]}>{date.format('D')}</Text>
-            <Text style={[styles.dateDay, isActive && styles.dateTextActive]}>{date.format('ddd')}</Text>
+            <View style={[isActive ? styles.dateButtonActive : { marginTop: 6 }]}>
+              {isActive && <View style={styles.dot} />}
+              <Text style={[styles.dateNumber]}>{date.format('D')}</Text>
+            </View>
+            <Text style={[styles.dateDay]}>{date.format('ddd')}</Text>
           </TouchableOpacity>
         );
       })}
@@ -34,12 +36,11 @@ const DateSelector: React.FC = () => {
 
 const styles = StyleSheet.create({
   dateSelectorContainer: { paddingHorizontal: SIZES.padding, paddingBottom: SIZES.padding },
-  dateButton: { backgroundColor: COLORS.white, borderRadius: 25, paddingVertical: 12, paddingHorizontal: 18, marginRight: 10, alignItems: 'center', minWidth: 60, borderWidth: 1, borderColor: '#E2E8F0' },
-  dateButtonActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  dot: { position: 'absolute', top: 8, width: 5, height: 5, borderRadius: 2.5, backgroundColor: COLORS.white },
-  dateNumber: { fontSize: 18, fontWeight: 'bold', color: COLORS.textDark, marginBottom: 4 },
-  dateDay: { fontSize: 14, color: COLORS.textLight },
-  dateTextActive: { color: COLORS.white },
+  dateButton: { backgroundColor: COLORS.white, borderRadius: 25, paddingBottom: 9, paddingTop: 4, paddingHorizontal: 6, marginRight: 10, alignItems: 'center', justifyContent: 'space-between', minWidth: 54, borderWidth: 1, borderColor: '#E2E8F0' },
+  dateButtonActive: { backgroundColor: COLORS.primaryLight, borderColor: COLORS.primary, borderRadius: 100, paddingHorizontal: 14, paddingVertical: 6, alignItems: 'center'  },
+  dot: { position: 'absolute', top: -2, width: 6, height: 6, borderRadius: 2.5, backgroundColor: COLORS.primary },
+  dateNumber: { fontSize: 16, fontWeight: 'bold', color: COLORS.textDark, marginBottom: 4 },
+  dateDay: { fontSize: 12, color: COLORS.textLight },
 });
 
 export default DateSelector;
