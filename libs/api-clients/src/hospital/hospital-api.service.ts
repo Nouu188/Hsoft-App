@@ -75,6 +75,7 @@ export class HospitalApiClientService {
                 ) {
                     mabn,
                     sodienthoai,
+                    hoten,
                     socmnd,
                     namsinh
                 }
