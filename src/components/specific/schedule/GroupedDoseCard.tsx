@@ -1,10 +1,11 @@
-// src/components/GroupedDoseCard.tsx
+// src/components/GroupedDoseCard.tsx (Đã cập nhật)
 
 import { COLORS, SIZES } from "@/constants/theme";
 import dayjs from "dayjs";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { GroupedDose } from "@/types/dtos/dose/grouped-dose.dto";
+import { Shadow } from 'react-native-shadow-2';
 
 interface GroupedDoseCardProps {
   group: GroupedDose;
@@ -12,49 +13,55 @@ interface GroupedDoseCardProps {
 
 const GroupedDoseCard: React.FC<GroupedDoseCardProps> = ({ group }) => {
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="alarm-outline" size={21} color={COLORS.primary} />
-            <Text style={styles.timeText}>{dayjs(group.time).format("h:mm A")}</Text>
-        </View>
-        <TouchableOpacity>
-            <Text style={styles.underlinedText}>Chi tiết</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.divider} />
-      <View style={styles.doseList}>
-        {group.doses.map((dose) => (
-          <View key={dose.id} style={styles.doseItem}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="sparkles-outline" size={18} color={COLORS.textDark} />
-            </View>
-            <View style={styles.doseInfo}>
-              <Text style={styles.medicationName}>{dose.medication_name}</Text>
-              <Text style={styles.instructions}>{dose.usage_instructions}</Text>
-            </View>
+    <Shadow
+      distance={3} 
+      startColor={'rgba(0, 50, 100, 0.08)'} 
+      endColor={'rgba(0, 0, 0, 0.01)'} 
+      offset={[4, 2]} 
+      style={styles.shadowContainer}
+    >
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="alarm-outline" size={21} color={COLORS.primary} />
+              <Text style={styles.timeText}>{dayjs(group.time).format("h:mm A")}</Text>
           </View>
-        ))}
+          <TouchableOpacity>
+              <Text style={styles.underlinedText}>Chi tiết</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.doseList}>
+          {group.doses.map((dose) => (
+            <View key={dose.id} style={styles.doseItem}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="sparkles-outline" size={18} color={COLORS.textDark} />
+              </View>
+              <View style={styles.doseInfo}>
+                <Text style={styles.medicationName}>{dose.medication_name}</Text>
+                <Text style={styles.instructions}>{dose.usage_instructions}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
       </View>
-    </View>
+    </Shadow>
   );
 };
 
 const styles = StyleSheet.create({
+  shadowContainer: {
+    width: '100%', 
+    borderRadius: SIZES.radius * 1.5,
+    marginBottom: SIZES.padding * 0.6,
+  },
   card: {
     backgroundColor: COLORS.primaryLight,
-    borderRadius: SIZES.radius * 1.5,
-    paddingHorizontal: SIZES.padding*0.8,
-    paddingTop: SIZES.padding*0.6,
-    paddingBottom: SIZES.padding*0.2,
-    marginBottom: SIZES.padding*0.6,
-    // Shadow cho iOS
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.01,
-    shadowRadius: 4,
-    // Shadow cho Android
-    elevation: 3,
+    borderRadius: SIZES.radius * 1.5, 
+    paddingHorizontal: SIZES.padding * 0.8,
+    paddingTop: SIZES.padding * 0.6,
+    paddingBottom: SIZES.padding * 0.2,
+    marginHorizontal: 1,
   },
   header: {
     flexDirection: "row",

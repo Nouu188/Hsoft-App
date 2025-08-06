@@ -1,7 +1,5 @@
-// src/screens/HomeScreen.tsx (Đã cấu trúc lại)
-
 import React, { useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, useWindowDimensions, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
@@ -11,37 +9,55 @@ import DoseList from '@/components/specific/schedule/DoseList';
 import DateSelector from '@/components/specific/schedule/DateSelector';
 import dayjs from 'dayjs';
 
+import Animated, { 
+  useSharedValue, 
+  useAnimatedScrollHandler, 
+  useAnimatedStyle,
+  interpolate,
+} from 'react-native-reanimated';
+
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
 const HomeScreen: React.FC = () => {
   const selectedDate = useScheduleStore(state => state.selectedDate);
   const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
   const isLoading = useScheduleStore(state => state.isLoading);
-  const error = useScheduleStore(state => state.error);
   const user = useAuthStore(state => state.user);
 
-  const onFetch = useCallback(() => {
-    if (user) {
-      fetchDosesBySelectedDate();
-    }
-  }, [user, fetchDosesBySelectedDate, selectedDate]); // Bỏ selectedDate vì fetchDosesBySelectedDate đã lấy từ store
+  const { height: screenHeight } = useWindowDimensions();
+  const INITIAL_BG_HEIGHT = screenHeight * 0.4; 
+  const MIN_BG_HEIGHT = 80; 
+  const SCROLL_DISTANCE_TO_SHRINK = INITIAL_BG_HEIGHT - MIN_BG_HEIGHT;
 
-  useEffect(() => {
-    onFetch();
-  }, [onFetch]);
+  const scrollY = useSharedValue(0);
 
-  const onRefresh = useCallback(() => {
-    onFetch();
-  }, [onFetch]);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
-  // 1. Định nghĩa các phần của màn hình dưới dạng một mảng dữ liệu
+  const animatedBackgroundStyle = useAnimatedStyle(() => {
+    const height = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE_TO_SHRINK],
+      [INITIAL_BG_HEIGHT, MIN_BG_HEIGHT],
+      'clamp'
+    );
+    return {
+      height: height,
+    };
+  });
+
+  const onFetch = useCallback(() => { if (user) { fetchDosesBySelectedDate(); } }, [user, fetchDosesBySelectedDate, selectedDate]);
+  useEffect(() => { onFetch(); }, [onFetch]);
+  const onRefresh = useCallback(() => { onFetch(); }, [onFetch]);
   const screenSections = [
     { type: 'header', id: 'header' },
     { type: 'date_selector', id: 'date_selector' },
     { type: 'dose_list', id: 'dose_list' },
-    // Thêm một item giả ở cuối để FAB không che mất nội dung
     { type: 'footer_spacer', id: 'footer_spacer' }, 
   ];
-
-  // 2. Tạo một hàm để render từng phần
   const renderSection = ({ item }: { item: { type: string } }) => {
     switch (item.type) {
       case 'header':
@@ -49,9 +65,14 @@ const HomeScreen: React.FC = () => {
           <>
             <View style={styles.header}>
               <Text style={styles.greeting}>Chào buổi sáng{'\n'}<Text style={styles.userName}>Thịnh</Text></Text>
-              <TouchableOpacity style={styles.notificationButton}>
-                <Ionicons name="notifications-outline" size={24} color={COLORS.textDark} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity style={styles.notificationButton}>
+                  <Ionicons name="search-outline" size={23} color={COLORS.lightGray} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.notificationButton}>
+                  <Ionicons name="notifications-outline" size={23} color={COLORS.lightGray} />
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={styles.titleContainer}>
               <Text style={styles.sectionTitle}>Lịch trình của bạn</Text>
@@ -62,10 +83,8 @@ const HomeScreen: React.FC = () => {
       case 'date_selector':
         return <DateSelector />;
       case 'dose_list':
-        // DoseList bây giờ là một item bình thường, không lồng nhau
         return <DoseList />;
       case 'footer_spacer':
-        // Khoảng trống ở cuối để nút FAB không che nội dung
         return <View style={{ height: 100 }} />;
       default:
         return null;
@@ -74,8 +93,12 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 3. Sử dụng MỘT FlatList duy nhất */}
-      <FlatList
+
+      <Animated.View style={[styles.background, animatedBackgroundStyle]} />
+
+      <AnimatedFlatList
+        onScroll={scrollHandler}
+        scrollEventThrottle={16} 
         data={screenSections}
         renderItem={renderSection}
         keyExtractor={(item) => item.id}
@@ -88,17 +111,24 @@ const HomeScreen: React.FC = () => {
           />
         }
       />
-
-      {/* Nút thêm mới (FAB) */}
-      <TouchableOpacity style={styles.fab}>
-        <Ionicons name="add" size={32} color={COLORS.white} />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' }, // Đổi màu nền cho nhất quán
+  container: { 
+    flex: 1, 
+    backgroundColor: '#F8FAFC' 
+  },
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.primary, 
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
   header: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
@@ -108,26 +138,22 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.padding,
   },
   greeting: { 
-    fontSize: 24, 
+    fontSize: 20, 
     fontWeight: '300', 
-    color: COLORS.textLight 
+    color: COLORS.white 
   },
   userName: {
+    fontSize: 17, 
     fontWeight: '700',
-    color: COLORS.textDark,
+    color: COLORS.white, 
   },
   notificationButton: { 
-    width: 44, 
-    height: 44, 
+    width: 40, 
+    height: 40, 
     borderRadius: 22, 
-    backgroundColor: COLORS.white, 
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', 
     justifyContent: 'center', 
     alignItems: 'center', 
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -142,21 +168,9 @@ const styles = StyleSheet.create({
     color: COLORS.textDark, 
   },
   monthTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: COLORS.textLight,
-  },
-  fab: { 
-    position: 'absolute', 
-    bottom: 40, 
-    right: 20, 
-    width: 60, 
-    height: 60, 
-    borderRadius: 30, 
-    backgroundColor: COLORS.primary, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    elevation: 8 
+    color: COLORS.lightGray,
   },
 });
 

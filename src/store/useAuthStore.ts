@@ -67,7 +67,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       await AsyncStorage.removeItem('accessToken');
       console.log('[AuthStore][logout] AccessToken removed from AsyncStorage');
 
-      // Reset Apollo Client cache để xóa dữ liệu cũ
       await accountClient.resetStore();
       console.log('[AuthStore][logout] Apollo Client cache reset');
 
