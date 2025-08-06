@@ -16,7 +16,7 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<{ type: string }>);
 
 const HomeScreen: React.FC = () => {
   const selectedDate = useScheduleStore(state => state.selectedDate);
@@ -101,7 +101,7 @@ const HomeScreen: React.FC = () => {
         scrollEventThrottle={16} 
         data={screenSections}
         renderItem={renderSection}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.type}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between', 
     alignItems: 'center', 
     paddingHorizontal: SIZES.padding, 
-    paddingTop: SIZES.padding, 
-    marginBottom: SIZES.padding,
+    paddingTop: SIZES.padding*0.4, 
+    marginBottom: SIZES.padding*0.4,
   },
   greeting: { 
     fontSize: 20, 
