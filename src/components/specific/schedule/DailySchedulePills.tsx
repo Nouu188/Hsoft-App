@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
@@ -8,9 +8,10 @@ import dayjs from 'dayjs';
 interface DailySchedulePillsProps {
     medicationName: string;
     allDosesForDay: GroupedDose[];
+    onPillPress: (time: string) => void;
 }
 
-const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ medicationName, allDosesForDay }) => {
+const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ medicationName, allDosesForDay, onPillPress }) => {
     const medicationSchedule = useMemo(() => {
         return allDosesForDay
             .filter(group => group.doses.some(d => d.medication_name === medicationName))
@@ -18,7 +19,7 @@ const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ medicationName,
     }, [allDosesForDay, medicationName]);
 
     if (medicationSchedule.length <= 1) {
-        return null; 
+        return null;
     }
 
     const getPillInfo = (status: GroupedDose['status']) => {
@@ -40,13 +41,13 @@ const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ medicationName,
             {medicationSchedule.map(group => {
                 const { icon, color, style } = getPillInfo(group.status);
                 return (
-                    <View key={group.time} style={[styles.pill, style]}>
+                    <TouchableOpacity key={group.time} style={[styles.pill, style]} onPress={() => onPillPress(group.time)}>
                         <View style={{ flexDirection: 'row' }}>
                             <Ionicons name={icon as any} size={14} color={color} />
                             <Text style={[styles.pillText, { color }]}>{group.timeOfDay}</Text>
                         </View>
                         <Text style={styles.pillText}>{dayjs(group.time).format('HH:mm')}</Text>
-                    </View>
+                    </TouchableOpacity>
                 );
             })}
         </View>

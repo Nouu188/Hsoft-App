@@ -1,7 +1,7 @@
 import { COLORS, SIZES } from "@/constants/theme";
 import { useScheduleStore } from "@/store/useScheduleStore";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native"; // Thay FlatList bằng ScrollView
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import TimeSlotCard from "./TimeSlotCard";
 import SearchBar from "@/components/common/SearchBar";
 import FilterModal from "./FilterModal";
@@ -19,12 +19,18 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
-const DoseList: React.FC = () => {
+interface DoseListProps {
+  onEnterScrollArea: () => void;
+  onLeaveScrollArea: () => void;
+}
+
+const DoseList: React.FC<DoseListProps> = ({ onEnterScrollArea, onLeaveScrollArea }) => {
   const groupDosesForSelectedDay = useScheduleStore(state => state.groupDosesForSelectedDay);
   const isLoading = useScheduleStore(state => state.isLoading);
   const error = useScheduleStore(state => state.error);
   const updateDoseStatus = useScheduleStore(state => state.updateDoseStatus);
   const toggleDosePreparedStatus = useScheduleStore(state => state.toggleDosePreparedStatus);
+  const setDoseMealPreference = useScheduleStore(state => state.setDoseMealPreference)
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
@@ -35,14 +41,14 @@ const DoseList: React.FC = () => {
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       const { layoutMeasurement, contentOffset, contentSize } = event;
-      // Kiểm tra xem người dùng đã cuộn đến cuối chưa (với một khoảng sai số nhỏ)
+
       const isScrolledToEnd = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
       isAtBottom.value = isScrolledToEnd;
     },
   });
 
-  const bounceAnim = useSharedValue(0);  
-  
+  const bounceAnim = useSharedValue(0);
+
   const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {
       opacity: withTiming(isAtBottom.value ? 0 : 1, { duration: 300 }),
@@ -59,8 +65,8 @@ const DoseList: React.FC = () => {
         withTiming(-3, { duration: 500, easing: Easing.inOut(Easing.quad) }),
         withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) }),
       ),
-      -1, // infinite
-      true // reverse
+      -1,
+      true
     );
   }, []);
 
@@ -103,6 +109,24 @@ const DoseList: React.FC = () => {
     }
   };
 
+  const scrollRef = useRef<ScrollView>(null);
+  const layoutMap = useRef(new Map<string, number>());
+
+  const handleNavigateToTime = (time: string) => {
+    const y = layoutMap.current.get(time);
+    if (y !== undefined && scrollRef.current) {
+      scrollRef.current.scrollTo({ y, animated: true });
+    }
+  };
+
+  const handleSkipDose = (doseId: string) => {
+    updateDoseStatus(doseId, 'SKIPPED');
+  };
+
+  const handleRescheduleDose = (doseId: string, newTime: string) => {
+    // Gọi action từ store
+  };
+
   const activeFilterCount = filters.status !== 'ALL' ? 1 : 0;
 
   if (isLoading) {
@@ -113,7 +137,11 @@ const DoseList: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View 
+      style={styles.container}
+      onTouchStart={onEnterScrollArea}
+      onTouchEnd={onLeaveScrollArea}
+    >
       <SearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -124,7 +152,7 @@ const DoseList: React.FC = () => {
       <AnimatedScrollView
         style={styles.list}
         onScroll={scrollHandler}
-        scrollEventThrottle={16} 
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: SIZES.padding }}
       >
@@ -136,6 +164,10 @@ const DoseList: React.FC = () => {
               onMarkAllAsTaken={handleMarkAllAsTaken}
               onTogglePrepared={toggleDosePreparedStatus}
               allDosesForDay={groupDosesForSelectedDay}
+              onNavigateToTime={handleNavigateToTime}
+              onSkipDose={handleSkipDose}
+              onRescheduleDose={handleRescheduleDose}
+              onSetMealPreference={setDoseMealPreference}
             />
           ))
         ) : (
@@ -149,7 +181,7 @@ const DoseList: React.FC = () => {
         )}
       </AnimatedScrollView>
 
-      {filteredData.length > 2 && ( 
+      {filteredData.length > 2 && (
         <Animated.View style={[styles.scrollIndicator, animatedIndicatorStyle]}>
           <Ionicons name="chevron-down" size={16} color={COLORS.primary} />
           <Text style={styles.scrollIndicatorText}>Còn tiếp</Text>

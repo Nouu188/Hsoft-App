@@ -6,12 +6,18 @@ import { COLORS, SIZES } from '@/constants/theme';
 import dayjs from 'dayjs';
 import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
 import DailySchedulePills from './DailySchedulePills';
+import DoseItem from './DoseItem';
+import { MealRelation } from '@/types/dtos/dose/dose.dto';
 
 interface TimeSlotCardProps {
     group: GroupedDose;
-    allDosesForDay: GroupedDose[]; 
+    allDosesForDay: GroupedDose[];
     onMarkAllAsTaken: (time: string) => void;
     onTogglePrepared: (doseId: string) => void;
+    onNavigateToTime: (time: string) => void;
+    onSkipDose: (doseId: string) => void;
+    onRescheduleDose: (doseId: string, newTime: string) => void;
+    onSetMealPreference: (doseId: string, preference: MealRelation | null) => void;
 }
 
 const getStatusInfo = (status: GroupedDose['status']) => {
@@ -28,8 +34,8 @@ const getStatusInfo = (status: GroupedDose['status']) => {
     }
 };
 
-const TimeSlotCard: React.FC<TimeSlotCardProps> = ({ group, allDosesForDay, onMarkAllAsTaken, onTogglePrepared }) => {
-    const { cardStyle, iconColor, tagText } = getStatusInfo(group.status);
+const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
+    const { group, allDosesForDay, onMarkAllAsTaken, onTogglePrepared, onNavigateToTime, onSkipDose, onRescheduleDose, onSetMealPreference } = props; const { cardStyle, iconColor, tagText } = getStatusInfo(group.status);
     const isActionable = group.status === 'ACTIVE' || group.status === 'MISSED';
 
     const [expandedDoseId, setExpandedDoseId] = useState<string | null>(null);
@@ -65,39 +71,15 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = ({ group, allDosesForDay, onMa
 
                 <View style={styles.doseList}>
                     {group.doses.map(dose => (
-                        <View key={dose.id} style={[styles.doseItemContainer]}>
-                            <View style={styles.doseItem}>
-                                <TouchableOpacity onPress={() => onTogglePrepared(dose.id)} style={[styles.checkbox,]}>
-                                    <Ionicons name={dose.is_prepared ? "checkbox" : "square-outline"} size={24} color={dose.is_prepared ? COLORS.primary : COLORS.textLight} />
-                                </TouchableOpacity>
-                                <View style={[styles.doseInfo, dose.is_prepared && styles.preparedItem]}>
-                                    <Text style={styles.medicationName}>{dose.medication_name}</Text>
-                                    <Text style={styles.dosageText}>{dose.usage_instructions}</Text>
-                                    <Text style={styles.dosageText}>{dose.dosage_instructions}</Text>
-                                    <DailySchedulePills
-                                        medicationName={dose.medication_name}
-                                        allDosesForDay={allDosesForDay}
-                                    />
-                                </View>
-
-                                {dose.next_doses && dose.next_doses.length > 0 && (
-                                    <TouchableOpacity onPress={() => toggleExpand(dose.id)} style={styles.expandButton}>
-                                        <Ionicons name={expandedDoseId === dose.id ? "chevron-up-outline" : "chevron-down-outline"} size={22} color={COLORS.textLight} />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-
-                            {expandedDoseId === dose.id && (
-                                <View style={styles.nextDosesContainer}>
-                                    <Text style={styles.nextDosesTitle}>Các liều tiếp theo:</Text>
-                                    {dose.next_doses?.map((nextDoseTime, index) => (
-                                        <Text key={index} style={styles.nextDoseText}>
-                                            - {dayjs(nextDoseTime).format('h:mm A, dddd, DD/MM')}
-                                        </Text>
-                                    ))}
-                                </View>
-                            )}
-                        </View>
+                        <DoseItem
+                            key={dose.id}
+                            dose={dose}
+                            allDosesForDay={allDosesForDay}
+                            onTogglePrepared={onTogglePrepared}
+                            onNavigateToTime={onNavigateToTime}
+                            onSkipDose={onSkipDose}
+                            onSetMealPreference={onSetMealPreference}
+                        />
                     ))}
                 </View>
 
@@ -121,7 +103,7 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: COLORS.white,
         borderRadius: SIZES.radius * 1.5,
-        padding: SIZES.padding*0.8,
+        padding: SIZES.padding * 0.8,
         borderWidth: 1.5,
         borderColor: 'transparent',
     },
@@ -133,7 +115,7 @@ const styles = StyleSheet.create({
     timeText: { fontSize: 18, fontWeight: 'bold', marginLeft: 10, color: COLORS.textDark },
     tag: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: SIZES.radius },
     tagText: { color: COLORS.white, fontWeight: '700', fontSize: 12 },
-    doseList: { paddingTop: SIZES.padding * 0.75, borderTopWidth: 1, borderTopColor: COLORS.border, marginTop: SIZES.padding / 2 },
+    doseList: { paddingTop: SIZES.padding * 0.35, borderTopWidth: 1, borderTopColor: COLORS.border, marginTop: SIZES.padding / 2 },
     doseItem: { flexDirection: 'row', justifyContent: 'flex-start', marginBottom: SIZES.padding / 2 },
     doseIconContainer: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.primaryLight, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
     medicationName: { fontSize: 16, fontWeight: '600', color: COLORS.textDark },

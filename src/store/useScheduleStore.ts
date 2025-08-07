@@ -6,7 +6,7 @@ import { UPDATE_DOSE_STATUS } from '@/api/mutations/doseMutations';
 import isBetween from 'dayjs/plugin/isBetween';
 import { schedulingClient } from '@/api/apoloClient';
 import { GET_DOSES_BY_DATE_RANGE, GET_DOSES_BY_SELECTED_DATE } from '@/api/queries/doseQueries';
-import { Dose } from '@/types/dtos/dose/dose.dto';
+import { Dose, MealRelation } from '@/types/dtos/dose/dose.dto';
 import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
 
 dayjs.extend(isBetween);
@@ -23,6 +23,8 @@ interface ScheduleState {
   fetchDosesBySelectedDate: () => Promise<void>;
   updateDoseStatus: (doseId: string, status: 'TAKEN' | 'SKIPPED') => Promise<void>;
   toggleDosePreparedStatus: (doseId: string) => void;
+  rescheduleDose: (doseId: string, newTime: string) => Promise<void>;
+  setDoseMealPreference: (doseId: string, preference: MealRelation | null) => void;
 }
 
 const TIME_SLOTS = {
@@ -272,5 +274,34 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
         groupDosesForSelectedDay: updatedGroupedDoses,
       };
     });
-  }
+  },
+
+  rescheduleDose: async (doseId, newTime) => {
+    // Logic này tương tự như updateDoseStatus
+    // 1. Tìm liều thuốc và cập nhật `due_at` của nó một cách lạc quan (optimistic)
+    // 2. Gọi API mutation để cập nhật trên server
+    // 3. Nếu lỗi, rollback lại thời gian cũ
+    console.log(`Rescheduling dose ${doseId} to ${newTime}`);
+    // ... (Tự triển khai logic tương tự updateDoseStatus)
+  },
+
+  setDoseMealPreference: (doseId, preference) => {
+    set(state => {
+      const updateMealPreference = (doses: Dose[]) => 
+        doses.map(dose => 
+          dose.id === doseId ? { ...dose, meal_relation: preference } : dose
+        );
+
+      const updatedDosesInDateRange = updateMealPreference(state.dosesInDateRange);
+      const updatedDosesForDay = updateMealPreference(state.dosesForSelectedDay);
+      const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
+
+      return {
+        dosesInDateRange: updatedDosesInDateRange,
+        dosesForSelectedDay: updatedDosesForDay,
+        groupDosesForSelectedDay: updatedGroupedDoses,
+      };
+    });
+    // Trong ứng dụng thực tế, bạn sẽ gọi API để lưu thay đổi này vào DB
+  },
 }));

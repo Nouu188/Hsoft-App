@@ -1,12 +1,8 @@
-// src/services/fcmService.ts
 import { accountClient } from '@/api/apoloClient';
 import { REGISTER_FCM_TOKEN } from '@/api/mutations/registerFCM_token';
 import messaging from '@react-native-firebase/messaging';
 
 class FcmService {
-  /**
-   * Yêu cầu quyền gửi thông báo từ người dùng (quan trọng cho iOS).
-   */
   async requestUserPermission(): Promise<boolean> {
     const authStatus = await messaging().requestPermission();
     const enabled =
