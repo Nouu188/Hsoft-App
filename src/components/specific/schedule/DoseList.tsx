@@ -1,134 +1,224 @@
-// src/components/DoseList.tsx
-
 import { COLORS, SIZES } from "@/constants/theme";
 import { useScheduleStore } from "@/store/useScheduleStore";
-import { ActivityIndicator, FlatList, StyleSheet, Text, View, TextInput, ScrollView } from "react-native";
-import GroupedDoseCard from "./GroupedDoseCard";
-import { useState, useMemo } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native"; // Thay FlatList bằng ScrollView
+import { useState, useMemo, useEffect } from "react";
+import TimeSlotCard from "./TimeSlotCard";
+import SearchBar from "@/components/common/SearchBar";
+import FilterModal from "./FilterModal";
+import { FilterState } from "@/screens/schedule/DoseFilter";
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  withSequence,
+  Easing
+} from 'react-native-reanimated';
 import Ionicons from "@react-native-vector-icons/ionicons";
+
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 const DoseList: React.FC = () => {
   const groupDosesForSelectedDay = useScheduleStore(state => state.groupDosesForSelectedDay);
   const isLoading = useScheduleStore(state => state.isLoading);
   const error = useScheduleStore(state => state.error);
+  const updateDoseStatus = useScheduleStore(state => state.updateDoseStatus);
+  const toggleDosePreparedStatus = useScheduleStore(state => state.toggleDosePreparedStatus);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
+  const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+
+  const isAtBottom = useSharedValue(false);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const { layoutMeasurement, contentOffset, contentSize } = event;
+      // Kiểm tra xem người dùng đã cuộn đến cuối chưa (với một khoảng sai số nhỏ)
+      const isScrolledToEnd = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
+      isAtBottom.value = isScrolledToEnd;
+    },
+  });
+
+  const bounceAnim = useSharedValue(0);  
+  
+  const animatedIndicatorStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(isAtBottom.value ? 0 : 1, { duration: 300 }),
+      transform: [
+        { translateY: withTiming(isAtBottom.value ? 10 : 0, { duration: 300 }) },
+        { translateY: bounceAnim.value }
+      ],
+    };
+  });
+
+  useEffect(() => {
+    bounceAnim.value = withRepeat(
+      withSequence(
+        withTiming(-3, { duration: 500, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) }),
+      ),
+      -1, // infinite
+      true // reverse
+    );
+  }, []);
 
   const filteredData = useMemo(() => {
-    if (!searchQuery) {
-      return groupDosesForSelectedDay;
-    }
-    const lowercasedQuery = searchQuery.toLowerCase();
-    
-    return groupDosesForSelectedDay.filter(group => 
-      group.doses.some(dose => 
-        dose.medication_name.toLowerCase().includes(lowercasedQuery)
-      )
-    );
-  }, [groupDosesForSelectedDay, searchQuery]);
+    if (!groupDosesForSelectedDay) return [];
 
+    let data = [...groupDosesForSelectedDay];
+
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      data = data
+        .map(group => {
+          const matchingDoses = group.doses.filter(dose =>
+            dose.medication_name.toLowerCase().includes(lowercasedQuery)
+          );
+          return { ...group, doses: matchingDoses };
+        })
+        .filter(group => group.doses.length > 0);
+    }
+
+    if (filters.status !== 'ALL') {
+      if (filters.status === 'ACTION_NEEDED') {
+        data = data.filter(g => g.status === 'ACTIVE' || g.status === 'MISSED');
+      } else {
+        data = data.filter(g => g.status === filters.status);
+      }
+    }
+
+    return data.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  }, [groupDosesForSelectedDay, filters, searchQuery]);
+
+  const handleMarkAllAsTaken = (time: string) => {
+    const group = groupDosesForSelectedDay.find(g => g.time === time);
+    if (group) {
+      group.doses.forEach(dose => {
+        if (dose.status !== 'TAKEN') {
+          updateDoseStatus(dose.id, 'TAKEN');
+        }
+      });
+    }
+  };
+
+  const activeFilterCount = filters.status !== 'ALL' ? 1 : 0;
 
   if (isLoading) {
-    return (
-      <View style={[styles.container, styles.centeredContent]}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
+    return <View style={[styles.container, styles.centeredContent]}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
   }
-
   if (error) {
-    return (
-       <View style={[styles.container, styles.centeredContent]}>
-        <Text style={styles.errorText}>Lỗi: {error}</Text>
-      </View>
-    );
+    return <View style={[styles.container, styles.centeredContent]}><Text style={styles.errorText}>Lỗi: {error}</Text></View>;
   }
-
-  const renderContent = () => {
-    if (filteredData.length === 0) {
-      return (
-        <View style={styles.centeredContent}>
-          <Text style={styles.emptyText}>
-            {groupDosesForSelectedDay.length > 0
-              ? 'Không tìm thấy thuốc phù hợp.'
-              : 'Không có lịch uống thuốc cho ngày này.'}
-          </Text>
-        </View>
-      );
-    }
-    // Dùng .map() để render danh sách
-    return filteredData.map(group => <GroupedDoseCard key={group.time} group={group} />);
-  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Tìm kiếm thuốc..."
-          placeholderTextColor={COLORS.textLight}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        <Ionicons name="search-outline" size={22} color={COLORS.textLight} style={styles.searchIcon} />
-      </View>
+      <SearchBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onFilterPress={() => setFilterModalVisible(true)}
+        activeFilterCount={activeFilterCount}
+      />
 
-      <ScrollView
+      <AnimatedScrollView
         style={styles.list}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16} 
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: SIZES.padding }}
       >
-        {renderContent()}
-      </ScrollView>
+        {filteredData.length > 0 ? (
+          filteredData.map(item => (
+            <TimeSlotCard
+              key={item.time}
+              group={item}
+              onMarkAllAsTaken={handleMarkAllAsTaken}
+              onTogglePrepared={toggleDosePreparedStatus}
+              allDosesForDay={groupDosesForSelectedDay}
+            />
+          ))
+        ) : (
+          <View style={styles.centeredContent}>
+            <Text style={styles.emptyText}>
+              {groupDosesForSelectedDay.length > 0
+                ? 'Không có lịch uống thuốc phù hợp.'
+                : 'Không có lịch uống thuốc cho ngày này.'}
+            </Text>
+          </View>
+        )}
+      </AnimatedScrollView>
+
+      {filteredData.length > 2 && ( 
+        <Animated.View style={[styles.scrollIndicator, animatedIndicatorStyle]}>
+          <Ionicons name="chevron-down" size={16} color={COLORS.primary} />
+          <Text style={styles.scrollIndicatorText}>Còn tiếp</Text>
+        </Animated.View>
+      )}
+
+      <FilterModal
+        visible={isFilterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        currentFilters={filters}
+        onApply={setFilters}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: 472,
-    backgroundColor: '#d0d8e05a', 
+    height: 500,
+    backgroundColor: '#e8edf39e',
     borderRadius: SIZES.radius * 2,
     marginHorizontal: SIZES.padding * 0.8,
-    padding: SIZES.padding * 0.8,
+    paddingTop: SIZES.padding * 0.6,
     display: 'flex',
     flexDirection: 'column',
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    paddingHorizontal: SIZES.padding,
-    marginBottom: SIZES.padding*0.8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0'
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
-    color: COLORS.textDark,
-  },
   list: {
-    flex: 1, 
+    flex: 1,
+    marginTop: SIZES.padding / 4,
+    marginHorizontal: 12
   },
   centeredContent: {
-    flex: 1, 
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 50,
   },
   emptyText: {
     color: COLORS.textLight,
     fontSize: 16,
     textAlign: 'center',
+    paddingHorizontal: SIZES.padding,
   },
   errorText: {
     color: COLORS.danger,
     fontSize: 16,
     textAlign: 'center',
+  },
+  scrollIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  scrollIndicatorText: {
+    marginLeft: 5,
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontSize: 13,
   },
 });
 
