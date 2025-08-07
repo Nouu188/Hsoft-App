@@ -6,6 +6,7 @@ import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { CurrentUser, JwtAuthGuard } from '@app/auth';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { SYNC_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
+import { UpdateDoseInput } from './dto/update-dose.input';
 
 @Resolver(() => Dose)
 export class DosesResolver {
@@ -15,13 +16,6 @@ export class DosesResolver {
     private readonly dosesService: DosesService,
     private readonly amqpConnection: AmqpConnection,
   ) { }
-
-  @Query(() => [Dose], { name: 'dosesByIds' })
-  async findDosesByIds(
-    @Args('dose_ids', { type: () => [ID!]! }) dose_ids: string[],
-  ): Promise<Dose[]> {
-    return this.dosesService.findByIds(dose_ids);
-  }
 
   @Query(() => [Dose], { name: 'dosesByDateRange' })
   @UseGuards(JwtAuthGuard)
@@ -64,6 +58,15 @@ export class DosesResolver {
     logger.log(`Fetching doses from ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
 
     return this.dosesService.findDosesByDateRange(user.id, startOfDay, endOfDay);
+  }
+
+  @Mutation(() => [Dose], { name: 'updateDoses' })
+  @UseGuards(JwtAuthGuard)
+  updateDoses(
+    @CurrentUser() user: User,
+    @Args('updates', { type: () => [UpdateDoseInput] }) updates: UpdateDoseInput[],
+  ): Promise<Dose[]> {
+    return this.dosesService.updateDoses(user.id, updates);
   }
 
   @Mutation(() => Boolean, {

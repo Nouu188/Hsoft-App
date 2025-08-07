@@ -51,10 +51,23 @@ type Mutation {
     sodienthoai: String
     user_id: String
   ): Boolean!
+  updateDoses(updates: [UpdateDoseInput!]!): [Dose!]!
 }
 
 type Query {
   dosesByDateRange(endDate: String!, startDate: String!): [Dose!]!
-  dosesByIds(dose_ids: [ID!]!): [Dose!]!
   dosesBySelectedDate(selectedDate: String!): [Dose!]!
+}
+
+input UpdateDoseDataInput {
+  """Trạng thái mới của liều uống"""
+  status: DoseStatus
+}
+
+input UpdateDoseInput {
+  """Dữ liệu cần cập nhật"""
+  data: UpdateDoseDataInput!
+
+  """ID của liều uống cần cập nhật"""
+  id: ID!
 }

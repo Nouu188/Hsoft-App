@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
 import { Dose, DoseStatus } from './entities/dose.entity';
+import { UpdateDoseInput } from './dto/update-dose.input';
 
 export class DosesService {
   constructor(
@@ -9,10 +10,38 @@ export class DosesService {
     private doseRepository: Repository<Dose>,
   ) {}
 
-  async findByIds(dose_ids: string[]) {
-    return await this.doseRepository.find({
-        where: { id: In(dose_ids) },
+  async updateDoses(user_id: string, updates: UpdateDoseInput[]): Promise<Dose[]> {
+    if (!updates || updates.length === 0) {
+      throw new BadRequestException('No update data provided.');
+    }
+
+    const doseIds = updates.map(u => u.id);
+
+    const dosesToUpdate = await this.doseRepository.findBy({
+      id: In(doseIds),
+      user_id: user_id, 
     });
+
+    if (dosesToUpdate.length !== doseIds.length) {
+      throw new UnauthorizedException('You are trying to update doses that do not exist or you do not own.');
+    }
+
+    const updatedDoseEntities: Dose[] = [];
+    for (const dose of dosesToUpdate) {
+      const updateData = updates.find(u => u.id === dose.id)!.data;
+      
+      Object.assign(dose, updateData);
+
+      if (updateData.status === DoseStatus.TAKEN) {
+        dose.taken_at = new Date();
+      } else if (updateData.status === DoseStatus.SKIPPED) {
+        dose.taken_at = undefined;
+      }
+      
+      updatedDoseEntities.push(dose);
+    }
+
+    return this.doseRepository.save(updatedDoseEntities);
   }
 
   async findDosesByDateRange(

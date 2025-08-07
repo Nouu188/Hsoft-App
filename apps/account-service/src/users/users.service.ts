@@ -14,7 +14,7 @@ export class UsersService {
     private usersRepository: Repository<User>,
 
     private readonly hospitalClient: HospitalApiClientService,
-  ) {}
+  ) { }
 
   async findOne({
     mabn,
@@ -33,15 +33,21 @@ export class UsersService {
       sodienthoai: sodienthoai ?? undefined,
       socmnd: socmnd ?? undefined,
     });
-    
+
     return user ?? undefined;
   }
 
   async addFcmToken(user_id: string, token: string): Promise<boolean> {
+    console.log(`[addFcmToken] Called with user_id=${user_id}, token=${token}`);
+
     const user = await this.usersRepository.findOne({ where: { id: user_id } });
     if (!user) {
+      console.warn(`[addFcmToken] User not found with id=${user_id}`);
       return false;
     }
+
+    console.log(`[addFcmToken] Found user: ${user.id}`);
+    console.log(`[addFcmToken] Existing FCM tokens:`, user.fcm_tokens);
 
     if (!user.fcm_tokens) {
       user.fcm_tokens = [];
@@ -49,11 +55,16 @@ export class UsersService {
 
     if (!user.fcm_tokens.includes(token)) {
       user.fcm_tokens.push(token);
+      console.log(`[addFcmToken] Adding new token: ${token}`);
       await this.usersRepository.save(user);
+      console.log(`[addFcmToken] Saved user with updated FCM tokens.`);
+    } else {
+      console.log(`[addFcmToken] Token already exists, skipping.`);
     }
 
     return true;
   }
+
 
   async findByIdentifier(identifier: string): Promise<User | undefined> {
     if (isUUID(identifier)) {
@@ -89,7 +100,7 @@ export class UsersService {
       socmnd: socmnd,
       hoTen: hoten,
       namsinh: namsinh,
-      password: namsinh, 
+      password: namsinh,
       roles: [Role.USER],
     });
 

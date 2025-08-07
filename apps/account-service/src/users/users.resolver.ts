@@ -39,11 +39,12 @@ export class UsersResolver {
     return user;
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => Boolean, { name: 'registerFcmToken' })
+  @UseGuards(JwtAuthGuard)
   async registerFcmToken(
-    @Args('user_id', { type: () => String }) user_id: string,
-    @Args('token', { type: () => String }) token: string,
+    @CurrentUser() user: User,
+    @Args('fcm_token', { type: () => String }) fcm_token: string,
   ): Promise<boolean> {
-    return this.usersService.addFcmToken(user_id, token);
+    return this.usersService.addFcmToken(user.id, fcm_token);
   }
 }
