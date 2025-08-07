@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { LOGIN_MUTATION } from '../api/mutations/authMutations';
 import { accountClient } from '@/api/apoloClient';
+import { fcmService } from '@/services/fcmService';
 
 interface JwtPayload {
   sub: string;
@@ -54,6 +55,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ accessToken, user, isLoading: false });
 
       console.log('[AuthStore][login] Login successful, state updated');
+
+      fcmService.getFcmToken().then(token => {
+        if (token) {
+          fcmService.registerTokenWithServer(token);
+        }
+      });
     } catch (e: any) {
       console.error('[AuthStore][login] Login failed:', e.message, e);
       set({ error: e.message, isLoading: false });
@@ -100,6 +107,12 @@ export const useAuthStore = create<AuthState>((set) => ({
           
           set({ accessToken: token, user });
           console.log('[AuthStore][hydrate] User state updated:', user);
+
+          fcmService.getFcmToken().then(fcmToken => {
+            if (fcmToken) {
+              fcmService.registerTokenWithServer(fcmToken);
+            }
+          });
         }
       } else {
         console.log('[AuthStore][hydrate] No token found in AsyncStorage.');
