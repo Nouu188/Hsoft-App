@@ -1,13 +1,14 @@
 import { COLORS, SIZES } from "@/constants/theme";
 import { useScheduleStore } from "@/store/useScheduleStore";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native"; // Thay FlatList bằng ScrollView
-import { useState, useMemo, useEffect, useRef } from "react";
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native"; // Thay FlatList bằng ScrollView
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import TimeSlotCard from "./TimeSlotCard";
 import SearchBar from "@/components/common/SearchBar";
 import FilterModal from "./FilterModal";
 import { FilterState } from "@/screens/schedule/DoseFilter";
 import Animated from 'react-native-reanimated';
 import DateSelector from "./DateSelector";
+import { GroupedDose } from "@/types/dtos/dose/grouped-dose.dto";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
@@ -18,10 +19,20 @@ const MedicationScheduleView = () => {
     const updateDoseStatus = useScheduleStore(state => state.updateDoseStatus);
     const toggleDosePreparedStatus = useScheduleStore(state => state.toggleDosePreparedStatus);
     const setDoseMealPreference = useScheduleStore(state => state.setDoseMealPreference)
+    const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate)
+    const selectedDate = useScheduleStore(state => state.selectedDate)
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+
+    const onFetch = useCallback(() => {
+        fetchDosesBySelectedDate();
+    }, []);
+
+    useEffect(() => {
+        onFetch();
+    }, [selectedDate, fetchDosesBySelectedDate]);
 
     const filteredData = useMemo(() => {
         if (!groupDosesForSelectedDay) return [];
@@ -82,58 +93,44 @@ const MedicationScheduleView = () => {
 
     const activeFilterCount = filters.status !== 'ALL' ? 1 : 0;
 
-    if (isLoading) {
-        return <View style={[styles.container, styles.centeredContent]}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
-    }
     if (error) {
         return <View style={[styles.container, styles.centeredContent]}><Text style={styles.errorText}>Lỗi: {error}</Text></View>;
     }
 
-    const renderContent = () => {
-        if (isLoading && !groupDosesForSelectedDay.length) {
-            return <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 50 }} />;
-        }
-        if (error) {
-            return <Text style={styles.errorText}>Lỗi: {error}</Text>;
-        }
-        if (filteredData.length === 0) {
-            return (
-                <View style={styles.centeredContent}>
-                    <Text style={styles.emptyText}>
-                        {groupDosesForSelectedDay.length > 0
-                            ? 'Không có lịch uống thuốc phù hợp.'
-                            : 'Không có lịch uống thuốc cho ngày này.'}
-                    </Text>
-                </View>
-            );
-        }
-        return filteredData.map(item => (
-            <TimeSlotCard
-                key={item.time}
-                group={item}
-                onMarkAllAsTaken={handleMarkAllAsTaken}
-                onTogglePrepared={toggleDosePreparedStatus}
-                allDosesForDay={groupDosesForSelectedDay}
-                onNavigateToTime={handleNavigateToTime}
-                onSkipDose={handleSkipDose}
-                onRescheduleDose={handleRescheduleDose}
-                onSetMealPreference={setDoseMealPreference}
-            />
-        ));
+    const renderDoseItem = ({ item }: { item: GroupedDose }) => (
+        <TimeSlotCard
+            key={item.time}
+            group={item}
+            onMarkAllAsTaken={handleMarkAllAsTaken}
+            onTogglePrepared={toggleDosePreparedStatus}
+            allDosesForDay={groupDosesForSelectedDay}
+            onNavigateToTime={handleNavigateToTime}
+            onSkipDose={handleSkipDose}
+            onRescheduleDose={handleRescheduleDose}
+            onSetMealPreference={setDoseMealPreference}
+        />
+    );
+
+    const renderEmptyListComponent = () => {
+        if (isLoading || error) return null;
+
+        return (
+            <View style={styles.centeredContent}>
+                <Text style={styles.emptyText}>
+                    {groupDosesForSelectedDay.length > 0
+                        ? 'Không có lịch uống thuốc phù hợp.'
+                        : 'Không có lịch uống thuốc cho ngày này.'}
+                </Text>
+            </View>
+        );
     };
 
     return (
         <View style={styles.container}>
-            <ScrollView
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={false}
-                stickyHeaderIndices={[1]}
-                refreshControl={
-                    <RefreshControl refreshing={isLoading} tintColor={COLORS.primary} />
-                }
-            >
-                <DateSelector />
-
+            <View style={styles.staticHeader}>
+                <View style={styles.dateSelectorContainer}>
+                    <DateSelector />
+                </View>
                 <View style={styles.searchBarContainer}>
                     <SearchBar
                         searchQuery={searchQuery}
@@ -142,12 +139,24 @@ const MedicationScheduleView = () => {
                         activeFilterCount={activeFilterCount}
                     />
                 </View>
+            </View>
 
-                {/* Nội dung chính */}
-                <View style={styles.content}>
-                    {renderContent()}
-                </View>
-            </ScrollView>
+            <FlatList
+                style={styles.list}
+                data={filteredData}
+                renderItem={renderDoseItem}
+                keyExtractor={item => item.time}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={renderEmptyListComponent}
+                contentContainerStyle={{ paddingHorizontal: SIZES.padding, paddingBottom: 100, paddingTop: 12 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={onFetch}
+                        tintColor={COLORS.primary}
+                    />
+                }
+            />
 
             <FilterModal
                 visible={isFilterModalVisible}
@@ -166,10 +175,13 @@ const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
     },
+    dateSelectorContainer: {
+        paddingTop: SIZES.padding / 2,
+    },
     searchBarContainer: {
         paddingTop: SIZES.padding / 2,
-        paddingBottom: SIZES.padding,
-        backgroundColor: COLORS.white, // Nền cho search bar khi sticky
+        paddingBottom: SIZES.padding / 1.5,
+        backgroundColor: COLORS.white, 
     },
     content: {
         paddingHorizontal: SIZES.padding,
@@ -212,6 +224,18 @@ const styles = StyleSheet.create({
         color: COLORS.primary,
         fontWeight: '600',
         fontSize: 13,
+    },
+    list: {
+        flex: 1, 
+    },
+    staticHeader: {
+        backgroundColor: COLORS.white,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        zIndex: 10, 
     },
 });
 

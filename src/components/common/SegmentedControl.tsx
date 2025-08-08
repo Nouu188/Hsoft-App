@@ -13,18 +13,10 @@ interface SegmentedControlProps {
 
 const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, selectedIndex, onOptionPress }) => {
   const { width } = useWindowDimensions();
-  // Tính toán chiều rộng của mỗi segment
+
   const segmentWidth = (width) / options.length;
 
-  // Animation cho thanh trượt chính
   const animatedIndicatorStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: withTiming(selectedIndex * segmentWidth, { duration: 300, easing: Easing.out(Easing.quad) }) }],
-    };
-  });
-
-  // Animation cho "miếng vá" góc
-  const animatedCornerFakerStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: withTiming(selectedIndex * segmentWidth, { duration: 300, easing: Easing.out(Easing.quad) }) }],
     };
@@ -32,13 +24,10 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, selectedIn
 
   return (
     <View style={styles.container}>
-      {/* "Miếng vá" để tạo hiệu ứng liền mạch */}
-      <Animated.View style={[styles.cornerFaker, { width: segmentWidth }, animatedCornerFakerStyle]} />
+      <View>
+        <Animated.View style={[styles.activeIndicator, styles.activeIndicatorShadow, selectedIndex === 0 ? { borderTopRightRadius: 16 } : { borderTopLeftRadius: 16 }, { width: segmentWidth }, animatedIndicatorStyle]} />
+      </View>
 
-      {/* Thanh trượt chính có thể nhìn thấy */}
-      <Animated.View style={[styles.activeIndicator, selectedIndex === 0 ? { borderTopRightRadius: 20 } : { borderTopLeftRadius: 20 } , { width: segmentWidth }, animatedIndicatorStyle]} />
-
-      {/* Các nút bấm */}
       {options.map((option, index) => {
         const isActive = selectedIndex === index;
         return (
@@ -58,32 +47,32 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, selectedIn
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: COLORS.primaryLight, // Nền trong suốt
+    backgroundColor: COLORS.primaryLight,
     position: 'relative',
-    height: 50, // Chiều cao cố định
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    height: 50,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  activeIndicatorShadow: {
+    zIndex: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 5, height: 0 }, // width > 0 => bóng bên phải
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4
   },
   activeIndicator: {
+    bottom: 2,
     position: 'absolute',
     height: '100%',
     backgroundColor: COLORS.white,
-    zIndex: 1, // Nằm trên "miếng vá"
-  },
-  cornerFaker: {
-    position: 'absolute',
-    // Đặt nó cao hơn một chút để che đi phần bo tròn của container bên dưới
-    height: '150%', 
-    backgroundColor: COLORS.white, // Cùng màu với nền nội dung
-    zIndex: 0, // Nằm dưới thanh trượt
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    zIndex: 1,
   },
   option: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2, // Nằm trên cùng
+    zIndex: 2,
   },
   optionText: {
     fontSize: 15,
@@ -91,7 +80,7 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   optionTextActive: {
-    color: COLORS.primary, // Hoặc màu bạn muốn cho text active
+    color: COLORS.primary,
   },
 });
 
