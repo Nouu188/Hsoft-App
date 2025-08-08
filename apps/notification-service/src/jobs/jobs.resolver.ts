@@ -1,7 +1,8 @@
 import { Mutation, Resolver, Args, ID } from '@nestjs/graphql';
 import { Logger } from '@nestjs/common';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import { NOTIFICATION_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq';
 
 @Resolver()
 export class JobsResolver {
@@ -21,8 +22,8 @@ export class JobsResolver {
       const payload = { user_id, dose_ids: [dose_id] }; 
       
       this.amqpConnection.publish(
-          NOTIFICATION_EXCHANGE,
-          'notification.send.grouped',
+          ExchangeName.NOTIFICATION,
+          RoutingKey.NOTIFICATION_SCHEDULE,
           payload,
       );
       return true;

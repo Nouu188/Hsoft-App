@@ -15,7 +15,8 @@ export class AccountApiClientService {
         private readonly configService: ConfigService,
         private readonly authApiClient: AuthApiClientService,
     ) {
-        this.accountServiceUrl = this.configService.get<string>('ACCOUNT_SERVICE_URL/graphql')!;
+        this.accountServiceUrl = this.configService.get<string>('ACCOUNT_SERVICE_URL') + '/graphql';
+
         if (!this.accountServiceUrl) {
             throw new Error('ACCOUNT_SERVICE_URL is not defined in environment variables.');
         }

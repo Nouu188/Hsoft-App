@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import { BATCH_SYNC_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq';
 
 @Injectable()
 export class JobSchedulerService {
@@ -13,8 +14,8 @@ export class JobSchedulerService {
     triggerFullSync() {
         this.logger.log('CRON JOB: Triggering start of full daily sync...');
         this.amqpConnection.publish(
-            BATCH_SYNC_EXCHANGE,
-            'batch.start_full_sync',
+            ExchangeName.BATCH_SYNC,
+            RoutingKey.BATCH_START_FULL_SYNC,
             {}
         );
     }
