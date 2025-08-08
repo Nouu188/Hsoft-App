@@ -1,6 +1,5 @@
 import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
-import { NOTIFICATION_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
 import { DoseApiClientService } from '@app/api-clients/doses/dose-api-client.service';
 import { DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
@@ -8,6 +7,8 @@ import { FirebaseService } from '../../firebase/firebase.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NotificationHistory } from '../../history/notification-history.entity';
 import { Repository } from 'typeorm';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { QueueName, RoutingKey } from '@app/common/rabbitmq';
 
 interface GroupedNotificationPayload {
     user_id: string;
@@ -26,9 +27,9 @@ export class NotificationConsumer {
     ) {}
 
     @RabbitSubscribe({
-        exchange: NOTIFICATION_EXCHANGE,
-        routingKey: 'notification.send.grouped',
-        queue: 'notification.send.queue',
+        exchange: ExchangeName.NOTIFICATION,
+        routingKey: RoutingKey.NOTIFICATION_SCHEDULE,
+        queue: QueueName.NOTIFICATION_SCHEDULER,
     })
     public async handleSendGroupedNotification(payload: GroupedNotificationPayload): Promise<void | Nack> {
         const { user_id, dose_ids } = payload;

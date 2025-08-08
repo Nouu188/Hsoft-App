@@ -1,12 +1,7 @@
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { Global, Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
-export const NOTIFICATION_EXCHANGE = 'notification.exchange';
-export const SYNC_EXCHANGE = 'sync.exchange';
-export const BATCH_SYNC_EXCHANGE = 'batch.sync.exchange';
-export const USER_EVENTS_EXCHANGE = 'user.first_login';
-
+import { Exchanges } from './exchanges';
 @Global()
 @Module({
   imports: [
@@ -20,34 +15,7 @@ export const USER_EVENTS_EXCHANGE = 'user.first_login';
         logger.debug(`Connecting to RabbitMQ at URI: ${uri}`);
 
         return {
-          exchanges: [
-            {
-              name: NOTIFICATION_EXCHANGE,
-              type: 'x-delayed-message',
-              options: {
-                durable: true,
-                arguments: {
-                  'x-delayed-type': 'topic',
-                },
-              },
-            },
-            {
-              name: SYNC_EXCHANGE,
-              type: 'direct',
-            },
-            {
-              name: BATCH_SYNC_EXCHANGE,
-              type: 'x-delayed-message',
-              options: {
-                durable: true,
-                arguments: { 'x-delayed-type': 'direct' },
-              }
-            },
-            {
-              name: USER_EVENTS_EXCHANGE,
-              type: 'direct',
-            }
-          ],
+          exchanges: Exchanges,
           uri,
           prefetchCount: 10,
           connectionInitOptions: { wait: false },

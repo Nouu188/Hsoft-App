@@ -1,8 +1,9 @@
 import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { SYNC_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
 import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { QueueName, RoutingKey } from '@app/common/rabbitmq';
 
 interface SyncRequestPayload {
     ngay?: string;
@@ -21,9 +22,9 @@ export class SyncConsumer {
     ) {}
 
     @RabbitSubscribe({
-        exchange: SYNC_EXCHANGE,
-        routingKey: 'sync.request',
-        queue: 'sync.requests.queue',
+        exchange: ExchangeName.SYNC,
+        routingKey: RoutingKey.SYNC_REQUEST,
+        queue: QueueName.SYNC_REQUESTS,
     })
     public async handleSyncRequest(payload: SyncRequestPayload) {
         const { user_id, sodienthoai, mabn, socmnd , ngay } = payload;

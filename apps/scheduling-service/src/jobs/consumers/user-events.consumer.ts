@@ -2,7 +2,8 @@ import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
-import { USER_EVENTS_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { QueueName, RoutingKey } from '@app/common/rabbitmq';
 
 @Injectable()
 export class UserEventsConsumer {
@@ -14,9 +15,9 @@ export class UserEventsConsumer {
     ) {}
 
     @RabbitSubscribe({
-        exchange: USER_EVENTS_EXCHANGE,
-        routingKey: 'user.first_login',
-        queue: 'scheduling.user_first_login.queue',
+        exchange: ExchangeName.USER_EVENTS,
+        routingKey: RoutingKey.USER_FIRST_LOGIN,
+        queue: QueueName.SCHEDULING_USER_FIRST_LOGIN,
     })
     public async handleUserFirstLogin(payload: { user_id: string }): Promise<void | Nack> {
         const { user_id } = payload;

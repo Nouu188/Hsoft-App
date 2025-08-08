@@ -15,7 +15,7 @@ export class AccountApiClientService {
         private readonly configService: ConfigService,
         private readonly authApiClient: AuthApiClientService,
     ) {
-        this.accountServiceUrl = this.configService.get<string>('ACCOUNT_SERVICE_URL')!;
+        this.accountServiceUrl = this.configService.get<string>('ACCOUNT_SERVICE_URL/graphql')!;
         if (!this.accountServiceUrl) {
             throw new Error('ACCOUNT_SERVICE_URL is not defined in environment variables.');
         }
@@ -125,7 +125,6 @@ export class AccountApiClientService {
             } else {
                 this.logger.error(`- Message: ${error.message}`);
             }
-            // Ném lỗi để lớp gọi có thể bắt
             throw new Error('Failed to communicate with Account Service');
         }
     }

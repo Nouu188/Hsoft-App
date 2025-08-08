@@ -5,8 +5,9 @@ import { Logger, UseGuards } from '@nestjs/common';
 import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { CurrentUser, JwtAuthGuard } from '@app/auth';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import { SYNC_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
 import { UpdateDoseInput } from './dto/update-dose.input';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq';
 
 @Resolver(() => Dose)
 export class DosesResolver {
@@ -87,8 +88,8 @@ export class DosesResolver {
     const payload = { user_id, mabn, sodienthoai, socmnd, ngay };
 
     this.amqpConnection.publish(
-      SYNC_EXCHANGE,
-      'sync.request',
+      ExchangeName.SYNC,
+      RoutingKey.SYNC_REQUEST,
       payload,
     );
 

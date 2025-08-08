@@ -20,7 +20,7 @@ export class AuthApiClientService implements OnModuleInit {
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
     ) {
-        this.authServiceUrl = 'http://localhost:3001';
+        this.authServiceUrl = this.configService.get<string>('ACCOUNT_SERVICE_URL')!;
         this.clientId = this.configService.get<string>('SERVICE_CLIENT_ID')!;
         this.clientSecret = this.configService.get<string>('SERVICE_CLIENT_SECRET')!;
 

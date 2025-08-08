@@ -1,9 +1,9 @@
-// apps/scheduling-service/src/jobs/consumers/batch-sync.consumer.ts
 import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { DosesSyncService } from '../services/doses-sync.service';
-import { BATCH_SYNC_EXCHANGE } from '@app/common/rabbitmq/rabbitmq.module';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { QueueName, RoutingKey } from '@app/common/rabbitmq';
 
 interface BatchSyncPayload {
     userIds: string[];
@@ -15,22 +15,20 @@ export class BatchSyncConsumer {
 
     constructor(
         private readonly dosesSyncService: DosesSyncService,
-        private readonly accountApiClient: AccountApiClientService, // Để lấy thông tin user
+        private readonly accountApiClient: AccountApiClientService, 
     ) {}
 
     @RabbitSubscribe({
-        exchange: BATCH_SYNC_EXCHANGE,
-        routingKey: 'batch.process_sync',
-        queue: 'batch.sync.queue',
+        exchange: ExchangeName.BATCH_SYNC,
+        routingKey: RoutingKey.BATCH_PROCESS_SYNC,
+        queue: QueueName.BATCH_SYNC,
     })
     public async handleProcessBatch(payload: BatchSyncPayload): Promise<void> {
         const { userIds } = payload;
         this.logger.log(`Processing batch with ${userIds.length} users...`);
 
-        // Xử lý từng user trong batch một cách song song
         const syncPromises = userIds.map(async (userId) => {
             try {
-                // Lấy thông tin user đầy đủ từ Account Service
                 const user = await this.accountApiClient.fetchUserByIdentifier(userId);
                 if (user) {
                     await this.dosesSyncService.syncDosesInFuture(user);
