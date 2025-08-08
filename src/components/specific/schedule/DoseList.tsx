@@ -19,12 +19,7 @@ import Ionicons from "@react-native-vector-icons/ionicons";
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
-interface DoseListProps {
-  onEnterScrollArea: () => void;
-  onLeaveScrollArea: () => void;
-}
-
-const DoseList: React.FC<DoseListProps> = ({ onEnterScrollArea, onLeaveScrollArea }) => {
+const DoseList = () => {
   const groupDosesForSelectedDay = useScheduleStore(state => state.groupDosesForSelectedDay);
   const isLoading = useScheduleStore(state => state.isLoading);
   const error = useScheduleStore(state => state.error);
@@ -37,38 +32,28 @@ const DoseList: React.FC<DoseListProps> = ({ onEnterScrollArea, onLeaveScrollAre
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
 
   const isAtBottom = useSharedValue(false);
+  const contentHeight = useSharedValue(0);
+  const layoutHeight = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       const { layoutMeasurement, contentOffset, contentSize } = event;
-
+      contentHeight.value = contentSize.height;
+      layoutHeight.value = layoutMeasurement.height;
       const isScrolledToEnd = layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
       isAtBottom.value = isScrolledToEnd;
     },
   });
 
-  const bounceAnim = useSharedValue(0);
-
   const animatedIndicatorStyle = useAnimatedStyle(() => {
+    // Chỉ hiển thị nếu nội dung dài hơn khung chứa
+    const canScroll = contentHeight.value > layoutHeight.value;
     return {
-      opacity: withTiming(isAtBottom.value ? 0 : 1, { duration: 300 }),
-      transform: [
-        { translateY: withTiming(isAtBottom.value ? 10 : 0, { duration: 300 }) },
-        { translateY: bounceAnim.value }
-      ],
+      opacity: withTiming(isAtBottom.value || !canScroll ? 0 : 1, { duration: 300 }),
+      transform: [{ translateY: withTiming(isAtBottom.value || !canScroll ? 10 : 0, { duration: 300 }) }],
     };
   });
 
-  useEffect(() => {
-    bounceAnim.value = withRepeat(
-      withSequence(
-        withTiming(-3, { duration: 500, easing: Easing.inOut(Easing.quad) }),
-        withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) }),
-      ),
-      -1,
-      true
-    );
-  }, []);
 
   const filteredData = useMemo(() => {
     if (!groupDosesForSelectedDay) return [];
@@ -139,8 +124,6 @@ const DoseList: React.FC<DoseListProps> = ({ onEnterScrollArea, onLeaveScrollAre
   return (
     <View 
       style={styles.container}
-      onTouchStart={onEnterScrollArea}
-      onTouchEnd={onLeaveScrollArea}
     >
       <SearchBar
         searchQuery={searchQuery}
@@ -200,7 +183,7 @@ const DoseList: React.FC<DoseListProps> = ({ onEnterScrollArea, onLeaveScrollAre
 
 const styles = StyleSheet.create({
   container: {
-    height: 500,
+    flex: 1,
     backgroundColor: '#e8edf39e',
     borderRadius: SIZES.radius * 2,
     marginHorizontal: SIZES.padding * 0.8,

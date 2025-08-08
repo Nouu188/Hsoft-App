@@ -5,7 +5,6 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import dayjs from 'dayjs';
 import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
-import DailySchedulePills from './DailySchedulePills';
 import DoseItem from './DoseItem';
 import { MealRelation } from '@/types/dtos/dose/dose.dto';
 

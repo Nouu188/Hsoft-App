@@ -1,106 +1,115 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+// src/screens/schedule/ScheduleScreen.tsx (Đã tái cấu trúc theo MoMo)
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES } from '../../constants/theme';
-import HeartProgress from '@/components/specific/home/HeartProgress';
+import { COLORS, SIZES } from '@/constants/theme';
 
-const ScheduleScreen = () => {
+// Import các component con
+import SegmentedControl from '@/components/common/SegmentedControl';
+import MedicationScheduleView from '@/components/specific/schedule/MedicationScheduleView';
+
+// Placeholder cho màn hình Lịch hẹn khám
+const AppointmentView = () => (
+  <View style={styles.placeholderContainer}>
+    <Text style={styles.placeholderText}>Giao diện Lịch hẹn khám sẽ ở đây.</Text>
+  </View>
+);
+
+const ScheduleScreen: React.FC = () => {
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  const { width: screenWidth } = useWindowDimensions();
+
+  // Animation cho việc trượt nội dung
+  const contentAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: withTiming(-selectedTabIndex * screenWidth, { duration: 350, easing: Easing.out(Easing.quad) }) }],
+    };
+  });
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Header */}
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        {/* Phần Header tĩnh màu hồng */}
         <View style={styles.header}>
-          <TouchableOpacity>
-            <Ionicons name="menu" size={28} color={COLORS.textDark} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Med Plus</Text>
-          <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={28} color={COLORS.textDark} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Pillo Med Care Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="ellipse" size={30} color={COLORS.primary} style={{transform: [{ rotate: '90deg' }]}}/>
-                <View style={{ marginLeft: SIZES.padding / 2 }}>
-                    <Text style={styles.cardTitle}>Pillo Med Care</Text>
-                    <Text style={styles.cardSubtitle}>1 Tablet</Text>
-                </View>
-            </View>
-            <Ionicons name="ellipsis-vertical" size={24} color={COLORS.textLight} />
+          <Text style={styles.headerTitle}>Lịch sử giao dịch</Text>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity><Ionicons name="search-outline" size={24} color={COLORS.textDark} /></TouchableOpacity>
+            <TouchableOpacity><Ionicons name="filter-outline" size={24} color={COLORS.textDark} /></TouchableOpacity>
+            <TouchableOpacity><Ionicons name="eye-outline" size={24} color={COLORS.textDark} /></TouchableOpacity>
           </View>
-          <View style={styles.pillButtons}>
-            <TouchableOpacity style={[styles.pillButton, styles.pillButtonActive]}>
-              <Text style={styles.pillButtonTextActive}>Scheduled 1</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.pillButton}>
-              <Text style={styles.pillButtonText}>As-needed 0</Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.listButton}>
-            <Text style={styles.listButtonText}>Pillo Med Care list</Text>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
         </View>
 
-        {/* Measurement Tracker */}
-        <Text style={styles.sectionTitle}>Measurement Tracker</Text>
-        <View style={[styles.card, { alignItems: 'center' }]}>
-            <View style={[styles.cardHeader, { width: '100%' }]}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <Ionicons name="heart-outline" size={24} color={COLORS.textDark} />
-                    <View style={{marginLeft: 10}}>
-                        <Text style={styles.cardTitle}>Heart Health</Text>
-                        <Text style={styles.cardSubtitle}>70bpm</Text>
-                    </View>
-                </View>
-                <TouchableOpacity style={styles.addButton}>
-                    <Ionicons name="add" size={20} color={COLORS.primary} />
-                </TouchableOpacity>
-            </View>
-            <HeartProgress percentage={60} />
-        </View>
+        {/* Nút chuyển đổi */}
+        <SegmentedControl
+          options={['Lịch uống thuốc', 'Lịch hẹn khám']}
+          selectedIndex={selectedTabIndex}
+          onOptionPress={setSelectedTabIndex}
+        />
 
-        {/* Blood Check (Simplified) */}
-        <View style={styles.card}>
-            <View style={[styles.cardHeader, { width: '100%' }]}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <Ionicons name="pulse-outline" size={24} color={COLORS.textDark} />
-                    <View style={{marginLeft: 10}}>
-                        <Text style={styles.cardTitle}>Blood Check</Text>
-                    </View>
-                </View>
-                <TouchableOpacity style={styles.addButton}>
-                    <Ionicons name="add" size={20} color={COLORS.primary} />
-                </TouchableOpacity>
+        {/* Phần nền trắng chứa nội dung */}
+        <View style={styles.contentWrapper}>
+          <Animated.View style={[styles.contentSlider, contentAnimatedStyle]}>
+            <View style={{ width: screenWidth }}>
+              <MedicationScheduleView />
             </View>
-            <View style={{height: 60, marginTop: 20}} />
+            <View style={{ width: screenWidth }}>
+              <AppointmentView />
+            </View>
+          </Animated.View>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SIZES.padding },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.textDark },
-  card: { backgroundColor: COLORS.primaryLight, borderRadius: SIZES.radius * 1.5, padding: SIZES.padding, margin: SIZES.padding, marginTop: 0 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.textDark },
-  cardSubtitle: { fontSize: 14, color: COLORS.textLight },
-  pillButtons: { flexDirection: 'row', marginTop: SIZES.padding },
-  pillButton: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: COLORS.lightGray, marginRight: 10 },
-  pillButtonActive: { backgroundColor: COLORS.primary },
-  pillButtonText: { color: COLORS.textLight, fontWeight: '500' },
-  pillButtonTextActive: { color: COLORS.white, fontWeight: '500' },
-  listButton: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.lightGray, padding: 12, borderRadius: SIZES.radius, marginTop: SIZES.padding },
-  listButtonText: { color: COLORS.primary, fontWeight: '600' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.textDark, padding: SIZES.padding },
-  addButton: { backgroundColor: COLORS.lightGray, padding: 5, borderRadius: 20 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.primary, // Màu nền hồng nhạt
+  },
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SIZES.padding,
+    paddingVertical: SIZES.padding,
+    backgroundColor: COLORS.primary, // Đảm bảo header có nền hồng
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.textDark,
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  contentWrapper: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    // Overflow hidden để nội dung trượt không bị tràn ra ngoài
+    overflow: 'hidden',
+  },
+  contentSlider: {
+    flex: 1,
+    flexDirection: 'row',
+    marginTop: SIZES.padding,
+  },
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: COLORS.textLight,
+  },
 });
 
 export default ScheduleScreen;
