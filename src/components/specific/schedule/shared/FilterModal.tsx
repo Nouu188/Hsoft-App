@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { COLORS, SIZES } from '@/constants/theme';
-import { FilterState } from '@/screens/schedule/DoseFilter';
+import { FilterState } from '@/components/specific/schedule/medication/components/DoseFilter';
 
 interface FilterModalProps {
   visible: boolean;

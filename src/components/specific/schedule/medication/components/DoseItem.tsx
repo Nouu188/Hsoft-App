@@ -5,7 +5,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import DailySchedulePills from './DailySchedulePills';
-import DoseActionMenu from './DoseActionMenu';
+import DoseActionMenu from '../../shared/DoseActionMenu';
 import MealTimeSetter from './MealTimeSetter';
 import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
 import { Dose, MealRelation } from '@/types/dtos/dose/dose.dto';

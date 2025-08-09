@@ -5,8 +5,8 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, LinearT
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 import { COLORS, SIZES, FONTS, SHADOWS } from '../../constants/theme';
-import AuthInput from '../../components/AuthInput';
 import { useAuthStore } from '../../store/useAuthStore'; 
+import AuthInput from '@/components/specific/auth/AuthInput';
 
 const { width } = Dimensions.get('window');
 

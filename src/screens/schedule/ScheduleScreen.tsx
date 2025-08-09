@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-rea
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import SegmentedControl from '@/components/common/SegmentedControl';
-import MedicationScheduleView from '@/components/specific/schedule/MedicationScheduleView';
+import MedicationScheduleView from '@/components/specific/schedule/medication/MedicationScheduleView';
 
 const AppointmentView = () => (
   <View style={styles.placeholderContainer}>

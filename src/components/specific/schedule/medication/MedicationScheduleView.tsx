@@ -2,13 +2,13 @@ import { COLORS, SIZES } from "@/constants/theme";
 import { useScheduleStore } from "@/store/useScheduleStore";
 import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import TimeSlotCard from "./TimeSlotCard";
+import TimeSlotCard from "./components/TimeSlotCard";
 import SearchBar from "@/components/common/SearchBar";
-import FilterModal from "./FilterModal";
-import { FilterState } from "@/screens/schedule/DoseFilter";
-import DateSelector from "./DateSelector";
+import FilterModal from "../shared/FilterModal";
+import { FilterState } from "@/components/specific/schedule/medication/components/DoseFilter";
+import DateSelector from "../shared/DateSelector";
 import { GroupedDose } from "@/types/dtos/dose/grouped-dose.dto";
-import dayjs from "dayjs";
+import TimeSlotCardSkeleton from "./components/TimeSlotCardSkeleton";
 
 const MedicationScheduleView = () => {
     const groupDosesForSelectedDay = useScheduleStore(state => state.groupDosesForSelectedDay);
@@ -71,55 +71,55 @@ const MedicationScheduleView = () => {
         }
     };
 
-  const flatListRef = useRef<FlatList<GroupedDose>>(null);
+    const flatListRef = useRef<FlatList<GroupedDose>>(null);
 
-  const handleNavigateToTime = (time: string) => {
-    const indexInFullList = groupDosesForSelectedDay.findIndex(
-      group => new Date(group.time).getTime() === new Date(time).getTime()
-    );
+    const handleNavigateToTime = (time: string) => {
+        const indexInFullList = groupDosesForSelectedDay.findIndex(
+            group => new Date(group.time).getTime() === new Date(time).getTime()
+        );
 
-    if (indexInFullList === -1) {
-      console.warn(`Could not find the target time slot in the original data source.`);
-      return;
-    }
-
-    const onScrollEnd = () => {
-      console.log('Scrolling animation finished.');
-    };
-
-    const isFilterActive = filters.status !== 'ALL' || searchQuery !== '';
-    
-    
-    if (isFilterActive) {
-      console.log('Filters are active. Clearing them temporarily to scroll.');
-      setFilters({ status: 'ALL', timeOfDay: [] });
-      setSearchQuery('');
-
-      setTimeout(() => {
-        if (flatListRef.current) {
-          flatListRef.current.scrollToIndex({
-            index: indexInFullList,
-            animated: true,
-            viewPosition: 0,
-            viewOffset: SIZES.padding
-          });
-          setTimeout(onScrollEnd, 400);
+        if (indexInFullList === -1) {
+            console.warn(`Could not find the target time slot in the original data source.`);
+            return;
         }
-      }, 100); 
 
-    } else {
-      if (flatListRef.current) {
-        flatListRef.current.scrollToIndex({
-          index: indexInFullList,
-          animated: true,
-          viewPosition: 0,
-          viewOffset: SIZES.padding,
-        });
-        setTimeout(onScrollEnd, 500);
-      }
-      console.log(flatListRef.current)
-    }
-  };
+        const onScrollEnd = () => {
+            console.log('Scrolling animation finished.');
+        };
+
+        const isFilterActive = filters.status !== 'ALL' || searchQuery !== '';
+
+
+        if (isFilterActive) {
+            console.log('Filters are active. Clearing them temporarily to scroll.');
+            setFilters({ status: 'ALL', timeOfDay: [] });
+            setSearchQuery('');
+
+            setTimeout(() => {
+                if (flatListRef.current) {
+                    flatListRef.current.scrollToIndex({
+                        index: indexInFullList,
+                        animated: true,
+                        viewPosition: 0,
+                        viewOffset: SIZES.padding
+                    });
+                    setTimeout(onScrollEnd, 400);
+                }
+            }, 100);
+
+        } else {
+            if (flatListRef.current) {
+                flatListRef.current.scrollToIndex({
+                    index: indexInFullList,
+                    animated: true,
+                    viewPosition: 0,
+                    viewOffset: SIZES.padding,
+                });
+                setTimeout(onScrollEnd, 500);
+            }
+            console.log(flatListRef.current)
+        }
+    };
 
     const handleSkipDose = (doseId: string) => {
         updateDoseStatus(doseId, 'SKIPPED');
@@ -163,6 +163,14 @@ const MedicationScheduleView = () => {
         );
     };
 
+    const renderSkeleton = () => (
+        <View style={{ paddingHorizontal: SIZES.padding, paddingTop: 12 }}>
+            <TimeSlotCardSkeleton />
+            <TimeSlotCardSkeleton />
+            <TimeSlotCardSkeleton />
+        </View>
+    );
+
     return (
         <View style={styles.container}>
             <View style={styles.staticHeader}>
@@ -179,23 +187,27 @@ const MedicationScheduleView = () => {
                 </View>
             </View>
 
-            <FlatList
-                style={styles.list}
-                ref={flatListRef}
-                data={filteredData}
-                renderItem={renderDoseItem}
-                keyExtractor={item => item.time}
-                showsVerticalScrollIndicator={false}
-                ListEmptyComponent={renderEmptyListComponent}
-                contentContainerStyle={{ paddingHorizontal: SIZES.padding, paddingBottom: 100, paddingTop: 12 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isLoading}
-                        onRefresh={onFetch}
-                        tintColor={COLORS.primary}
-                    />
-                }
-            />
+            {isLoading ? (
+                renderSkeleton()
+            ) : (
+                <FlatList
+                    style={styles.list}
+                    ref={flatListRef}
+                    data={filteredData}
+                    renderItem={renderDoseItem}
+                    keyExtractor={item => item.time}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={renderEmptyListComponent}
+                    contentContainerStyle={{ paddingHorizontal: SIZES.padding, paddingBottom: 100, paddingTop: 12 }}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={isLoading}
+                            onRefresh={onFetch}
+                            tintColor={COLORS.primary}
+                        />
+                    }
+                />
+            )}
 
             <FilterModal
                 visible={isFilterModalVisible}
@@ -220,7 +232,7 @@ const styles = StyleSheet.create({
     searchBarContainer: {
         paddingTop: SIZES.padding / 2,
         paddingBottom: SIZES.padding / 1.5,
-        backgroundColor: COLORS.white, 
+        backgroundColor: COLORS.white,
     },
     content: {
         paddingHorizontal: SIZES.padding,
@@ -265,7 +277,7 @@ const styles = StyleSheet.create({
         fontSize: 13,
     },
     list: {
-        flex: 1, 
+        flex: 1,
     },
     staticHeader: {
         backgroundColor: COLORS.white,
@@ -274,7 +286,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 1, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
-        zIndex: 10, 
+        zIndex: 10,
     },
 });
 

@@ -43,7 +43,7 @@ const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ dose, time, all
             {medicationSchedule.map(group => {
                 const { icon, color, style } = getPillInfo(group.status);
                 return (
-                    <TouchableOpacity key={group.time} style={[styles.pill, style, dose.is_prepared && group.time === time && { opacity: 0.7 }]} onPress={() => onPillPress(group.time)}>
+                    <TouchableOpacity key={group.time} style={[styles.pill, style, dose.is_prepared && group.time === time && { opacity: 0.5 }]} onPress={() => onPillPress(group.time)}>
                         <View style={{ flexDirection: 'row' }}>
                             <Ionicons name={icon as any} size={14} color={color} />
                             <Text style={[styles.pillText, { color }]}>{group.timeOfDay}</Text>

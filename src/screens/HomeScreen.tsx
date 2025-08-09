@@ -5,8 +5,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import { useScheduleStore } from '@/store/useScheduleStore';
 import { useAuthStore } from '@/store/useAuthStore';
-import DoseList from '@/components/specific/schedule/DoseList';
-import DateSelector from '@/components/specific/schedule/DateSelector';
+import DateSelector from '@/components/specific/schedule/shared/DateSelector';
 import dayjs from 'dayjs';
 
 import Animated, {
@@ -84,10 +83,6 @@ const HomeScreen: React.FC = () => {
         );
       case 'date_selector':
         return <DateSelector />;
-      case 'dose_list':
-        return (
-          <DoseList />
-        );
       case 'footer_spacer':
         return <View style={{ height: 100 }} />;
       default:

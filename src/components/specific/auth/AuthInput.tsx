@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES, FONTS } from '../constants/theme';
+import { COLORS, SIZES, FONTS } from '../../../constants/theme';
 
 interface AuthInputProps {
   icon: string;
