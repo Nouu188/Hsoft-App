@@ -1,30 +1,24 @@
 import { COLORS, SIZES } from "@/constants/theme";
 import { useScheduleStore } from "@/store/useScheduleStore";
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native"; // Thay FlatList bằng ScrollView
+import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import TimeSlotCard from "./TimeSlotCard";
 import SearchBar from "@/components/common/SearchBar";
 import FilterModal from "./FilterModal";
 import { FilterState } from "@/screens/schedule/DoseFilter";
-import Animated from 'react-native-reanimated';
 import DateSelector from "./DateSelector";
 import { GroupedDose } from "@/types/dtos/dose/grouped-dose.dto";
-
-const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+import dayjs from "dayjs";
 
 const MedicationScheduleView = () => {
     const groupDosesForSelectedDay = useScheduleStore(state => state.groupDosesForSelectedDay);
     const isLoading = useScheduleStore(state => state.isLoading);
     const error = useScheduleStore(state => state.error);
+    const selectedDate = useScheduleStore(state => state.selectedDate)
     const updateDoseStatus = useScheduleStore(state => state.updateDoseStatus);
     const toggleDosePreparedStatus = useScheduleStore(state => state.toggleDosePreparedStatus);
-    const setDoseMealPreference = useScheduleStore(state => state.setDoseMealPreference)
-    const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate)
-    const selectedDate = useScheduleStore(state => state.selectedDate)
-
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
-    const [isFilterModalVisible, setFilterModalVisible] = useState(false);
+    const setDoseMealPreference = useScheduleStore(state => state.setDoseMealPreference);
+    const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
 
     const onFetch = useCallback(() => {
         fetchDosesBySelectedDate();
@@ -33,6 +27,10 @@ const MedicationScheduleView = () => {
     useEffect(() => {
         onFetch();
     }, [selectedDate, fetchDosesBySelectedDate]);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
+    const [isFilterModalVisible, setFilterModalVisible] = useState(false);
 
     const filteredData = useMemo(() => {
         if (!groupDosesForSelectedDay) return [];
@@ -73,15 +71,55 @@ const MedicationScheduleView = () => {
         }
     };
 
-    const scrollRef = useRef<ScrollView>(null);
-    const layoutMap = useRef(new Map<string, number>());
+  const flatListRef = useRef<FlatList<GroupedDose>>(null);
 
-    const handleNavigateToTime = (time: string) => {
-        const y = layoutMap.current.get(time);
-        if (y !== undefined && scrollRef.current) {
-            scrollRef.current.scrollTo({ y, animated: true });
-        }
+  const handleNavigateToTime = (time: string) => {
+    const indexInFullList = groupDosesForSelectedDay.findIndex(
+      group => new Date(group.time).getTime() === new Date(time).getTime()
+    );
+
+    if (indexInFullList === -1) {
+      console.warn(`Could not find the target time slot in the original data source.`);
+      return;
+    }
+
+    const onScrollEnd = () => {
+      console.log('Scrolling animation finished.');
     };
+
+    const isFilterActive = filters.status !== 'ALL' || searchQuery !== '';
+    
+    
+    if (isFilterActive) {
+      console.log('Filters are active. Clearing them temporarily to scroll.');
+      setFilters({ status: 'ALL', timeOfDay: [] });
+      setSearchQuery('');
+
+      setTimeout(() => {
+        if (flatListRef.current) {
+          flatListRef.current.scrollToIndex({
+            index: indexInFullList,
+            animated: true,
+            viewPosition: 0,
+            viewOffset: SIZES.padding
+          });
+          setTimeout(onScrollEnd, 400);
+        }
+      }, 100); 
+
+    } else {
+      if (flatListRef.current) {
+        flatListRef.current.scrollToIndex({
+          index: indexInFullList,
+          animated: true,
+          viewPosition: 0,
+          viewOffset: SIZES.padding,
+        });
+        setTimeout(onScrollEnd, 500);
+      }
+      console.log(flatListRef.current)
+    }
+  };
 
     const handleSkipDose = (doseId: string) => {
         updateDoseStatus(doseId, 'SKIPPED');
@@ -143,6 +181,7 @@ const MedicationScheduleView = () => {
 
             <FlatList
                 style={styles.list}
+                ref={flatListRef}
                 data={filteredData}
                 renderItem={renderDoseItem}
                 keyExtractor={item => item.time}

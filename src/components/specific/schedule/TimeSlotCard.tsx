@@ -37,14 +37,7 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
     const { group, allDosesForDay, onMarkAllAsTaken, onTogglePrepared, onNavigateToTime, onSkipDose, onRescheduleDose, onSetMealPreference } = props; const { cardStyle, iconColor, tagText } = getStatusInfo(group.status);
     const isActionable = group.status === 'ACTIVE' || group.status === 'MISSED';
 
-    const [expandedDoseId, setExpandedDoseId] = useState<string | null>(null);
-
     const allDosesPrepared = group.doses.every(d => d.is_prepared);
-
-    const toggleExpand = (doseId: string) => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setExpandedDoseId(expandedDoseId === doseId ? null : doseId);
-    };
 
     return (
         <Shadow distance={8} startColor={'#1B4D7E0F'} offset={[2, 5]} style={styles.shadowContainer}>
@@ -52,7 +45,7 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
                 <View style={styles.header}>
                     <View style={styles.headerLeft}>
                         <Ionicons name="alarm-outline" size={24} color={iconColor} />
-                        <Text style={styles.timeText}>{group.timeOfDay} - {dayjs(group.time).format('h:mm A')}</Text>
+                        <Text style={styles.timeText}>{group.timeOfDay} - {dayjs(group.time).format('HH:mm')}</Text>
                     </View>
                     <View style={[styles.tag, { backgroundColor: iconColor }]}>
                         <Text style={styles.tagText}>{tagText}</Text>
@@ -72,6 +65,7 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
                     {group.doses.map(dose => (
                         <DoseItem
                             key={dose.id}
+                            time={group.time}
                             dose={dose}
                             allDosesForDay={allDosesForDay}
                             onTogglePrepared={onTogglePrepared}

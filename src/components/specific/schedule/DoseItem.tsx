@@ -12,6 +12,7 @@ import { Dose, MealRelation } from '@/types/dtos/dose/dose.dto';
 
 interface DoseItemProps {
   dose: Dose;
+  time: string;
   allDosesForDay: GroupedDose[];
   onTogglePrepared: (doseId: string) => void;
   onNavigateToTime: (time: string) => void;
@@ -20,7 +21,7 @@ interface DoseItemProps {
 }
 
 const DoseItem: React.FC<DoseItemProps> = (props) => {
-  const { dose, allDosesForDay, onTogglePrepared, onNavigateToTime, onSkipDose, onSetMealPreference } = props;
+  const { dose, time, allDosesForDay, onTogglePrepared, onNavigateToTime, onSkipDose, onSetMealPreference } = props;
   const [isMenuVisible, setMenuVisible] = useState(false);
 
   const detectedMealType = useMemo((): 'BEFORE' | 'AFTER' | null => {
@@ -57,24 +58,27 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
   ];
 
   return (
-    <View style={[styles.doseItemContainer, dose.is_prepared && styles.preparedItem]}>
+    <View style={[styles.doseItemContainer]}>
       <View style={styles.doseItem}>
         <TouchableOpacity onPress={() => onTogglePrepared(dose.id)} style={styles.checkbox}>
           <Ionicons name={dose.is_prepared ? "checkbox" : "square-outline"} size={24} color={dose.is_prepared ? COLORS.primary : COLORS.textLight} />
         </TouchableOpacity>
         <View style={styles.doseInfo}>
-          <Text style={styles.medicationName}>{dose.medication_name}</Text>
-          <Text style={styles.dosageText}>{dose.dosage_instructions}</Text>
-          
-          <View style={styles.usageContainer}>
-            {dose.usage_instructions && <Text style={styles.usageText}>{dose.usage_instructions}</Text>}
-            {detectedMealType && (
-              <MealTimeSetter mealRelation={dose.meal_relation} onPress={handleSetMealMinutes} />
-            )}
+          <View style={dose.is_prepared && styles.preparedItem}>
+            <Text style={styles.medicationName}>{dose.medication_name}</Text>
+            <Text style={styles.dosageText}>{dose.dosage_instructions}</Text>
+
+            <View style={styles.usageContainer}>
+              {dose.usage_instructions && <Text style={styles.usageText}>{dose.usage_instructions}</Text>}
+              {detectedMealType && (
+                <MealTimeSetter mealRelation={dose.meal_relation} onPress={handleSetMealMinutes} />
+              )}
+            </View>
           </View>
 
           <DailySchedulePills
-            medicationName={dose.medication_name}
+            time={time}
+            dose={dose}
             allDosesForDay={allDosesForDay}
             onPillPress={onNavigateToTime}
           />
@@ -89,16 +93,16 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
 };
 
 const styles = StyleSheet.create({
-    doseItemContainer: { backgroundColor: COLORS.white, borderRadius: SIZES.radius, marginBottom: SIZES.padding / 4, overflow: 'hidden' },
-    preparedItem: { opacity: 0.7 },
-    doseItem: { flexDirection: 'row', alignItems: 'flex-start', padding: 10 },
-    checkbox: { paddingRight: 10, paddingTop: 3 },
-    doseInfo: { flex: 1 },
-    medicationName: { fontSize: 16, fontWeight: '600', color: COLORS.textDark },
-    dosageText: { fontSize: 14, color: COLORS.textLight, marginTop: 2 },
-    usageContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' },
-    usageText: { fontSize: 14, color: COLORS.textLight, fontStyle: 'italic' },
-    menuButton: { padding: 8, marginLeft: 8, bottom: 2 },
+  doseItemContainer: { backgroundColor: COLORS.white, borderRadius: SIZES.radius, marginBottom: SIZES.padding / 4, overflow: 'hidden' },
+  preparedItem: { opacity: 0.7 },
+  doseItem: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 10 },
+  checkbox: { paddingRight: 10, paddingTop: 2 },
+  doseInfo: { flex: 1 },
+  medicationName: { fontSize: 16, fontWeight: '600', color: COLORS.textDark },
+  dosageText: { fontSize: 14, color: COLORS.textLight, marginTop: 2 },
+  usageContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' },
+  usageText: { fontSize: 14, color: COLORS.textLight, fontStyle: 'italic' },
+  menuButton: { padding: 8, marginLeft: 8, bottom: 2 },
 });
 
 export default DoseItem;

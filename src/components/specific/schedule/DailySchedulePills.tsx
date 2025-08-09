@@ -1,22 +1,24 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES } from '@/constants/theme';
+import { COLORS } from '@/constants/theme';
 import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
 import dayjs from 'dayjs';
+import { Dose } from '@/types/dtos/dose/dose.dto';
 
 interface DailySchedulePillsProps {
-    medicationName: string;
+    dose: Dose;
+    time: string;
     allDosesForDay: GroupedDose[];
     onPillPress: (time: string) => void;
 }
 
-const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ medicationName, allDosesForDay, onPillPress }) => {
+const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ dose, time, allDosesForDay, onPillPress }) => {
     const medicationSchedule = useMemo(() => {
         return allDosesForDay
-            .filter(group => group.doses.some(d => d.medication_name === medicationName))
+            .filter(group => group.doses.some(d => d.medication_name === dose.medication_name))
             .sort((a, b) => dayjs(a.time).valueOf() - dayjs(b.time).valueOf());
-    }, [allDosesForDay, medicationName]);
+    }, [allDosesForDay, dose.medication_name]);
 
     if (medicationSchedule.length <= 1) {
         return null;
@@ -41,7 +43,7 @@ const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ medicationName,
             {medicationSchedule.map(group => {
                 const { icon, color, style } = getPillInfo(group.status);
                 return (
-                    <TouchableOpacity key={group.time} style={[styles.pill, style]} onPress={() => onPillPress(group.time)}>
+                    <TouchableOpacity key={group.time} style={[styles.pill, style, dose.is_prepared && group.time === time && { opacity: 0.7 }]} onPress={() => onPillPress(group.time)}>
                         <View style={{ flexDirection: 'row' }}>
                             <Ionicons name={icon as any} size={14} color={color} />
                             <Text style={[styles.pillText, { color }]}>{group.timeOfDay}</Text>
