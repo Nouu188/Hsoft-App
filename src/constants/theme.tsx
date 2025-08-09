@@ -8,20 +8,20 @@ const { width, height } = Dimensions.get('window');
 export const COLORS = {
   // Màu chủ đạo
   primary: '#5A8D9E', // Màu xanh xám chính, dùng cho các nút active, icon, điểm nhấn
-  primaryLight: '#e2f0f7', // Một phiên bản rất nhạt của màu primary, dùng cho nền card
+  primaryLight: '#E8EDF3', // Một phiên bản rất nhạt của màu primary, dùng cho nền card
   
   // Màu phụ trợ
   secondary: '#475569', // Màu xám đậm cho các yếu tố phụ
   accent: '#F76F6F',   // Màu nhấn (đỏ/hồng san hô) cho các chỉ số quan trọng, cảnh báo
 
   // Màu trạng thái
-  success: '#22C55E',  // Xanh lá cây cho hành động thành công
-  warning: '#F59E0B',  // Vàng cho cảnh báo
-  danger: '#EF4444',   // Đỏ cho lỗi hoặc hành động xóa
+  success: '#27AE60',  // Xanh lá cây cho hành động thành công
+  warning: '#F39C12',  // Vàng cho cảnh báo
+  danger: '#C0392B',   // Đỏ cho lỗi hoặc hành động xóa
 
   // Màu văn bản (Text)
-  textDark: '#0F172A',  // Gần như đen, cho tiêu đề và văn bản chính
-  text: '#334155',      // Xám đậm cho văn bản phụ
+  textDark: '#2C3E50',  // Gần như đen, cho tiêu đề và văn bản chính
+  text: '#34495E',      // Xám đậm cho văn bản phụ
   textLight: '#64748B', // Xám nhạt cho các ghi chú, placeholder
   textOnPrimary: '#FFFFFF', // Màu chữ trên nền màu chủ đạo
 
@@ -29,7 +29,7 @@ export const COLORS = {
   background: '#F8FAFC', // Màu nền chính của app (trắng hơi xám)
   white: '#FFFFFF',      // Màu trắng tinh khiết cho các card
   lightGray: '#F1F5F9',  // Xám rất nhạt cho các dải phân cách, nền input
-  border: '#E2E8F0',     // Màu viền
+  border: '#D8DEE9',     // Màu viền
 
   // Màu trong suốt
   transparent: 'transparent',

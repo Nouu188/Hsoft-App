@@ -86,10 +86,7 @@ const HomeScreen: React.FC = () => {
         return <DateSelector />;
       case 'dose_list':
         return (
-          <DoseList
-            onEnterScrollArea={() => setParentScrollEnabled(false)}
-            onLeaveScrollArea={() => setParentScrollEnabled(true)}
-          />
+          <DoseList />
         );
       case 'footer_spacer':
         return <View style={{ height: 100 }} />;

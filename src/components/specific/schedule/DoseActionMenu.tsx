@@ -37,7 +37,7 @@ const DoseActionMenu: React.FC<DoseActionMenuProps> = ({ visible, onClose, optio
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  menuContainer: { backgroundColor: COLORS.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: SIZES.padding, paddingBottom: 40 },
+  menuContainer: { backgroundColor: COLORS.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: SIZES.padding },
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15 },
   optionText: { fontSize: 16, marginLeft: 15, color: COLORS.textDark },
 });
