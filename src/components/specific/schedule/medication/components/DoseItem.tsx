@@ -60,11 +60,13 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
   return (
     <View style={[styles.doseItemContainer]}>
       <View style={styles.doseItem}>
-        <TouchableOpacity onPress={() => onTogglePrepared(dose.id)} style={styles.checkbox}>
-          <Ionicons name={dose.is_prepared ? "checkbox" : "square-outline"} size={24} color={dose.is_prepared ? COLORS.primary : COLORS.textLight} />
-        </TouchableOpacity>
+        {dose.status !== 'TAKEN' && (
+          <TouchableOpacity onPress={() => onTogglePrepared(dose.id)} style={[styles.checkbox]}>
+            <Ionicons name={dose.is_prepared ? "checkbox" : "square-outline"} size={24} color={dose.is_prepared ? COLORS.primary : COLORS.textLight} />
+          </TouchableOpacity>
+        )}
         <View style={styles.doseInfo}>
-          <View style={dose.is_prepared && styles.preparedItem}>
+          <View style={dose.status !== 'TAKEN' && dose.is_prepared && styles.preparedItem }>
             <Text style={styles.medicationName}>{dose.medication_name}</Text>
             <Text style={styles.dosageText}>{dose.dosage_instructions}</Text>
 
@@ -93,14 +95,14 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
 };
 
 const styles = StyleSheet.create({
-  doseItemContainer: { backgroundColor: COLORS.white, borderRadius: SIZES.radius, marginBottom: SIZES.padding / 4, overflow: 'hidden' },
-  preparedItem: { opacity: 0.7 },
+  doseItemContainer: { borderRadius: SIZES.radius, marginBottom: SIZES.padding / 4, overflow: 'hidden' },
+  preparedItem: { },
   doseItem: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 10 },
-  checkbox: { paddingRight: 10, paddingTop: 2 },
+  checkbox: { marginRight: 10, marginTop: 2 },
   doseInfo: { flex: 1 },
   medicationName: { fontSize: 16, fontWeight: '600', color: COLORS.textDark },
   dosageText: { fontSize: 14, color: COLORS.textLight, marginTop: 2 },
-  usageContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' },
+  usageContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap',  },
   usageText: { fontSize: 14, color: COLORS.textLight, fontStyle: 'italic' },
   menuButton: { padding: 8, marginLeft: 8, bottom: 2 },
 });

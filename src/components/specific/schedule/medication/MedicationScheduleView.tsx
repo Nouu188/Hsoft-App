@@ -20,13 +20,13 @@ const MedicationScheduleView = () => {
     const setDoseMealPreference = useScheduleStore(state => state.setDoseMealPreference);
     const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
 
-    const onFetch = useCallback(() => {
-        fetchDosesBySelectedDate();
-    }, []);
-
     useEffect(() => {
-        onFetch();
+        fetchDosesBySelectedDate();
     }, [selectedDate, fetchDosesBySelectedDate]);
+
+    const onRefresh = useCallback(() => {
+        fetchDosesBySelectedDate();
+    }, [fetchDosesBySelectedDate]);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
@@ -35,7 +35,7 @@ const MedicationScheduleView = () => {
     const filteredData = useMemo(() => {
         if (!groupDosesForSelectedDay) return [];
 
-        let data = [...groupDosesForSelectedDay];
+        let data = groupDosesForSelectedDay;
 
         if (searchQuery) {
             const lowercasedQuery = searchQuery.toLowerCase();
@@ -57,7 +57,7 @@ const MedicationScheduleView = () => {
             }
         }
 
-        return data.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+        return data;
     }, [groupDosesForSelectedDay, filters, searchQuery]);
 
     const handleMarkAllAsTaken = (time: string) => {
@@ -74,50 +74,39 @@ const MedicationScheduleView = () => {
     const flatListRef = useRef<FlatList<GroupedDose>>(null);
 
     const handleNavigateToTime = (time: string) => {
-        const indexInFullList = groupDosesForSelectedDay.findIndex(
+        const indexInFilteredList = filteredData.findIndex(
             group => new Date(group.time).getTime() === new Date(time).getTime()
         );
 
-        if (indexInFullList === -1) {
-            console.warn(`Could not find the target time slot in the original data source.`);
-            return;
-        }
+        if (indexInFilteredList !== -1) {
+            if (flatListRef.current) {
+                flatListRef.current.scrollToIndex({
+                    index: indexInFilteredList,
+                    animated: true,
+                    viewPosition: 0, 
+                    viewOffset: SIZES.padding 
+                });
+            }
+        } else {
+            console.warn(`Target time slot is hidden by filters. Clearing filters to scroll.`);
 
-        const onScrollEnd = () => {
-            console.log('Scrolling animation finished.');
-        };
-
-        const isFilterActive = filters.status !== 'ALL' || searchQuery !== '';
-
-
-        if (isFilterActive) {
-            console.log('Filters are active. Clearing them temporarily to scroll.');
             setFilters({ status: 'ALL', timeOfDay: [] });
             setSearchQuery('');
 
             setTimeout(() => {
-                if (flatListRef.current) {
+                const indexInFullList = groupDosesForSelectedDay.findIndex(
+                    group => new Date(group.time).getTime() === new Date(time).getTime()
+                );
+
+                if (indexInFullList !== -1 && flatListRef.current) {
                     flatListRef.current.scrollToIndex({
                         index: indexInFullList,
                         animated: true,
                         viewPosition: 0,
                         viewOffset: SIZES.padding
                     });
-                    setTimeout(onScrollEnd, 400);
                 }
-            }, 100);
-
-        } else {
-            if (flatListRef.current) {
-                flatListRef.current.scrollToIndex({
-                    index: indexInFullList,
-                    animated: true,
-                    viewPosition: 0,
-                    viewOffset: SIZES.padding,
-                });
-                setTimeout(onScrollEnd, 500);
-            }
-            console.log(flatListRef.current)
+            }, 100); 
         }
     };
 
@@ -187,7 +176,7 @@ const MedicationScheduleView = () => {
                 </View>
             </View>
 
-            {isLoading ? (
+            {isLoading && groupDosesForSelectedDay.length === 0 ? (
                 renderSkeleton()
             ) : (
                 <FlatList
@@ -202,7 +191,7 @@ const MedicationScheduleView = () => {
                     refreshControl={
                         <RefreshControl
                             refreshing={isLoading}
-                            onRefresh={onFetch}
+                            onRefresh={onRefresh}
                             tintColor={COLORS.primary}
                         />
                     }

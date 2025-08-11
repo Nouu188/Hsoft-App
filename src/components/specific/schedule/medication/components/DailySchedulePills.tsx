@@ -84,11 +84,11 @@ const styles = StyleSheet.create({
         borderColor: COLORS.primary,
     },
     pillCompleted: {
-        backgroundColor: '#E9F9EF',
+        backgroundColor: '#ffffffff',
         borderColor: COLORS.success,
     },
     pillMissed: {
-        backgroundColor: '#FDEDED',
+        backgroundColor: '#ffffffff',
         borderColor: COLORS.danger,
     },
 });

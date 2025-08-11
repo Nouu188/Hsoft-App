@@ -30,7 +30,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: SIZES.radius,
-    marginLeft: 10, 
+    marginLeft: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 5, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 1
   },
   text: {
     marginLeft: 5,

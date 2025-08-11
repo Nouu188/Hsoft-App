@@ -22,6 +22,7 @@ export const GET_DOSES_BY_SELECTED_DATE = gql`
       medication_name
       dosage_instructions
       usage_instructions
+      meal_relation
     }
   }
 `;  

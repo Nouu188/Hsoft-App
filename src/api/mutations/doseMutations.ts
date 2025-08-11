@@ -9,3 +9,13 @@ export const UPDATE_DOSE_STATUS = gql`
     }
   }
 `;
+
+export const UPDATE_DOSES_MUTATION = gql`
+  mutation UpdateDoses($updates: [UpdateDoseInput!]!) {
+    updateDoses(updates: $updates) {
+      id
+      due_at
+      status
+    }
+  }
+`;

@@ -14,5 +14,5 @@ export interface Dose {
 
 export interface MealRelation {
   type: 'BEFORE' | 'AFTER' | 'WITH';
-  minutes?: number; // Chỉ cần thiết cho 'BEFORE' và 'AFTER'
+  minutes?: number;
 }

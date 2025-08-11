@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import dayjs from 'dayjs';
 import { useAuthStore } from './useAuthStore';
-import { UPDATE_DOSE_STATUS } from '@/api/mutations/doseMutations';
+import { UPDATE_DOSE_STATUS, UPDATE_DOSES_MUTATION } from '@/api/mutations/doseMutations';
 
 import isBetween from 'dayjs/plugin/isBetween';
 import { schedulingClient } from '@/api/apoloClient';
@@ -13,13 +13,13 @@ dayjs.extend(isBetween);
 
 interface ScheduleState {
   selectedDate: dayjs.Dayjs;
-  dosesInDateRange: Dose[]; 
-  dosesForSelectedDay: Dose[]; 
+  dosesInDateRange: Dose[];
+  dosesForSelectedDay: Dose[];
   groupDosesForSelectedDay: GroupedDose[];
   isLoading: boolean;
   error: string | null;
   setSelectedDate: (date: dayjs.Dayjs) => void;
-  fetchDosesByDateRange: (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs) => Promise<void>; 
+  fetchDosesByDateRange: (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs) => Promise<void>;
   fetchDosesBySelectedDate: () => Promise<void>;
   updateDoseStatus: (doseId: string, status: 'TAKEN' | 'SKIPPED') => Promise<void>;
   toggleDosePreparedStatus: (doseId: string) => void;
@@ -28,12 +28,11 @@ interface ScheduleState {
 }
 
 const TIME_SLOTS = {
-  Sáng: { start: 3, end: 9 },  
-  Trưa: { start: 9, end: 15 }, 
-  Chiều: { start: 15, end: 18 }, 
-  Tối: { start: 18, end: 23 },  
+  Sáng: { start: 3, end: 9 },
+  Trưa: { start: 9, end: 15 },
+  Chiều: { start: 15, end: 18 },
+  Tối: { start: 18, end: 23 },
 };
-
 
 const groupAndProcessDoses = (doses: Dose[]): GroupedDose[] => {
   if (!doses || doses.length === 0) {
@@ -72,9 +71,9 @@ const groupAndProcessDoses = (doses: Dose[]): GroupedDose[] => {
     } else {
       status = 'UPCOMING';
     }
-    
+
     if (anySkipped) {
-        status = 'MISSED';
+      status = 'MISSED';
     }
 
     return {
@@ -85,7 +84,24 @@ const groupAndProcessDoses = (doses: Dose[]): GroupedDose[] => {
     };
   });
 
-  processedGroups.sort((a, b) => dayjs(a.time).valueOf() - dayjs(b.time).valueOf());
+  const statusPriority: Record<GroupedDose['status'], number> = {
+    'ACTIVE': 1,    
+    'UPCOMING': 2,  
+    'MISSED': 3,   
+    'COMPLETED': 4, 
+  };
+
+  processedGroups.sort((a, b) => {
+    const priorityA = statusPriority[a.status];
+    const priorityB = statusPriority[b.status];
+    
+    // Nếu độ ưu tiên khác nhau, sắp xếp theo ưu tiên
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+    
+    return dayjs(a.time).valueOf() - dayjs(b.time).valueOf();
+  });
 
   return processedGroups;
 };
@@ -101,15 +117,15 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
   setSelectedDate: (date) => {
     console.log(`[ScheduleStore] Action: setSelectedDate called with`, date.format('YYYY-MM-DD'));
     set(state => {
-      const dosesForNewDay = state.dosesInDateRange.filter(dose => 
+      const dosesForNewDay = state.dosesInDateRange.filter(dose =>
         dayjs(dose.due_at).isSame(date, 'day')
       );
       console.log(`[ScheduleStore] Derived State: Found ${dosesForNewDay.length} doses for the selected day from cached range.`);
 
       const groupedDoses = groupAndProcessDoses(dosesForNewDay);
       console.log(`[ScheduleStore] Derived State: Found ${dosesForNewDay.length} doses and created ${groupedDoses.length} groups.`);
-      
-      return { 
+
+      return {
         selectedDate: date,
         dosesForSelectedDay: dosesForNewDay,
         groupDosesForSelectedDay: groupedDoses,
@@ -120,44 +136,61 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
   fetchDosesBySelectedDate: async () => {
     const user = useAuthStore.getState().user;
     if (!user) {
-      console.warn('[ScheduleStore] Action: fetchDosesByDateRange skipped. Reason: User not authenticated.');
+      console.warn('[ScheduleStore] Skipped: fetchDosesBySelectedDate - User not authenticated.');
       set({ error: 'User not authenticated.', dosesInDateRange: [], dosesForSelectedDay: [] });
       return;
     }
 
+    const selectedDateStr = get().selectedDate.format('YYYY-MM-DD');
+    console.log(`[ScheduleStore] Start: Fetch doses for ${selectedDateStr}`);
+
     set({ isLoading: true, error: null });
-    console.log(`[ScheduleStore] Action: fetchDosesBySelectedDate called. Fetching in ${get().selectedDate.format('YYYY-MM-DD')}`);
+
+    const previousGroups = get().groupDosesForSelectedDay;
 
     try {
-      const { data, loading, error } = await schedulingClient.query({
+      const { data, error } = await schedulingClient.query({
         query: GET_DOSES_BY_SELECTED_DATE,
-        variables: { 
-          selectedDate: get().selectedDate.toISOString()
-        },
+        variables: { selectedDate: get().selectedDate.toISOString() },
         fetchPolicy: 'network-only',
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       const fetchedDoses: Dose[] = data.dosesBySelectedDate || [];
-      console.log(`[ScheduleStore] API Success: Fetched ${fetchedDoses.length} doses.`);
+      console.log(`[ScheduleStore] API Success: ${fetchedDoses.length} doses fetched.`);
 
       const groupedDoses = groupAndProcessDoses(fetchedDoses);
-      console.log(`[ScheduleStore] API Success: Fetched ${fetchedDoses.length} doses and created ${groupedDoses.length} groups.`);
+      console.log(`[ScheduleStore] Grouping complete: ${groupedDoses.length} groups created.`);
 
-      set({ 
-        dosesForSelectedDay: fetchedDoses,
-        groupDosesForSelectedDay: groupedDoses,
-        isLoading: false 
+      const mergedGroups = groupedDoses.map(group => {
+        const prevGroup = previousGroups.find(pg => pg.time === group.time);
+        return {
+          ...group,
+          doses: group.doses.map(dose => {
+            const prevDose = prevGroup?.doses.find(pd => pd.id === dose.id);
+            return {
+              ...dose,
+              is_prepared: prevDose?.is_prepared ?? false
+            };
+          })
+        };
       });
 
+      set({
+        dosesForSelectedDay: fetchedDoses,
+        groupDosesForSelectedDay: mergedGroups,
+        isLoading: false
+      });
+
+      console.log('[ScheduleStore] State updated successfully.');
+
     } catch (e: any) {
-      console.error('[ScheduleStore] API Failure: Failed to fetch doses.', e);
+      console.error('[ScheduleStore] API Failure:', e);
       set({ error: e.message, isLoading: false, dosesInDateRange: [], dosesForSelectedDay: [] });
     }
   },
+
 
   fetchDosesByDateRange: async (startDate, endDate) => {
     const user = useAuthStore.getState().user;
@@ -173,9 +206,9 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     try {
       const { data, loading, error } = await schedulingClient.query({
         query: GET_DOSES_BY_DATE_RANGE,
-        variables: { 
-          startDate: startDate.toISOString(), 
-          endDate: endDate.toISOString() 
+        variables: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
         },
         fetchPolicy: 'network-only',
       });
@@ -192,7 +225,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
       const dosesForCurrentDay = fetchedDoses.filter(dose => dayjs(dose.due_at).isSame(currentSelectedDate, 'day'));
       const groupedDosesForCurrentDay = groupAndProcessDoses(dosesForCurrentDay);
 
-      set({ 
+      set({
         dosesInDateRange: fetchedDoses,
         isLoading: false,
         groupDosesForSelectedDay: groupedDosesForCurrentDay,
@@ -213,13 +246,13 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
 
     console.log(`[ScheduleStore] Action: updateDoseStatus called for dose ${doseId} to status ${status}.`);
     const previousDoses = get().dosesInDateRange;
-    
+
     console.log('[ScheduleStore] Performing optimistic update on UI.');
     set(state => {
       const updatedDoses = state.dosesInDateRange.map(dose =>
         dose.id === doseId ? { ...dose, status } : dose
       );
-      const updatedDosesForDay = updatedDoses.filter(dose => 
+      const updatedDosesForDay = updatedDoses.filter(dose =>
         dayjs(dose.due_at).isSame(state.selectedDate, 'day')
       );
       const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
@@ -232,16 +265,27 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     });
 
     try {
+      const updatePayload = {
+        id: doseId,
+        data: {
+          status: status,
+        },
+      };
+
       await schedulingClient.mutate({
-        mutation: UPDATE_DOSE_STATUS,
-        variables: { doseId, status },
+        mutation: UPDATE_DOSES_MUTATION,
+        variables: {
+          updates: [updatePayload]
+        },
       });
       console.log(`[ScheduleStore] API Success: Successfully updated dose ${doseId}.`);
+
+      await get().fetchDosesBySelectedDate();
     } catch (e: any) {
       console.error(`[ScheduleStore] API Failure: Failed to update dose ${doseId}. Rolling back UI.`, e);
       // Rollback
       set(state => {
-        const previousDosesForDay = previousDoses.filter(dose => 
+        const previousDosesForDay = previousDoses.filter(dose =>
           dayjs(dose.due_at).isSame(state.selectedDate, 'day')
         );
 
@@ -250,7 +294,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
           error: `Failed to update status: ${e.message}`,
           dosesInDateRange: previousDoses,
           dosesForSelectedDay: previousDosesForDay,
-          groupDosesForSelectedDay: previousGroupedDoses, 
+          groupDosesForSelectedDay: previousGroupedDoses,
         };
       });
     }
@@ -258,18 +302,13 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
 
   toggleDosePreparedStatus: (doseId) => {
     set(state => {
-      const updatePreparedStatus = (doses: Dose[]) => 
-        doses.map(dose => 
-          dose.id === doseId ? { ...dose, is_prepared: !dose.is_prepared } : dose
-        );
+      const updatedDosesForDay = state.dosesForSelectedDay.map(dose =>
+        dose.id === doseId ? { ...dose, is_prepared: !dose.is_prepared } : dose
+      );
 
-      const updatedDosesInDateRange = updatePreparedStatus(state.dosesInDateRange);
-      const updatedDosesForDay = updatePreparedStatus(state.dosesForSelectedDay);
-      
       const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
 
       return {
-        dosesInDateRange: updatedDosesInDateRange,
         dosesForSelectedDay: updatedDosesForDay,
         groupDosesForSelectedDay: updatedGroupedDoses,
       };
@@ -285,23 +324,65 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     // ... (Tự triển khai logic tương tự updateDoseStatus)
   },
 
-  setDoseMealPreference: (doseId, preference) => {
-    set(state => {
-      const updateMealPreference = (doses: Dose[]) => 
-        doses.map(dose => 
-          dose.id === doseId ? { ...dose, meal_relation: preference } : dose
-        );
+  setDoseMealPreference: async (doseId: string, preference: MealRelation | null) => {
+    const user = useAuthStore.getState().user;
+    if (!user) {
+      console.warn(`[ScheduleStore] Action: setDoseMealPreference skipped for dose ${doseId}. Reason: User not authenticated.`);
+      return;
+    }
 
-      const updatedDosesInDateRange = updateMealPreference(state.dosesInDateRange);
-      const updatedDosesForDay = updateMealPreference(state.dosesForSelectedDay);
-      const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
+    console.log(`[ScheduleStore] Action: setDoseMealPreference called for dose ${doseId}.`, preference);
+
+    const previousDosesForSelectedDay = get().dosesForSelectedDay;
+
+    console.log('[ScheduleStore] Performing optimistic update for meal preference.');
+    set(state => {
+      const updateMealPreference = (groupDosesForSelectedDay: GroupedDose[]) =>
+        groupDosesForSelectedDay.map(group => ({
+          ...group,
+          doses: group.doses.map(dose =>
+            dose.id === doseId ? { ...dose, meal_relation: preference } : dose
+          )
+        }));
+
+      const updatedDosesForSelectedDay = updateMealPreference(state.groupDosesForSelectedDay);
 
       return {
-        dosesInDateRange: updatedDosesInDateRange,
-        dosesForSelectedDay: updatedDosesForDay,
-        groupDosesForSelectedDay: updatedGroupedDoses,
+        groupDosesForSelectedDay: updatedDosesForSelectedDay,
       };
     });
-    // Trong ứng dụng thực tế, bạn sẽ gọi API để lưu thay đổi này vào DB
+
+    try {
+      const updatePayload = {
+        id: doseId,
+        data: {
+          meal_relation: preference,
+        },
+      };
+
+      await schedulingClient.mutate({
+        mutation: UPDATE_DOSES_MUTATION,
+        variables: {
+          updates: [updatePayload]
+        },
+      });
+
+      console.log(`[ScheduleStore] API Success: Successfully updated meal preference for dose ${doseId}.`);
+    } catch (e: any) {
+      // 4. Nếu có lỗi, Rollback lại trạng thái giao diện cũ
+      console.error(`[ScheduleStore] API Failure: Failed to update meal preference for dose ${doseId}. Rolling back UI.`, e);
+      set(state => {
+        const previousDosesForDay = previousDosesForSelectedDay.filter(dose =>
+          dayjs(dose.due_at).isSame(state.selectedDate, 'day')
+        );
+        const previousGroupedDoses = groupAndProcessDoses(previousDosesForDay);
+
+        return {
+          error: `Failed to update meal preference: ${e.message}`,
+          dosesForSelectedDay: previousDosesForDay,
+          groupDosesForSelectedDay: previousGroupedDoses,
+        };
+      });
+    }
   },
 }));
