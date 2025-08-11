@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
 import { Dose, DoseStatus } from './entities/dose.entity';
@@ -8,41 +8,57 @@ export class DosesService {
   constructor(
     @InjectRepository(Dose)
     private doseRepository: Repository<Dose>,
-  ) {}
+  ) { }
 
   async updateDoses(user_id: string, updates: UpdateDoseInput[]): Promise<Dose[]> {
+    const logger = new Logger('DosesService');
+
+    logger.debug(`updateDoses called with user_id=${user_id}, updates=${JSON.stringify(updates)}`);
+
     if (!updates || updates.length === 0) {
+      logger.warn(`No update data provided for user_id=${user_id}`);
       throw new BadRequestException('No update data provided.');
     }
 
     const doseIds = updates.map(u => u.id);
+    logger.debug(`Dose IDs to update: ${doseIds.join(', ')}`);
 
     const dosesToUpdate = await this.doseRepository.findBy({
       id: In(doseIds),
-      user_id: user_id, 
+      user_id: user_id,
     });
 
+    logger.debug(`Found ${dosesToUpdate.length} doses in DB for user_id=${user_id}`);
+
     if (dosesToUpdate.length !== doseIds.length) {
+      logger.error(`Mismatch in doses count. Expected ${doseIds.length}, found ${dosesToUpdate.length}. Possibly unauthorized update attempt.`);
       throw new UnauthorizedException('You are trying to update doses that do not exist or you do not own.');
     }
 
     const updatedDoseEntities: Dose[] = [];
     for (const dose of dosesToUpdate) {
       const updateData = updates.find(u => u.id === dose.id)!.data;
-      
+      logger.debug(`Updating dose ID=${dose.id} with data=${JSON.stringify(updateData)}`);
+
       Object.assign(dose, updateData);
 
       if (updateData.status === DoseStatus.TAKEN) {
         dose.taken_at = new Date();
+        logger.debug(`Dose ID=${dose.id} marked as TAKEN at ${dose.taken_at.toISOString()}`);
       } else if (updateData.status === DoseStatus.SKIPPED) {
         dose.taken_at = undefined;
+        logger.debug(`Dose ID=${dose.id} marked as SKIPPED`);
       }
-      
+
       updatedDoseEntities.push(dose);
     }
 
-    return this.doseRepository.save(updatedDoseEntities);
+    const saved = await this.doseRepository.save(updatedDoseEntities);
+    logger.debug(`Successfully updated ${saved.length} doses for user_id=${user_id}`);
+
+    return saved;
   }
+
 
   async findDosesByDateRange(
     user_id: string,
@@ -54,7 +70,7 @@ export class DosesService {
     }
 
     if (startDate > endDate) {
-        throw new BadRequestException('startDate cannot be after endDate.');
+      throw new BadRequestException('startDate cannot be after endDate.');
     }
 
     const dosesInRange = await this.doseRepository.find({
@@ -74,10 +90,10 @@ export class DosesService {
     if (status !== DoseStatus.TAKEN && status !== DoseStatus.SKIPPED) {
       throw new BadRequestException('Invalid status. Only TAKEN or SKIPPED are allowed.');
     }
-    
-    const dose = await this.doseRepository.findOneBy({ 
-        id: dose_id,
-        user_id,
+
+    const dose = await this.doseRepository.findOneBy({
+      id: dose_id,
+      user_id,
     });
 
     if (!dose) {
@@ -85,8 +101,8 @@ export class DosesService {
     }
 
     dose.status = status;
-    dose.taken_at = (status === DoseStatus.TAKEN) ? new Date() : undefined; 
-    
+    dose.taken_at = (status === DoseStatus.TAKEN) ? new Date() : undefined;
+
     return this.doseRepository.save(dose);
   }
 }

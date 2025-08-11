@@ -11,6 +11,7 @@ import { join } from 'path';
 import { ApiClientsModule } from '@app/api-clients';
 import { JobsModule } from './jobs/jobs.module';
 import { AuthLibModule } from '@app/auth';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthLibModule } from '@app/auth';
       autoSchemaFile: join(process.cwd(), 'apps/scheduling-service/schema.gql'),
       sortSchema: true,
       playground: true,
+      resolvers: { JSONObject: GraphQLJSONObject },
     }),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -38,13 +40,13 @@ import { AuthLibModule } from '@app/auth';
         synchronize: true,
       }),
     }),
-    AppRabbitMQModule, 
+    AppRabbitMQModule,
     HttpModule,
     DosesModule,
     ApiClientsModule,
     AuthLibModule,
-    JobsModule
+    JobsModule,
   ],
   providers: [],
 })
-export class SchedulingServiceModule {}
+export class SchedulingServiceModule { }

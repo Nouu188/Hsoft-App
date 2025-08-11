@@ -16,7 +16,7 @@ export class DosesSyncService {
         @InjectRepository(Dose) private doseRepository: Repository<Dose>,
         private readonly hospitalClient: HospitalApiClientService,
         private readonly notificationClient: NotificationApiClientService,
-    ) {}
+    ) { }
 
     // Trường "ngay" là ngày đi khám của bệnh nhân, cũng như ngày bắt đầu uống thuốc 
     public async syncDosesInFuture(user: User, ngay: string = ""): Promise<void> {
@@ -28,13 +28,13 @@ export class DosesSyncService {
             ylenhthuoc = await this.hospitalClient.fetchYLenhThuoc(user, ngay);
         } catch (error) {
             this.logger.error(`Failed to get y lenh thuoc for user ${user.id}. Error: ${error.message}`);
-            throw error; 
+            throw error;
         }
 
         if (ylenhthuoc.length === 0) {
             this.logger.log(`No treatments found for user ${user.id} on ${todayString}.`);
             return;
-        }  
+        }
 
         const newDosesMap = new Map<string, Partial<Dose>>();
 
@@ -52,7 +52,7 @@ export class DosesSyncService {
                 if (dueAt.isAfter(moment())) {
                     // Tạo khóa định danh duy nhất
                     const externalId = `${ylenh.id}-${ylenh.stt}-${dueAt.format('YYYYMMDDHHmm')}`;
-                    
+
                     const doseData: Partial<Dose> = {
                         external_id: externalId,
                         ylenh_id: ylenh.id,
@@ -64,6 +64,13 @@ export class DosesSyncService {
                         medication_name: ylenh.tenthuoc,
                         dosage_instructions: ylenh.lieudung,
                         usage_instructions: ylenh.thuchien,
+                        meal_relation: ylenh.thuchien === 'Trước ăn'
+                            ? { type: 'BEFORE', minutes: 30 }
+                            : ylenh.thuchien === 'Sau ăn'
+                                ? { type: 'AFTER', minutes: 0 }
+                                : ylenh.thuchien === 'Trong bữa ăn'
+                                    ? { type: 'WITH', minutes: 0 }
+                                    : null,
                     };
                     newDosesMap.set(externalId, doseData);
                 }
@@ -94,7 +101,7 @@ export class DosesSyncService {
         if (dosesToCreate.length > 0) {
             const savedDoses = await this.doseRepository.save(dosesToCreate);
             this.logger.log(`Created ${savedDoses.length} new doses for user ${user.id}.`);
-            
+
             await this.notificationClient.scheduleNotifications(savedDoses.map(dose => ({
                 id: dose.id,
                 user_id: dose.user_id,
@@ -120,14 +127,14 @@ export class DosesSyncService {
             allYlenhthuoc = await this.hospitalClient.fetchYLenhThuoc(user);
         } catch (error) {
             this.logger.error(`Failed to fetch ALL treatment data for user ${user.id}.`, error);
-            throw error; 
+            throw error;
         }
 
         if (allYlenhthuoc.length === 0) {
             this.logger.log(`No doses found in from the hospital for user ${user.id}`);
             return;
-        }  
-        
+        }
+
         const allDosesToCreate = new Map<string, Partial<Dose>>();
 
         for (const ylenh of allYlenhthuoc) {
@@ -140,10 +147,10 @@ export class DosesSyncService {
             for (let i = 0; i < numberOfDays; i++) {
                 const currentDate = startDate.clone().add(i, 'days');
                 const dueAt = moment.tz(`${currentDate.format('DD/MM/YYYY')} ${ylenh.thoidiem}`, 'DD/MM/YYYY HH:mm', 'Asia/Ho_Chi_Minh');
-                
+
                 // Không lọc theo isAfter(moment()) nữa vì chúng ta cần cả lịch sử
                 const externalId = `${ylenh.id}-${ylenh.stt}-${dueAt.format('YYYYMMDDHHmm')}`;
-                
+
                 // Dùng Map để tự động loại bỏ các liều trùng lặp nếu API trả về lỗi
                 if (!allDosesToCreate.has(externalId)) {
                     allDosesToCreate.set(externalId, {
@@ -157,6 +164,13 @@ export class DosesSyncService {
                         medication_name: ylenh.tenthuoc,
                         dosage_instructions: ylenh.lieudung,
                         usage_instructions: ylenh.thuchien,
+                        meal_relation: ylenh.thuchien === 'Trước ăn'
+                            ? { type: 'BEFORE', minutes: 30 }
+                            : ylenh.thuchien === 'Sau ăn'
+                                ? { type: 'AFTER', minutes: 0 }
+                                : ylenh.thuchien === 'Trong bữa ăn'
+                                    ? { type: 'WITH', minutes: 0 }
+                                    : null,
                     });
                 }
             }
@@ -177,13 +191,13 @@ export class DosesSyncService {
             const chunk = dosesToSaveInChunks.slice(i, i + 100);
             await this.doseRepository.save(chunk);
         }
-        
+
         this.logger.log(`Created ${dosesToSaveInChunks.length} total doses for user ${user.id}.`);
 
         // Lên lịch thông báo chỉ cho các liều PENDING
         const futureDoses = dosesToSaveInChunks.filter(d => d.status === DoseStatus.PENDING);
         await this.notificationClient.scheduleNotifications(futureDoses.map(dose => ({
-            id: dose.id!, 
+            id: dose.id!,
             user_id: dose.user_id!,
             notify_at: dose.notify_at!,
         })));

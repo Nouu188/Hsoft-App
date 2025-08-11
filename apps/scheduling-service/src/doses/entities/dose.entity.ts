@@ -1,11 +1,17 @@
 // src/modules/doses/entities/dose.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 export enum DoseStatus {
   PENDING = 'PENDING',
   TAKEN = 'TAKEN',
   SKIPPED = 'SKIPPED',
+}
+
+export interface MealRelation {
+  type: 'BEFORE' | 'AFTER' | 'WITH';
+  minutes?: number;
 }
 
 registerEnumType(DoseStatus, { name: 'DoseStatus' });
@@ -60,4 +66,12 @@ export class Dose {
   @Field({ nullable: true, description: 'Hướng dẫn cách dùng từ y lệnh' })
   @Column({ nullable: true })
   usage_instructions?: string;
+
+  @Column({
+    type: 'jsonb', // Sử dụng kiểu jsonb để lưu trữ object
+    nullable: true, // Cho phép giá trị là null
+    name: 'meal_relation',
+  })
+  @Field(() => GraphQLJSONObject, { nullable: true, description: 'Quan hệ với bữa ăn' }) // Cần import GraphQLJSONObject
+  meal_relation?: MealRelation | null;
 }

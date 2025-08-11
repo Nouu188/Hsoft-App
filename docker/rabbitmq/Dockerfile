@@ -1,12 +1,9 @@
-# docker/rabbitmq/Dockerfile
+FROM rabbitmq:3.13-management
 
-# Bắt đầu từ image RabbitMQ chính thức có giao diện quản lý
-# Dùng phiên bản cụ thể để đảm bảo tính ổn định
-FROM rabbitmq:4.1
+RUN apt-get update && apt-get install -y curl && \
+    curl -L https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.13.0/rabbitmq_delayed_message_exchange-3.13.0.ez \
+    -o /opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.13.0.ez
 
-# Copy file cấu hình plugin vào đúng vị trí
-# RabbitMQ sẽ tự động đọc file này khi khởi động và kích hoạt các plugin được liệt kê
-COPY enabled_plugins /etc/rabbitmq/
+RUN echo '[rabbitmq_management, rabbitmq_delayed_message_exchange].' > /etc/rabbitmq/enabled_plugins
 
-# Copy file cấu hình chính vào đúng vị trí
 COPY rabbitmq.conf /etc/rabbitmq/
