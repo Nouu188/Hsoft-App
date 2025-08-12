@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, LayoutAnimation, Alert } from 'react-native';
 import { Shadow } from 'react-native-shadow-2';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
@@ -11,7 +11,7 @@ import { MealRelation } from '@/types/dtos/dose/dose.dto';
 interface TimeSlotCardProps {
     group: GroupedDose;
     allDosesForDay: GroupedDose[];
-    onMarkAllAsTaken: (time: string) => void;
+    onMarkAllAsTaken: (doseIds: string[]) => void;
     onTogglePrepared: (doseId: string) => void;
     onNavigateToTime: (time: string) => void;
     onSkipDose: (doseId: string) => void;
@@ -23,7 +23,7 @@ const getStatusInfo = (status: GroupedDose['status']) => {
     switch (status) {
         case 'ACTIVE':
             return { cardStyle: styles.cardActive, iconColor: COLORS.primary, tagText: 'Đến giờ uống' };
-        case 'COMPLETED':
+        case 'TAKEN':
             return { cardStyle: styles.cardCompleted, iconColor: COLORS.success, tagText: 'Đã uống' };
         case 'MISSED':
             return { cardStyle: styles.cardMissed, iconColor: COLORS.danger, tagText: 'Đã bỏ lỡ' };
@@ -34,14 +34,53 @@ const getStatusInfo = (status: GroupedDose['status']) => {
 };
 
 const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
-    const { group, allDosesForDay, onMarkAllAsTaken, onTogglePrepared, onNavigateToTime, onSkipDose, onRescheduleDose, onSetMealPreference } = props; const { cardStyle, iconColor, tagText } = getStatusInfo(group.status);
+    const { group, allDosesForDay, onMarkAllAsTaken, onTogglePrepared, onNavigateToTime, onSkipDose, onSetMealPreference } = props;
+    const { cardStyle, iconColor, tagText } = getStatusInfo(group.status);
     const isActionable = group.status === 'ACTIVE' || group.status === 'MISSED';
 
-    const allDosesPrepared = group.doses.every(d => d.is_prepared);
+    // State cục bộ để theo dõi các liều thuốc đã được tick
+    const [preparedDoseIds, setPreparedDoseIds] = useState<string[]>([]);
+
+    // Đồng bộ state cục bộ với state từ store khi group thay đổi
+    useEffect(() => {
+        const initiallyPrepared = group.doses.filter(d => d.is_prepared).map(d => d.id);
+        setPreparedDoseIds(initiallyPrepared);
+    }, [group]);
+
+    const handleTogglePrepared = (doseId: string) => {
+        onTogglePrepared(doseId);
+
+        setPreparedDoseIds(prevIds =>
+            prevIds.includes(doseId)
+                ? prevIds.filter(id => id !== doseId)
+                : [...prevIds, doseId]
+        );
+    };
+
+    const isButtonDisabled = preparedDoseIds.length === 0;
+    const areAllDosesPrepared = preparedDoseIds.length === group.doses.length && group.doses.length > 0;
+    const buttonText = areAllDosesPrepared ? "Đánh dấu tất cả đã uống" : `Đánh dấu đã uống (${preparedDoseIds.length})`;
+
+    // 4. Handler cho nút hành động với Alert
+    const handleConfirmTaken = () => {
+        Alert.alert(
+            "Xác nhận uống thuốc",
+            `Bạn có chắc đã uống ${preparedDoseIds.length} loại thuốc đã chọn?`,
+            [
+                { text: "Hủy", style: "cancel" },
+                {
+                    text: "Xác nhận",
+                    onPress: () => onMarkAllAsTaken(preparedDoseIds),
+                    style: "default"
+                },
+            ]
+        );
+    };
 
     return (
         <Shadow distance={8} startColor={'#1B4D7E0F'} offset={[2, 5]} style={styles.shadowContainer}>
             <View style={[styles.card, cardStyle]}>
+                {/* Header không đổi */}
                 <View style={styles.header}>
                     <View style={styles.headerLeft}>
                         <Ionicons name="alarm-outline" size={24} color={iconColor} />
@@ -52,11 +91,12 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
                     </View>
                 </View>
 
+                {/* Trạng thái chuẩn bị thuốc */}
                 {isActionable && (
-                    <View style={[styles.preparedStatus, allDosesPrepared && styles.preparedStatusDone]}>
-                        <Ionicons name={allDosesPrepared ? "checkmark-circle" : "information-circle-outline"} size={18} color={allDosesPrepared ? COLORS.success : COLORS.textLight} />
-                        <Text style={[styles.preparedStatusText, allDosesPrepared && styles.preparedStatusTextDone]}>
-                            {allDosesPrepared ? 'Đã chuẩn bị đủ thuốc' : 'Đánh dấu vào ô vuông khi lấy thuốc'}
+                    <View style={[styles.preparedStatus, areAllDosesPrepared && styles.preparedStatusDone]}>
+                        <Ionicons name={areAllDosesPrepared ? "checkmark-circle" : "information-circle-outline"} size={18} color={areAllDosesPrepared ? COLORS.success : COLORS.textLight} />
+                        <Text style={[styles.preparedStatusText, areAllDosesPrepared && styles.preparedStatusTextDone]}>
+                            {areAllDosesPrepared ? 'Đã chuẩn bị đủ thuốc' : 'Đánh dấu vào ô vuông khi lấy thuốc'}
                         </Text>
                     </View>
                 )}
@@ -78,11 +118,12 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
 
                 {isActionable && (
                     <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => onMarkAllAsTaken(group.time)}
+                        style={[styles.actionButton, isButtonDisabled && styles.actionButtonDisabled]}
+                        onPress={handleConfirmTaken}
+                        disabled={isButtonDisabled}
                     >
                         <Ionicons name="checkmark-done-outline" size={22} color={COLORS.white} />
-                        <Text style={styles.actionButtonText}>Đánh dấu tất cả đã uống</Text>
+                        <Text style={styles.actionButtonText}>{buttonText}</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -115,6 +156,9 @@ const styles = StyleSheet.create({
     dosageText: { fontSize: 14, color: COLORS.textLight },
     actionButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.primary, paddingVertical: 12, borderRadius: SIZES.radius },
     actionButtonText: { color: COLORS.white, fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
+    actionButtonDisabled: {
+        opacity: 0.7,
+    },
     preparedStatus: {
         flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.primaryLight, padding: 8, borderRadius: SIZES.radius, marginTop: SIZES.padding / 4, shadowColor: '#000',
         shadowOffset: { width: 5, height: 0 },

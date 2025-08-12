@@ -79,8 +79,7 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
           </View>
 
           <DailySchedulePills
-            time={time}
-            dose={dose}
+            currentDose={dose}
             allDosesForDay={allDosesForDay}
             onPillPress={onNavigateToTime}
           />

@@ -31,7 +31,7 @@ const MedicationScheduleView = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-
+console.log(groupDosesForSelectedDay)
     const filteredData = useMemo(() => {
         if (!groupDosesForSelectedDay) return [];
 
@@ -60,15 +60,19 @@ const MedicationScheduleView = () => {
         return data;
     }, [groupDosesForSelectedDay, filters, searchQuery]);
 
-    const handleMarkAllAsTaken = (time: string) => {
-        const group = groupDosesForSelectedDay.find(g => g.time === time);
-        if (group) {
-            group.doses.forEach(dose => {
-                if (dose.status !== 'TAKEN') {
-                    updateDoseStatus(dose.id, 'TAKEN');
-                }
-            });
-        }
+    const handleMarkAsTaken = (doseIds: string[]) => {
+        console.log(`Marking doses as taken:`, doseIds);
+        // Lặp qua mảng ID và gọi action của store cho từng ID
+        doseIds.forEach(doseId => {
+            // Tìm liều thuốc trong state để đảm bảo nó chưa được uống
+            const doseToUpdate = groupDosesForSelectedDay
+                .flatMap(g => g.doses)
+                .find(d => d.id === doseId);
+
+            if (doseToUpdate && doseToUpdate.status !== 'TAKEN') {
+                updateDoseStatus(doseId, 'TAKEN');
+            }
+        });
     };
 
     const flatListRef = useRef<FlatList<GroupedDose>>(null);
@@ -128,7 +132,7 @@ const MedicationScheduleView = () => {
         <TimeSlotCard
             key={item.time}
             group={item}
-            onMarkAllAsTaken={handleMarkAllAsTaken}
+            onMarkAllAsTaken={handleMarkAsTaken}
             onTogglePrepared={toggleDosePreparedStatus}
             allDosesForDay={groupDosesForSelectedDay}
             onNavigateToTime={handleNavigateToTime}

@@ -63,7 +63,7 @@ const groupAndProcessDoses = (doses: Dose[]): GroupedDose[] => {
     const anySkipped = doseArray.some(d => d.status === 'SKIPPED');
 
     if (allTaken) {
-      status = 'COMPLETED';
+      status = 'TAKEN';
     } else if (now.isAfter(dueAt.add(1, 'hour')) && !allTaken) {
       status = 'MISSED';
     } else if (now.isBetween(dueAt.subtract(30, 'minute'), dueAt.add(1, 'hour'))) {
@@ -88,7 +88,7 @@ const groupAndProcessDoses = (doses: Dose[]): GroupedDose[] => {
     'ACTIVE': 1,    
     'UPCOMING': 2,  
     'MISSED': 3,   
-    'COMPLETED': 4, 
+    'TAKEN': 4, 
   };
 
   processedGroups.sort((a, b) => {
