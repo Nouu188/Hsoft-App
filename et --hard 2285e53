@@ -1,0 +1,25 @@
+[33m9712926[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfrontend[m[33m, [m[1;31morigin/frontend[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add calendar at Scheduling and relative date
+[33m49f3878[m Lots of stuck, 80% Scheduling
+[33m2285e53[m Add skeleton at Schedule and refactor folder named components from src
+[33m261c293[m Add navigation of scrolling to another dailySchedulePill when clicked
+[33mfdb1b12[m Add some colors
+[33mfcb2bcc[m Complete UI for Scheduling temporarily
+[33m5633c3a[m Add ScheduleScreen
+[33mc1d072c[m Refactor dose list
+[33m3bd53cd[m Complete pushNotification with firebase
+[33m147586d[m Refactor DoseList
+[33ma6722cf[m Fix type of Flatlist at HomeScreen
+[33m7fdf2e0[m Configure DoseList and add background
+[33m9ff679b[m Refactor UI for grouped schedule at HomeScreen
+[33m8939770[m Modify DateSelector and cofiguration of metro and babel
+[33meb5b1c7[m Modify API to fetch doses in selected date and display them on screen
+[33mbfab454[m Create components for screens
+[33mefc378d[m Modify ScheduleScreen vaf separate it into components
+[33m9f730df[m Initially setting Auth with login
+[33m04681c9[m Add Auth and Setting
+[33m96654d0[m Modify schedulescreen
+[33mc470750[m Modify useSchedule and Add ProfileScreen
+[33m11dab76[m Update source code chính
+[33mfcd3cca[m Second commit
+[33m13f8894[m Add src
+[33mc56e245[m Initial commit

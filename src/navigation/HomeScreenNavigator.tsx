@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import NotificationScreen from '../screens/notification/NotificationScreen.tsx';
 import HomeScreen from '../screens/HomeScreen.tsx'
+import NotificationSettingScreen from '../components/specific/notification/NotificationSetting.tsx'
 export type HomeStackParamList = {
   Notification:undefined;
   Home:undefined;
