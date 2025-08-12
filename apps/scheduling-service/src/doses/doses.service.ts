@@ -38,27 +38,25 @@ export class DosesService {
     const updatedDoseEntities: Dose[] = [];
     for (const dose of dosesToUpdate) {
       const updateData = updates.find(u => u.id === dose.id)!.data;
-      logger.debug(`Updating dose ID=${dose.id} with data=${JSON.stringify(updateData)}`);
 
       Object.assign(dose, updateData);
 
       if (updateData.status === DoseStatus.TAKEN) {
         dose.taken_at = new Date();
-        logger.debug(`Dose ID=${dose.id} marked as TAKEN at ${dose.taken_at.toISOString()}`);
+        dose.skipReasonCategory = null;
+        dose.skipReasonDetail = null;
       } else if (updateData.status === DoseStatus.SKIPPED) {
         dose.taken_at = undefined;
-        logger.debug(`Dose ID=${dose.id} marked as SKIPPED`);
+      } else {
+        dose.skipReasonCategory = null;
+        dose.skipReasonDetail = null;
       }
 
       updatedDoseEntities.push(dose);
     }
 
-    const saved = await this.doseRepository.save(updatedDoseEntities);
-    logger.debug(`Successfully updated ${saved.length} doses for user_id=${user_id}`);
-
-    return saved;
+    return this.doseRepository.save(updatedDoseEntities);
   }
-
 
   async findDosesByDateRange(
     user_id: string,

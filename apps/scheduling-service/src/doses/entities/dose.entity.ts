@@ -4,9 +4,11 @@ import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
 export enum DoseStatus {
+  UPCOMING = 'UPCOMING',
   PENDING = 'PENDING',
   TAKEN = 'TAKEN',
   SKIPPED = 'SKIPPED',
+  MISSED = 'MISSED',
 }
 
 export interface MealRelation {
@@ -44,7 +46,7 @@ export class Dose {
   notify_at: Date;
 
   @Field(() => DoseStatus)
-  @Column({ type: 'enum', enum: DoseStatus, default: DoseStatus.PENDING })
+  @Column({ type: 'enum', enum: DoseStatus, default: DoseStatus.UPCOMING, })
   status: DoseStatus;
   
   @Field(() => ID, { description: 'ID của người dùng sở hữu liều uống này' })
@@ -66,6 +68,22 @@ export class Dose {
   @Field({ nullable: true, description: 'Hướng dẫn cách dùng từ y lệnh' })
   @Column({ nullable: true })
   usage_instructions?: string;
+
+  @Column({
+    type: 'varchar',
+    name: 'skip_reason_category',
+    nullable: true,
+    comment: 'Lý do chính khi bỏ qua liều thuốc (ví dụ: FORGOT, SIDE_EFFECT).',
+  })
+  skipReasonCategory: string | null;
+
+  @Column({
+    type: 'text',
+    name: 'skip_reason_detail',
+    nullable: true,
+    comment: 'Mô tả chi tiết lý do bỏ qua.',
+  })
+  skipReasonDetail: string | null;
 
   @Column({
     type: 'jsonb', // Sử dụng kiểu jsonb để lưu trữ object

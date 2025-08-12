@@ -38,9 +38,11 @@ type Dose {
 }
 
 enum DoseStatus {
+  MISSED
   PENDING
   SKIPPED
   TAKEN
+  UPCOMING
 }
 
 """
@@ -78,6 +80,12 @@ input UpdateDoseDataInput {
 
   """Cài đặt quan hệ với bữa ăn"""
   meal_relation: MealRelationInput
+
+  """Lý do chính khi bỏ qua liều thuốc"""
+  skipReasonCategory: String
+
+  """Mô tả chi tiết lý do bỏ qua"""
+  skipReasonDetail: String
 
   """Trạng thái mới của liều uống"""
   status: DoseStatus

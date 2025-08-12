@@ -9,6 +9,7 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { BatchCreationConsumer } from './consumers/batch-doses-creation.consumer';
 import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
 import { UserEventsConsumer } from './consumers/user-events.consumer';
+import { DoseStatusTransitionService } from './services/dose-status-transition.service';
 
 @Module({
   imports: [
@@ -19,10 +20,11 @@ import { UserEventsConsumer } from './consumers/user-events.consumer';
   ],
   providers: [
     DosesSyncService,
+    DoseStatusTransitionService, 
     SyncConsumer,
     BatchCreationConsumer,
     UserEventsConsumer,
-    BatchSyncConsumer
+    BatchSyncConsumer,
   ],
 })
 export class JobsModule {}

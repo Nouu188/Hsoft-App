@@ -1,5 +1,5 @@
 import { InputType, Field, ID } from '@nestjs/graphql';
-import { IsDateString, IsEnum, IsInt, IsOptional, IsUUID, Min, ValidateNested } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min, ValidateNested } from 'class-validator';
 import { DoseStatus } from '../entities/dose.entity';
 import { Type } from 'class-transformer';
 
@@ -33,6 +33,17 @@ export class UpdateDoseDataInput {
   @ValidateNested()
   @Type(() => MealRelationInput)
   meal_relation?: MealRelationInput | null;
+
+  @Field(() => String, { nullable: true, description: 'Lý do chính khi bỏ qua liều thuốc' })
+  @IsOptional()
+  @IsString()
+  skipReasonCategory?: string;
+
+  @Field(() => String, { nullable: true, description: 'Mô tả chi tiết lý do bỏ qua' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  skipReasonDetail?: string;
 }
 
 @InputType()
