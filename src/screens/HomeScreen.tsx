@@ -51,7 +51,9 @@ const HomeScreen: React.FC = () => {
   });
 
   const onFetch = useCallback(() => { if (user) { fetchDosesBySelectedDate(); } }, [user, fetchDosesBySelectedDate, selectedDate]);
+  
   useEffect(() => { onFetch(); }, [onFetch]);
+
   const onRefresh = useCallback(() => { onFetch(); }, [onFetch]);
   const screenSections = [
     { type: 'header', id: 'header' },

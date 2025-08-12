@@ -9,6 +9,7 @@ import { FilterState } from "@/components/specific/schedule/medication/component
 import DateSelector from "../shared/DateSelector";
 import { GroupedDose } from "@/types/dtos/dose/grouped-dose.dto";
 import TimeSlotCardSkeleton from "./components/TimeSlotCardSkeleton";
+import { DoseStatus, GroupedDoseStatus } from "@/types";
 
 const MedicationScheduleView = () => {
     const groupDosesForSelectedDay = useScheduleStore(state => state.groupDosesForSelectedDay);
@@ -31,7 +32,7 @@ const MedicationScheduleView = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
     const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-console.log(groupDosesForSelectedDay)
+
     const filteredData = useMemo(() => {
         if (!groupDosesForSelectedDay) return [];
 
@@ -51,9 +52,10 @@ console.log(groupDosesForSelectedDay)
 
         if (filters.status !== 'ALL') {
             if (filters.status === 'ACTION_NEEDED') {
-                data = data.filter(g => g.status === 'ACTIVE' || g.status === 'MISSED');
+                data = data.filter(g => g.status === GroupedDoseStatus.ACTIVE || g.status === GroupedDoseStatus.MISSED);
             } else {
-                data = data.filter(g => g.status === filters.status);
+                // Ép kiểu `filters.status` thành `GroupedDoseStatus` để đảm bảo type safety
+                data = data.filter(g => g.status === (filters.status as GroupedDoseStatus));
             }
         }
 
@@ -62,15 +64,15 @@ console.log(groupDosesForSelectedDay)
 
     const handleMarkAsTaken = (doseIds: string[]) => {
         console.log(`Marking doses as taken:`, doseIds);
-        // Lặp qua mảng ID và gọi action của store cho từng ID
+
         doseIds.forEach(doseId => {
             // Tìm liều thuốc trong state để đảm bảo nó chưa được uống
             const doseToUpdate = groupDosesForSelectedDay
                 .flatMap(g => g.doses)
                 .find(d => d.id === doseId);
 
-            if (doseToUpdate && doseToUpdate.status !== 'TAKEN') {
-                updateDoseStatus(doseId, 'TAKEN');
+            if (doseToUpdate && doseToUpdate.status !== DoseStatus.TAKEN) {
+                updateDoseStatus(doseId, DoseStatus.TAKEN);
             }
         });
     };
@@ -114,8 +116,8 @@ console.log(groupDosesForSelectedDay)
         }
     };
 
-    const handleSkipDose = (doseId: string) => {
-        updateDoseStatus(doseId, 'SKIPPED');
+    const handleSkipDose = (doseId: string, reason: { category: string; detail?: string }) => {
+        updateDoseStatus(doseId, DoseStatus.SKIPPED, reason);
     };
 
     const handleRescheduleDose = (doseId: string, newTime: string) => {
@@ -132,7 +134,7 @@ console.log(groupDosesForSelectedDay)
         <TimeSlotCard
             key={item.time}
             group={item}
-            onMarkAllAsTaken={handleMarkAsTaken}
+            onMarkAsTaken={handleMarkAsTaken}
             onTogglePrepared={toggleDosePreparedStatus}
             allDosesForDay={groupDosesForSelectedDay}
             onNavigateToTime={handleNavigateToTime}

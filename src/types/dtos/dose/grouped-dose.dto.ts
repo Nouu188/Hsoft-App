@@ -1,8 +1,11 @@
+import { GroupedDoseStatus } from "@/types/enums/grouped-dose-status.enum";
 import { Dose } from "./dose.dto";
 
 export interface GroupedDose {
   time: string; 
   timeOfDay: 'Sáng' | 'Trưa' | 'Chiều' | 'Tối'; 
-  status: 'UPCOMING' | 'ACTIVE' | 'TAKEN' | 'MISSED'; 
+  
+  status: GroupedDoseStatus; 
+  
   doses: Dose[]; 
 }
