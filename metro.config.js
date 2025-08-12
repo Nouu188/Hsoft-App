@@ -18,6 +18,12 @@ const config = {
   server: {
     useGlobalHotkey: true,
   },
+  resolver: {
+    // Thêm 'ts' và 'tsx' vào danh sách các đuôi file nguồn.
+    sourceExts: process.env.RN_SRC_EXT
+      ? [...process.env.RN_SRC_EXT.split(','), 'ts', 'tsx']
+      : ['js', 'json', 'ts', 'tsx'],
+  },
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);

@@ -73,7 +73,7 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
             <View style={styles.usageContainer}>
               {dose.usage_instructions && <Text style={styles.usageText}>{dose.usage_instructions}</Text>}
               {detectedMealType && (
-                <MealTimeSetter mealRelation={dose.meal_relation} onPress={handleSetMealMinutes} />
+                <MealTimeSetter doseStatus={dose.status} mealRelation={dose.meal_relation} onPress={handleSetMealMinutes} />
               )}
             </View>
           </View>

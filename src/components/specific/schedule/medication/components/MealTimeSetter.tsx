@@ -6,14 +6,15 @@ import { MealRelation } from '@/types/dtos/dose/dose.dto';
 
 interface MealTimeSetterProps {
   mealRelation?: MealRelation | null;
+  doseStatus: 'UPCOMING' | 'TAKEN' | 'SKIPPED',
   onPress: () => void;
 }
 
-const MealTimeSetter: React.FC<MealTimeSetterProps> = ({ mealRelation, onPress }) => {
+const MealTimeSetter: React.FC<MealTimeSetterProps> = ({ mealRelation, doseStatus, onPress }) => {
   const hasValue = mealRelation && mealRelation.minutes;
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={styles.container} onPress={onPress} disabled={doseStatus === 'TAKEN' || doseStatus === 'SKIPPED'}>
       <Ionicons name="alarm-outline" size={16} color={hasValue ? COLORS.primary : COLORS.textLight} />
       <Text style={[styles.text, hasValue && styles.textWithValue as any]}>
         {hasValue ? `${mealRelation.minutes} phút` : '-- phút'}
