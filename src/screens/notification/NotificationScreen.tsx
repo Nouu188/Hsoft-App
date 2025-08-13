@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SIZES.padding / 2, height: 56, borderBottomWidth: 1, borderBottomColor: COLORS.border, backgroundColor: COLORS.white },
   headerButton: { padding: SIZES.padding / 2 },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: 'bold', color: COLORS.textDark },
-  contentContainer: { flex: 1 },
+  contentContainer: { maxHeight:640,marginBottom:90 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   centeredText: { flex: 1, textAlign: 'center', textAlignVertical: 'center', color: COLORS.textLight, fontSize: 16, padding: SIZES.padding },
 });

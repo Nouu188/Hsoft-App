@@ -35,7 +35,9 @@ const NotificationFilter: React.FC<NotificationFilterProps> = ({ activeFilter, o
 );
 
 const styles = StyleSheet.create({
-  container: { paddingVertical: SIZES.padding, paddingHorizontal: SIZES.padding },
+  container: { paddingVertical: SIZES.padding, paddingHorizontal: SIZES.padding,
+    maxHeight:80
+   },
   chip: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: COLORS.lightGray, marginRight: 10 },
   chipActive: { backgroundColor: COLORS.primary },
   chipText: { color: COLORS.textDark, fontWeight: '600' },

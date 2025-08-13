@@ -29,7 +29,7 @@ interface NotificationItemProps {
 const NotificationItem: React.FC<NotificationItemProps> = ({ item, onPress }) => {
   const isUnread = item.status !== 'READ';
   const { name, color } = getIconInfo(item.type);
-
+ console.log({item})
   return (
     <TouchableOpacity style={[styles.container, isUnread && styles.unreadContainer]} onPress={onPress}>
       {isUnread && <View style={styles.unreadDot} />}

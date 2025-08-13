@@ -2,7 +2,7 @@
 import React from 'react';
 
 // Import các màn hình bạn muốn điều hướng đến
-import AuthScreen from '../screens/auth/AuthScreen';
+import AuthScreen from '../screens/auth/AuthScreen'
 import TabNavigator from './TabNavigator'; // Giả sử đây là màn hình chính sau khi đăng nhập
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 

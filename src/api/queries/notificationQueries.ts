@@ -7,6 +7,15 @@ export const GET_MY_NOTIFICATION_HISTORY = gql`
       limit: $limit
     ) {
       id
+      user_id
+      title
+      body
+      dose_ids
+      type
+      status
+      payload
+      sentAt
+      createdAt
     }
   }
 `;
