@@ -58,15 +58,12 @@ const NotificationScreen = () => {
     // 2. Logic điều hướng dựa trên `type` và `payload`
     switch (item.type) {
       case NotificationType.DOSE_REMINDER:
-        // Điều hướng đến tab Lịch trình và có thể highlight cữ thuốc
-        navigation.navigate('MainTabs', { 
-          screen: 'Schedule', 
-          params: { timeToFocus: item.payload?.doseTime } 
+        navigation.navigate('Schedule', { 
+          timeToFocus: item.payload?.doseTime 
         });
         break;
       
       case NotificationType.RESULT_AVAILABLE:
-        // Điều hướng đến màn hình chi tiết kết quả
         if (item.payload?.resultId) {
           navigation.navigate('MedicalRecordsStack', {
             screen: 'RecordDetail',
@@ -76,25 +73,25 @@ const NotificationScreen = () => {
         break;
 
       case NotificationType.APPOINTMENT_REMINDER:
-      // case NotificationType.APPOINTMENT_CONFIRMED:
-      //   // Điều hướng đến màn hình chi tiết lịch hẹn
-      //   if (item.payload?.appointmentId) {
-      //     navigation.navigate('AppointmentStack', { // Giả sử có stack này
-      //       screen: 'AppointmentDetail',
-      //       params: { appointmentId: item.payload.appointmentId }
-      //     });
-      //   }
-      //   break;
+      case NotificationType.APPOINTMENT_CONFIRMED:
+        // Điều hướng đến màn hình chi tiết lịch hẹn
+        if (item.payload?.appointmentId) {
+          navigation.navigate('AppointmentStack', { // Giả sử có stack này
+            screen: 'AppointmentDetail',
+            params: { appointmentId: item.payload.appointmentId }
+          });
+        }
+        break;
       
-      // case NotificationType.PAYMENT_DUE:
-      //   // Điều hướng đến màn hình thanh toán
-      //   if (item.payload?.paymentId) {
-      //     navigation.navigate('PaymentStack', { // Giả sử có stack này
-      //       screen: 'PaymentDetail',
-      //       params: { paymentId: item.payload.paymentId }
-      //     });
-      //   }
-      //   break;
+      case NotificationType.PAYMENT_DUE:
+        // Điều hướng đến màn hình thanh toán
+        if (item.payload?.paymentId) {
+          navigation.navigate('PaymentStack', { // Giả sử có stack này
+            screen: 'PaymentDetail',
+            params: { paymentId: item.payload.paymentId }
+          });
+        }
+        break;
 
       default:
         // Không làm gì cho các thông báo chung
@@ -118,7 +115,7 @@ const NotificationScreen = () => {
           <NotificationItem item={item} onPress={() => handleNotificationPress(item)} />
         )}
         ListEmptyComponent={<Text style={styles.centeredText}>Bạn chưa có thông báo nào.</Text>}
-        contentContainerStyle={{ paddingBottom: SIZES.padding }}
+        contentContainerStyle={{ paddingBottom: SIZES.padding*12 }}
       />
     );
   };
@@ -149,7 +146,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SIZES.padding / 2, height: 56, borderBottomWidth: 1, borderBottomColor: COLORS.border, backgroundColor: COLORS.white },
   headerButton: { padding: SIZES.padding / 2 },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: 'bold', color: COLORS.textDark },
-  contentContainer: { maxHeight:640,marginBottom:90 },
+  contentContainer: { },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   centeredText: { flex: 1, textAlign: 'center', textAlignVertical: 'center', color: COLORS.textLight, fontSize: 16, padding: SIZES.padding },
 });

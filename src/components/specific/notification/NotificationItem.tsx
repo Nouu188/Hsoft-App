@@ -48,8 +48,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ item, onPress }) =>
 };
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', alignItems: 'center', padding: SIZES.padding, backgroundColor: COLORS.white, marginBottom: 2 },
-  unreadContainer: { backgroundColor: '#FFF8F8' },
+  container: { flexDirection: 'row', alignItems: 'center', padding: SIZES.padding, backgroundColor: COLORS.white, borderWidth: 0.58, borderColor: COLORS.border},
+  unreadContainer: { backgroundColor: '#fdededf9' },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.danger, marginRight: SIZES.padding / 2 },
   iconWrapper: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: SIZES.padding },
   content: { flex: 1 },
