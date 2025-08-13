@@ -1,3 +1,5 @@
+import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
+import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import {
   Column,
   CreateDateColumn,
@@ -21,46 +23,56 @@ export enum NotificationStatus {
   FAILED = 'FAILED',
 }
 
+registerEnumType(NotificationType, {
+  name: 'NotificationType', 
+  description: 'Các loại thông báo',
+});
+
+registerEnumType(NotificationStatus, {
+  name: 'NotificationStatus',
+  description: 'Trạng thái của một thông báo.',
+});
+
+@ObjectType('NotificationHistory')
 @Entity('notification_history')
 export class NotificationHistory {
+  @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Field()
   @Column({ type: 'uuid', name: 'user_id' })
   user_id: string;
 
+  @Field()
   @Column()
   title: string;
 
+  @Field()
   @Column({ type: 'text' })
   body: string;
 
+  @Field(() => [String], { nullable: true })
   @Column('simple-array', { name: 'dose_ids', nullable: true })
   dose_ids: string[];
 
-  @Column({
-    type: 'varchar',
-    enum: NotificationType,
-  })
+  @Field(() => NotificationType)
+  @Column({ type: 'varchar', enum: NotificationType })
   type: NotificationType;
 
-  @Column({
-    type: 'varchar',
-    enum: NotificationStatus,
-    default: NotificationStatus.SENT,
-  })
+  @Field(() => NotificationStatus)
+  @Column({ type: 'varchar', enum: NotificationStatus })
   status: NotificationStatus;
 
-  @Column({
-    type: 'jsonb',
-    nullable: true,
-    comment: 'Dữ liệu ngữ cảnh để client điều hướng, ví dụ: { "doseId": "..." }',
-  })
+  @Field(() => GraphQLJSONObject, { nullable: true }) // <-- SỬ DỤNG SCALAR JSON
+  @Column({ type: 'jsonb', nullable: true })
   payload: Record<string, any>;
 
-  @Column({ type: 'timestamptz', name: 'sent_at', default: () => 'CURRENT_TIMESTAMP' })
+  @Field()
+  @Column({ type: 'timestamptz', name: 'sent_at' })
   sentAt: Date;
 
+  @Field()
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 }

@@ -1,0 +1,56 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+"""JSON custom scalar type"""
+scalar JSONObject
+
+input MarkAsReadInput {
+  notificationIds: [ID!]!
+}
+
+type Mutation {
+  deleteNotification(id: ID!): Boolean!
+  markNotificationsAsRead(input: MarkAsReadInput!): Boolean!
+  test_triggerNotification(dose_id: ID!, user_id: ID!): Boolean!
+}
+
+type NotificationHistory {
+  body: String!
+  createdAt: DateTime!
+  dose_ids: [String!]
+  id: ID!
+  payload: JSONObject
+  sentAt: DateTime!
+  status: NotificationStatus!
+  title: String!
+  type: NotificationType!
+  user_id: String!
+}
+
+"""Trạng thái của một thông báo."""
+enum NotificationStatus {
+  FAILED
+  READ
+  SENT
+}
+
+"""Các loại thông báo"""
+enum NotificationType {
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_REMINDER
+  DOSE_REMINDER
+  GENERAL_ANNOUNCEMENT
+  PAYMENT_CONFIRMED
+  PAYMENT_DUE
+  RESULT_AVAILABLE
+}
+
+type Query {
+  myNotificationHistory(limit: Int! = 20, offset: Int! = 0): [NotificationHistory!]!
+}

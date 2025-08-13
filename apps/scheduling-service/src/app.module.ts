@@ -12,6 +12,7 @@ import { ApiClientsModule } from '@app/api-clients';
 import { JobsModule } from './jobs/jobs.module';
 import { AuthLibModule } from '@app/auth';
 import { GraphQLJSONObject } from 'graphql-type-json';
+import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
 
 @Module({
   imports: [
@@ -47,6 +48,8 @@ import { GraphQLJSONObject } from 'graphql-type-json';
     AuthLibModule,
     JobsModule,
   ],
-  providers: [],
+  providers: [
+    DateTimeScalar
+  ],
 })
 export class SchedulingServiceModule { }

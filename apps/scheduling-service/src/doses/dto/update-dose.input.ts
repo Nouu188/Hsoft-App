@@ -25,8 +25,8 @@ export class UpdateDoseDataInput {
 
   @Field(() => String, { nullable: true, description: 'Thời gian uống thuốc mới (định dạng ISO 8601)' })
   @IsOptional()
-  @IsDateString() // Validate rằng đây là một chuỗi ngày tháng hợp lệ
-  due_at?: string
+  @IsDateString()
+  due_at?: Date
 
   @Field(() => MealRelationInput, { nullable: true, description: 'Cài đặt quan hệ với bữa ăn' })
   @IsOptional()
@@ -53,5 +53,7 @@ export class UpdateDoseInput {
   id: string;
 
   @Field(() => UpdateDoseDataInput, { description: 'Dữ liệu cần cập nhật' })
+  @ValidateNested()
+  @Type(() => UpdateDoseDataInput)
   data: UpdateDoseDataInput;
 }

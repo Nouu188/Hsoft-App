@@ -39,6 +39,11 @@ export class DosesService {
     for (const dose of dosesToUpdate) {
       const updateData = updates.find(u => u.id === dose.id)!.data;
 
+      if (updateData.due_at) {
+        // Chuyển chuỗi ISO từ client thành Date object trước khi gán
+        updateData.due_at = new Date(updateData.due_at);
+      }
+
       Object.assign(dose, updateData);
 
       if (updateData.status === DoseStatus.TAKEN) {

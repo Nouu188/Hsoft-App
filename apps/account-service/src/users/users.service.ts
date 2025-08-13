@@ -65,6 +65,22 @@ export class UsersService {
     return true;
   }
 
+  async removeFcmTokens(userId: string, tokensToRemove: string[]): Promise<boolean> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user || !user.fcm_tokens) {
+      return false;
+    }
+
+    const initialCount = user.fcm_tokens.length;
+    user.fcm_tokens = user.fcm_tokens.filter(token => !tokensToRemove.includes(token));
+
+    if (user.fcm_tokens.length < initialCount) {
+      await this.usersRepository.save(user);
+      return true;
+    }
+
+    return false;
+  }
 
   async findByIdentifier(identifier: string): Promise<User | undefined> {
     if (isUUID(identifier)) {

@@ -47,4 +47,13 @@ export class UsersResolver {
   ): Promise<boolean> {
     return this.usersService.addFcmToken(user.id, fcm_token);
   }
+
+  @Mutation(() => Boolean)
+  @UseGuards(M2MJwtGuard) 
+  async removeFcmTokens(
+    @Args('userId', { type: () => ID }) userId: string,
+    @Args('tokens', { type: () => [String] }) tokens: string[],
+  ): Promise<boolean> {
+    return this.usersService.removeFcmTokens(userId, tokens);
+  }
 }

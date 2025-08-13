@@ -37,7 +37,7 @@ export class Dose {
   @Column({ nullable: true })
   ylenh_stt?: string;
 
-  @Field()
+  @Field(() => Date)
   @Column({ type: 'timestamptz' })
   due_at: Date;
 

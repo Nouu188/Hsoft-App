@@ -27,7 +27,9 @@ import { M2MJwtStrategy } from './strategies/m2m-jwt.strategy';
     }),
   ],
   exports: [
-    PassportModule
+    PassportModule,
+    JwtStrategy,
+    M2MJwtStrategy,
   ]
 })
 export class AuthLibModule {}

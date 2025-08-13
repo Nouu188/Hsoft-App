@@ -129,4 +129,56 @@ export class AccountApiClientService {
             throw new Error('Failed to communicate with Account Service');
         }
     }
+
+  async removeFcmTokens(userId: string, tokensToRemove: string[]): Promise<void> {
+    if (!tokensToRemove || tokensToRemove.length === 0) {
+      return; 
+    }
+
+    this.logger.log(`Requesting to remove ${tokensToRemove.length} invalid token(s) for user ${userId}.`);
+    
+    const m2mToken = await this.authApiClient.getM2MToken();
+
+    const mutation = `
+      mutation RemoveFcmTokens($userId: ID!, $tokens: [String!]!) {
+        removeFcmTokens(userId: $userId, tokens: $tokens)
+      }
+    `;
+    
+    const payload = {
+      query: mutation,
+      variables: {
+        userId,
+        tokens: tokensToRemove,
+      },
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          this.accountServiceUrl,
+          payload,
+          {
+            headers: { 
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${m2mToken}` 
+            },
+            timeout: 15000,
+          }   
+        )
+      );
+
+      if (response.data.errors) {
+        this.logger.error(`GraphQL errors while removing FCM tokens for user ${userId}:`, response.data.errors);
+      } else if (response.data.data.removeFcmTokens) {
+        this.logger.log(`Successfully requested token removal for user ${userId}.`);
+      } else {
+        this.logger.warn(`Token removal mutation for user ${userId} did not return a success value.`);
+      }
+
+    } catch (error) {
+      // Log lỗi chi tiết nhưng không ném lại để không gây Nack cho message gốc
+      this.logger.error(`Failed to send token removal request for user ${userId}. This is a non-critical error.`, error.response?.data || error.message);
+    }
+  }
 }

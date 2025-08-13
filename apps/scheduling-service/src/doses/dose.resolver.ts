@@ -33,7 +33,7 @@ export class DosesResolver {
     const startDate = new Date(startDateString);
     const endDate = new Date(endDateString);
 
-    logger.log(`Parsed date range: ${startDate.toISOString()} → ${endDate.toISOString()}`);
+    logger.log(`Parsed date range: ${startDate.toISOString()} x ${endDate.toISOString()}`);
 
     return this.dosesService.findDosesByDateRange(user.id, startDate, endDate);
   }

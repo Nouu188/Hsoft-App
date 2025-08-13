@@ -23,6 +23,7 @@ type Mutation {
   admin_createServiceClient(input: CreateServiceClientInput!): ServiceClient!
   login(loginInput: LoginInput!): LoginResponse!
   registerFcmToken(fcm_token: String!): Boolean!
+  removeFcmTokens(tokens: [String!]!, userId: ID!): Boolean!
 }
 
 type Query {
