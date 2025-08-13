@@ -46,7 +46,7 @@ const MealTimeSetter: React.FC<MealTimeSetterProps> = ({ mealRelation, doseStatu
   return (
     <TouchableOpacity style={containerStyle} onPress={onPress} disabled={isActionLocked}>
       <Ionicons 
-        name={mealRelation?.type === 'WITH' ? "restaurant-outline" : "alarm-outline"} 
+        name={"restaurant-outline"} 
         size={16} 
         color={isActionLocked ? COLORS.primary : iconColor} 
       />

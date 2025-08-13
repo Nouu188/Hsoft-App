@@ -17,7 +17,7 @@ import Animated, {
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<{ type: string }>);
 
-const HomeScreen: React.FC = () => {
+const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const selectedDate = useScheduleStore(state => state.selectedDate);
   const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
   const isLoading = useScheduleStore(state => state.isLoading);
@@ -51,9 +51,7 @@ const HomeScreen: React.FC = () => {
   });
 
   const onFetch = useCallback(() => { if (user) { fetchDosesBySelectedDate(); } }, [user, fetchDosesBySelectedDate, selectedDate]);
-  
   useEffect(() => { onFetch(); }, [onFetch]);
-
   const onRefresh = useCallback(() => { onFetch(); }, [onFetch]);
   const screenSections = [
     { type: 'header', id: 'header' },
@@ -72,7 +70,10 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity style={styles.notificationButton}>
                   <Ionicons name="search-outline" size={23} color={COLORS.lightGray} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.notificationButton}>
+                <TouchableOpacity 
+                  style={styles.notificationButton}
+onPress={() => navigation.navigate('Notification')}
+                >
                   <Ionicons name="notifications-outline" size={23} color={COLORS.lightGray} />
                 </TouchableOpacity>
               </View>

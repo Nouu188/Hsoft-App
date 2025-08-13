@@ -26,7 +26,7 @@ interface ScheduleState {
   setSelectedDate: (date: dayjs.Dayjs) => void;
   fetchDosesByDateRange: (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs) => Promise<void>;
   fetchDosesBySelectedDate: () => Promise<void>;
-  updateDoseStatus: (doseId: string, status: DoseStatus.TAKEN | DoseStatus.SKIPPED, reason?: SkipReason) => Promise<void>; 
+  updateDoseStatus: (doseId: string, status: DoseStatus.TAKEN | DoseStatus.SKIPPED, reason?: SkipReason) => Promise<void>;
   toggleDosePreparedStatus: (doseId: string) => void;
   rescheduleDose: (doseId: string, newTime: string) => Promise<void>;
   setDoseMealPreference: (doseId: string, preference: MealRelation | null) => void;
@@ -240,12 +240,12 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     const user = useAuthStore.getState().user;
     if (!user) return;
 
-    const previousDosesInDateRange = get().dosesInDateRange;
+    const previousDosesForSelectedDay = get().dosesForSelectedDay;
 
     // Optimistic Update
     set(state => {
       const updatedDosesForDay = state.dosesForSelectedDay.map(dose =>
-        dose.id === doseId ? { ...dose, status: status } : dose
+        dose.id === doseId ? { ...dose, status: status, is_prepared: false } : dose
       );
       const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
 
@@ -274,20 +274,18 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     } catch (e: any) {
       // Rollback
       set(state => {
-        const previousDosesForDay = previousDosesInDateRange.filter(dose =>
+        const previousDosesForDay = previousDosesForSelectedDay.filter(dose =>
           dayjs(dose.due_at).isSame(state.selectedDate, 'day')
         );
         const previousGroupedDoses = groupAndProcessDoses(previousDosesForDay);
         return {
           error: `Failed to update status: ${e.message}`,
-          dosesInDateRange: previousDosesInDateRange,
           dosesForSelectedDay: previousDosesForDay,
           groupDosesForSelectedDay: previousGroupedDoses,
         };
       });
     }
   },
-
 
   toggleDosePreparedStatus: (doseId) => {
     set(state => {
@@ -304,13 +302,60 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     });
   },
 
-  rescheduleDose: async (doseId, newTime) => {
-    // Logic này tương tự như updateDoseStatus
-    // 1. Tìm liều thuốc và cập nhật `due_at` của nó một cách lạc quan (optimistic)
-    // 2. Gọi API mutation để cập nhật trên server
-    // 3. Nếu lỗi, rollback lại thời gian cũ
-    console.log(`Rescheduling dose ${doseId} to ${newTime}`);
-    // ... (Tự triển khai logic tương tự updateDoseStatus)
+  rescheduleDose: async (doseId: string, newTime: string) => {
+    const user = useAuthStore.getState().user;
+    if (!user) {
+      console.warn(`[ScheduleStore] Action: rescheduleDose skipped for dose ${doseId}. Reason: User not authenticated.`);
+      return;
+    }
+    console.log(`[ScheduleStore] Action: rescheduleDose called for dose ${doseId} to new time ${newTime}.`);
+
+    const previousDosesForSelectedDay = get().dosesForSelectedDay;
+
+    console.log('[ScheduleStore] Performing optimistic update for reschedule.');
+    set(state => {
+      const sanitizedDoses = state.dosesForSelectedDay.map(dose => ({
+        ...dose,
+        due_at: dayjs(dose.due_at).toISOString(), 
+      }));
+
+      const updatedDosesForDay = sanitizedDoses.map(dose =>
+        dose.id === doseId ? { ...dose, due_at: newTime } : dose
+      );
+      
+      const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
+      
+      return {
+        dosesForSelectedDay: updatedDosesForDay,
+        groupDosesForSelectedDay: updatedGroupedDoses,
+      };
+    });
+
+    try {
+      const updatePayload = {
+        id: doseId,
+        data: {
+          due_at: newTime,
+        },
+      };
+
+      await schedulingClient.mutate({
+        mutation: UPDATE_DOSES_MUTATION,
+        variables: { updates: [updatePayload] },
+      });
+
+      console.log(`[ScheduleStore] API Success: Successfully rescheduled dose ${doseId} to ${newTime}.`);
+    } catch (e: any) {
+      console.error(`[ScheduleStore] API Failure: Failed to reschedule dose. Rolling back.`, e);
+      set(state => {
+        const previousGroupedDoses = groupAndProcessDoses(previousDosesForSelectedDay);
+        return {
+          error: `Failed to reschedule dose: ${e.message}`,
+          dosesForSelectedDay: previousDosesForSelectedDay,
+          groupDosesForSelectedDay: previousGroupedDoses,
+        };
+      });
+    }
   },
 
   setDoseMealPreference: async (doseId: string, preference: MealRelation | null) => {

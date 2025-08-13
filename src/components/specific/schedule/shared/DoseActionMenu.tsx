@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
   overlay: { 
     flex: 1, 
     backgroundColor: 'rgba(0,0,0,0.5)', 
-    justifyContent: 'flex-end' 
+    justifyContent: 'flex-end', 
   },
   menuContainer: { 
     backgroundColor: COLORS.white, 
     borderTopLeftRadius: 24, 
     borderTopRightRadius: 24, 
     paddingHorizontal: SIZES.padding,
-    paddingBottom: SIZES.padding * 2, 
+    paddingBottom: SIZES.padding * 1.5, 
     maxHeight: '60%',
   },
   header: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: COLORS.border,
-    marginLeft: 56, // Căn lề với text
+    marginLeft: 41, // Căn lề với text
   },
 });
 

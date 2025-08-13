@@ -6,3 +6,6 @@ export * from './dtos/dose/dose.dto';
 export * from './dtos/dose/grouped-dose.dto';
 export * from './dtos/dose/meal-relation.dto';
 
+export * from './enums/notification-type.enum';
+export * from './enums/notification-status.enum';
+export * from './dtos/notification/notification-history.dto';

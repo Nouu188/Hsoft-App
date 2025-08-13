@@ -4,8 +4,7 @@ import ScheduleScreen from '../screens/schedule/ScheduleScreen';
 import RecordScreen from '../screens/RecordScreen';
 import CustomTabBar from './CustomTabBar';
 import ProfileStackNavigator from './ProfileStackNavigator';
-import HomeScreen from '../screens/HomeScreen';
-
+import HomeScreenNavigator from './HomeScreenNavigator';
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
@@ -14,7 +13,7 @@ const TabNavigator = () => {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Home" component={HomeScreenNavigator} />
       <Tab.Screen name="Schedule" component={ScheduleScreen} />
       <Tab.Screen name="Record" component={RecordScreen} />
       <Tab.Screen name="ProfileStack" component={ProfileStackNavigator} />

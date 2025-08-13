@@ -13,6 +13,7 @@ import { DoseStatus, MealRelation, MealRelationType } from '@/types';
 import dayjs from 'dayjs';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import SkipReasonModal from '../../shared/SkipReasonModal';
+import ConfirmationModal from '@/components/common/ConfirmationModal';
 
 interface DoseItemProps {
   dose: Dose;
@@ -34,7 +35,7 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
     onSetMealPreference,
     onRescheduleDose
   } = props;
-  const [isSkipModalVisible, setSkipModalVisible] = useState(false);
+
   const handleSkipPress = () => {
     setSkipModalVisible(true);
   };
@@ -43,30 +44,52 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
     onSkipDose(dose.id, reason);
     setSkipModalVisible(false);
   };
-  const [isMenuVisible, setMenuVisible] = useState(false);
 
+  const [isMenuVisible, setMenuVisible] = useState(false);
+  const [isSkipModalVisible, setSkipModalVisible] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [pickerMode, setPickerMode] = useState<'reschedule' | 'mealTime' | null>(null);
 
+  const [confirmationState, setConfirmationState] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
   const detectedMealType = useMemo((): MealRelationType | null => {
     const instructions = dose.usage_instructions?.toLowerCase() || '';
+
     if (instructions.includes('trước ăn')) return MealRelationType.BEFORE;
     if (instructions.includes('sau ăn')) return MealRelationType.AFTER;
     if (instructions.includes('trong bữa ăn')) return MealRelationType.WITH;
+
     return null;
   }, [dose.usage_instructions]);
 
   const handleConfirmTime = (selectedTime: Date) => {
+    hideTimePicker(); // Đóng picker ngay lập tức
+    
     if (pickerMode === 'reschedule') {
-      onRescheduleDose(dose.id, dayjs(selectedTime).toISOString());
+      const newTimeISO = dayjs(selectedTime).toISOString();
+      setConfirmationState({
+        visible: true,
+        title: "Xác nhận Sửa giờ",
+        message: `Bạn có chắc muốn đổi giờ uống thuốc này thành ${dayjs(selectedTime).format('HH:mm')}?`,
+        onConfirm: () => onRescheduleDose(dose.id, newTimeISO),
+      });
     } else if (pickerMode === 'mealTime' && detectedMealType) {
       const doseTime = dayjs(dose.due_at);
       const mealTime = dayjs(selectedTime);
       const minutesDiff = Math.abs(doseTime.diff(mealTime, 'minute'));
-
-      onSetMealPreference(dose.id, { type: detectedMealType, minutes: minutesDiff });
+      
+      setConfirmationState({
+        visible: true,
+        title: "Xác nhận Giờ ăn",
+        message: `Cài đặt này sẽ điều chỉnh thông báo uống thuốc ${detectedMealType === MealRelationType.BEFORE ? 'trước' : 'sau'} bữa ăn ${minutesDiff} phút. Bạn có chắc chắn?`,
+        onConfirm: () => onSetMealPreference(dose.id, { type: detectedMealType, minutes: minutesDiff }),
+      });
     }
-    hideTimePicker();
   };
 
   const hideTimePicker = () => {
@@ -157,6 +180,16 @@ const DoseItem: React.FC<DoseItemProps> = (props) => {
         date={new Date(dose.due_at)} // Giá trị mặc định của picker
         is24Hour={true}
       />
+
+      {confirmationState && (
+        <ConfirmationModal
+          visible={confirmationState.visible}
+          onClose={() => setConfirmationState(null)}
+          onConfirm={confirmationState.onConfirm}
+          title={confirmationState.title}
+          message={confirmationState.message}
+        />
+      )}
     </View>
   );
 };

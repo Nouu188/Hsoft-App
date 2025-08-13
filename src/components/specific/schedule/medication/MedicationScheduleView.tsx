@@ -20,6 +20,7 @@ const MedicationScheduleView = () => {
     const toggleDosePreparedStatus = useScheduleStore(state => state.toggleDosePreparedStatus);
     const setDoseMealPreference = useScheduleStore(state => state.setDoseMealPreference);
     const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
+    const rescheduleDose = useScheduleStore(state => state.rescheduleDose);
 
     useEffect(() => {
         fetchDosesBySelectedDate();
@@ -121,7 +122,7 @@ const MedicationScheduleView = () => {
     };
 
     const handleRescheduleDose = (doseId: string, newTime: string) => {
-        // Gọi action từ store
+        rescheduleDose(doseId, newTime);
     };
 
     const activeFilterCount = filters.status !== 'ALL' ? 1 : 0;
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     dateSelectorContainer: {
-        paddingTop: SIZES.padding / 2,
+        paddingTop: SIZES.padding / 3,
     },
     searchBarContainer: {
         paddingTop: SIZES.padding / 2,
