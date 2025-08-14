@@ -12,12 +12,7 @@ import dayjs from 'dayjs';
 import { useScheduleStore } from '@/store/useScheduleStore';
 import { GET_DOSE_DETAILS_BY_ID } from '@/api/queries/doseQueries';
 import { schedulingClient } from '@/api/apoloClient';
-
-const AppointmentView = () => (
-  <View style={styles.placeholderContainer}>
-    <Text style={styles.placeholderText}>Giao diện Lịch hẹn khám sẽ ở đây.</Text>
-  </View>
-);
+import AppointmentView from '@/components/specific/schedule/appointment/AppointmentView';
 
 type ScheduleScreenRouteProp = MainTabsScreenProps<'Schedule'>['route'];
 
@@ -87,6 +82,15 @@ const ScheduleScreen: React.FC = () => {
     };
   });
 
+  const renderContent = () => {
+    if (selectedTabIndex === 0) {
+      return <MedicationScheduleView />;
+    }
+    if (selectedTabIndex === 1) {
+      return <AppointmentView />;
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
@@ -106,14 +110,7 @@ const ScheduleScreen: React.FC = () => {
         />
 
         <View style={styles.contentWrapper}>
-          <Animated.View style={[styles.contentSlider, contentAnimatedStyle]}>
-            <View style={{ width: screenWidth }}>
-              <MedicationScheduleView />
-            </View>
-            <View style={{ width: screenWidth }}>
-              <AppointmentView />
-            </View>
-          </Animated.View>
+          {renderContent()}
         </View>
       </View>
     </SafeAreaView>

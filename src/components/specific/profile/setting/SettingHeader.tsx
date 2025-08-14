@@ -11,7 +11,7 @@ const SettingsHeader = () => {
                 <Ionicons name="arrow-back-outline" size={28} color={COLORS.textDark} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Settings</Text>
-            <View style={styles.headerButton} /> {/* Placeholder để căn giữa title */}
+            <View style={styles.headerButton} />
         </View>
     );
 };
@@ -21,11 +21,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: SIZES.padding / 2, // Giảm padding để nút gần mép hơn
+        paddingHorizontal: SIZES.padding / 2, 
         paddingVertical: SIZES.base,
     },
     headerButton: {
-        width: 50, // Tăng vùng nhấn
+        width: 50, 
         height: 50,
         justifyContent: 'center',
         alignItems: 'center',

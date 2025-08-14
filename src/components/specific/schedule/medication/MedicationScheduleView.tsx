@@ -122,9 +122,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.white,
     },
-    scrollView: {
-        flex: 1,
-    },
     dateSelectorContainer: {
         paddingTop: SIZES.padding / 3,
     },
