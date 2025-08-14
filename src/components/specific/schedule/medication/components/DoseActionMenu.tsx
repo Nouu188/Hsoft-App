@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, FlatList } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
+import { useUIStore } from '@/store/useUIStore';
 
 type IoniconName = keyof typeof Ionicons;
 
@@ -16,16 +17,23 @@ interface DoseActionMenuProps {
   visible: boolean;
   onClose: () => void;
   options: MenuOption[];
-  title?: string; 
+  title?: string;
 }
 
 const DoseActionMenu: React.FC<DoseActionMenuProps> = ({ visible, onClose, options, title }) => {
-    const renderOption = ({ item }: { item: MenuOption }) => {
+  const setBottomSheetVisible = useUIStore(state => state.setBottomSheetVisible);
+
+  useEffect(() => {
+    setBottomSheetVisible(visible);
+  }, [visible, setBottomSheetVisible]);
+
+
+  const renderOption = ({ item }: { item: MenuOption }) => {
     const color = item.isDestructive ? COLORS.danger : COLORS.textDark;
 
     return (
-      <TouchableOpacity 
-        style={styles.option} 
+      <TouchableOpacity
+        style={styles.option}
         onPress={() => {
           item.onPress();
           onClose();
@@ -65,17 +73,17 @@ const DoseActionMenu: React.FC<DoseActionMenuProps> = ({ visible, onClose, optio
 };
 
 const styles = StyleSheet.create({
-  overlay: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.5)', 
-    justifyContent: 'flex-end', 
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
-  menuContainer: { 
-    backgroundColor: COLORS.white, 
-    borderTopLeftRadius: 24, 
-    borderTopRightRadius: 24, 
+  menuContainer: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingHorizontal: SIZES.padding,
-    paddingBottom: SIZES.padding * 1.5, 
+    paddingBottom: SIZES.padding * 1.5,
     maxHeight: '60%',
   },
   header: {
@@ -94,14 +102,14 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 4,
   },
-  option: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingVertical: 16 
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16
   },
-  optionText: { 
-    fontSize: 16, 
-    marginLeft: 16, 
+  optionText: {
+    fontSize: 16,
+    marginLeft: 16,
     fontWeight: '500',
   },
   separator: {

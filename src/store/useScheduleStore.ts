@@ -23,6 +23,8 @@ interface ScheduleState {
   groupDosesForSelectedDay: GroupedDose[];
   isLoading: boolean;
   error: string | null;
+  doseIdToFocus: string | null; 
+  setDoseIdToFocus: (doseId: string | null) => void;
   setSelectedDate: (date: dayjs.Dayjs) => void;
   fetchDosesByDateRange: (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs) => Promise<void>;
   fetchDosesBySelectedDate: () => Promise<void>;
@@ -112,6 +114,12 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
   groupDosesForSelectedDay: [],
   isLoading: false,
   error: null,
+  doseIdToFocus: null,
+
+  setDoseIdToFocus: (doseId) => {
+    console.log(`[ScheduleStore] Setting doseIdToFocus:`, doseId);
+    set({ doseIdToFocus: doseId });
+  },
 
   setSelectedDate: (date) => {
     console.log(`[ScheduleStore] Action: setSelectedDate called with`, date.format('YYYY-MM-DD'));

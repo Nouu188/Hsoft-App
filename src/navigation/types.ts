@@ -17,10 +17,10 @@ export type RootStackParamList = {
 // Các Tab ở dưới cùng
 export type MainTabsParamList = {
   Home: undefined;
-  Schedule: { timeToFocus?: string }; // Màn hình lịch trình có thể nhận tham số
-  MedicalRecordsStack: NavigatorScreenParams<MedicalRecordsStackParamList>; // Lồng một Stack khác vào Tab
-  AppointmentStack: NavigatorScreenParams<AppointmentStackParamList>; // Lồng Stack lịch hẹn
-  PaymentStack: NavigatorScreenParams<PaymentStackParamList>; // Lồng Stack thanh toán
+  Schedule: { doseIdsToFocus?: string[] }; 
+  MedicalRecordsStack: NavigatorScreenParams<MedicalRecordsStackParamList>; 
+  AppointmentStack: NavigatorScreenParams<AppointmentStackParamList>; 
+  PaymentStack: NavigatorScreenParams<PaymentStackParamList>; 
   Notification: undefined;
   Account: undefined;
 };

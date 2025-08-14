@@ -8,10 +8,9 @@ import {
   Pressable,
   SafeAreaView,
   StyleProp,
-  TextStyle, // Dùng SafeAreaView để tránh các vùng tai thỏ, thanh điều hướng
+  TextStyle,
 } from 'react-native';
 
-// Placeholder cho các icon, bạn có thể thay bằng component Icon thực tế
 interface IconProps {
   name: string;
   style?: StyleProp<TextStyle>;

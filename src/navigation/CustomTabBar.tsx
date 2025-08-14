@@ -4,24 +4,41 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Platform,
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS } from '../constants/theme';
+import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import { useUIStore } from '@/store/useUIStore';
 
 const { width } = Dimensions.get('window');
 
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
+  // Lắng nghe state từ store
+  const isBottomSheetVisible = useUIStore(state => state.isBottomSheetVisible);
+
+  // Tạo style động cho wrapper
+  const animatedWrapperStyle = useAnimatedStyle(() => {
+    return {
+      // Trượt xuống dưới màn hình khi modal mở, trượt lên lại khi đóng
+      transform: [
+        {
+          translateY: withTiming(isBottomSheetVisible ? 100 : 0, {
+            duration: 250,
+            easing: Easing.out(Easing.quad)
+          })
+        }
+      ],
+      // Mờ đi khi ẩn
+      opacity: withTiming(isBottomSheetVisible ? 0 : 1, { duration: 200 }),
+    };
+  });
   return (
-    <View style={styles.wrapper}>
+    <Animated.View style={[styles.wrapper, animatedWrapperStyle]}>
       <View style={styles.container}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
-          const label = options.tabBarLabel ?? route.name;
-
           const isFocused = state.index === index;
-
           const onPress = () => {
             const event = navigation.emit({
               type: 'tabPress',
@@ -50,12 +67,11 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
               iconName = isFocused ? 'person' : 'person-outline';
               break;
           }
-
           return (
             <TouchableOpacity
               key={index}
               onPress={onPress}
-              style={[styles.tabItem, isFocused &&styles.activeIconContainer]}
+              style={[styles.tabItem, isFocused && styles.activeIconContainer]}
             >
               <Ionicons
                 name={iconName as any}
@@ -66,7 +82,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
           );
         })}
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

@@ -1,139 +1,39 @@
 import { COLORS, SIZES } from "@/constants/theme";
-import { useScheduleStore } from "@/store/useScheduleStore";
-import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { useCallback } from "react";
 import TimeSlotCard from "./components/TimeSlotCard";
 import SearchBar from "@/components/common/SearchBar";
 import FilterModal from "../shared/FilterModal";
-import { FilterState } from "@/components/specific/schedule/medication/components/DoseFilter";
 import DateSelector from "../shared/DateSelector";
 import { GroupedDose } from "@/types/dtos/dose/grouped-dose.dto";
 import TimeSlotCardSkeleton from "./components/TimeSlotCardSkeleton";
-import { DoseStatus, GroupedDoseStatus } from "@/types";
+import { useMedicationSchedule } from "./hooks/useMedicationSchedule";
 
 const MedicationScheduleView = () => {
-    const groupDosesForSelectedDay = useScheduleStore(state => state.groupDosesForSelectedDay);
-    const isLoading = useScheduleStore(state => state.isLoading);
-    const error = useScheduleStore(state => state.error);
-    const selectedDate = useScheduleStore(state => state.selectedDate)
-    const updateDoseStatus = useScheduleStore(state => state.updateDoseStatus);
-    const toggleDosePreparedStatus = useScheduleStore(state => state.toggleDosePreparedStatus);
-    const setDoseMealPreference = useScheduleStore(state => state.setDoseMealPreference);
-    const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
-    const rescheduleDose = useScheduleStore(state => state.rescheduleDose);
-
-    useEffect(() => {
-        fetchDosesBySelectedDate();
-    }, [selectedDate, fetchDosesBySelectedDate]);
-
-    const onRefresh = useCallback(() => {
-        fetchDosesBySelectedDate();
-    }, [fetchDosesBySelectedDate]);
-
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filters, setFilters] = useState<FilterState>({ status: 'ALL', timeOfDay: [] });
-    const [isFilterModalVisible, setFilterModalVisible] = useState(false);
-
-    const filteredData = useMemo(() => {
-        if (!groupDosesForSelectedDay) return [];
-
-        let data = groupDosesForSelectedDay;
-
-        if (searchQuery) {
-            const lowercasedQuery = searchQuery.toLowerCase();
-            data = data
-                .map(group => {
-                    const matchingDoses = group.doses.filter(dose =>
-                        dose.medication_name.toLowerCase().includes(lowercasedQuery)
-                    );
-                    return { ...group, doses: matchingDoses };
-                })
-                .filter(group => group.doses.length > 0);
-        }
-
-        if (filters.status !== 'ALL') {
-            if (filters.status === 'ACTION_NEEDED') {
-                data = data.filter(g => g.status === GroupedDoseStatus.ACTIVE || g.status === GroupedDoseStatus.MISSED);
-            } else {
-                // Ép kiểu `filters.status` thành `GroupedDoseStatus` để đảm bảo type safety
-                data = data.filter(g => g.status === (filters.status as GroupedDoseStatus));
-            }
-        }
-
-        return data;
-    }, [groupDosesForSelectedDay, filters, searchQuery]);
-
-    const handleMarkAsTaken = (doseIds: string[]) => {
-        console.log(`Marking doses as taken:`, doseIds);
-
-        doseIds.forEach(doseId => {
-            // Tìm liều thuốc trong state để đảm bảo nó chưa được uống
-            const doseToUpdate = groupDosesForSelectedDay
-                .flatMap(g => g.doses)
-                .find(d => d.id === doseId);
-
-            if (doseToUpdate && doseToUpdate.status !== DoseStatus.TAKEN) {
-                updateDoseStatus(doseId, DoseStatus.TAKEN);
-            }
-        });
-    };
-
-    const flatListRef = useRef<FlatList<GroupedDose>>(null);
-
-    const handleNavigateToTime = (time: string) => {
-        const indexInFilteredList = filteredData.findIndex(
-            group => new Date(group.time).getTime() === new Date(time).getTime()
-        );
-
-        if (indexInFilteredList !== -1) {
-            if (flatListRef.current) {
-                flatListRef.current.scrollToIndex({
-                    index: indexInFilteredList,
-                    animated: true,
-                    viewPosition: 0, 
-                    viewOffset: SIZES.padding 
-                });
-            }
-        } else {
-            console.warn(`Target time slot is hidden by filters. Clearing filters to scroll.`);
-
-            setFilters({ status: 'ALL', timeOfDay: [] });
-            setSearchQuery('');
-
-            setTimeout(() => {
-                const indexInFullList = groupDosesForSelectedDay.findIndex(
-                    group => new Date(group.time).getTime() === new Date(time).getTime()
-                );
-
-                if (indexInFullList !== -1 && flatListRef.current) {
-                    flatListRef.current.scrollToIndex({
-                        index: indexInFullList,
-                        animated: true,
-                        viewPosition: 0,
-                        viewOffset: SIZES.padding
-                    });
-                }
-            }, 100); 
-        }
-    };
-
-    const handleSkipDose = (doseId: string, reason: { category: string; detail?: string }) => {
-        updateDoseStatus(doseId, DoseStatus.SKIPPED, reason);
-    };
-
-    const handleRescheduleDose = (doseId: string, newTime: string) => {
-        rescheduleDose(doseId, newTime);
-    };
-
-    const activeFilterCount = filters.status !== 'ALL' ? 1 : 0;
-
-    if (error) {
-        return <View style={[styles.container, styles.centeredContent]}><Text style={styles.errorText}>Lỗi: {error}</Text></View>;
-    }
-
-    const renderDoseItem = ({ item }: { item: GroupedDose }) => (
+    const {
+        isLoading,
+        error,
+        filteredData,
+        groupDosesForSelectedDay,
+        searchQuery,
+        filters,
+        isFilterModalVisible,
+        activeFilterCount,
+        flatListRef,
+        onRefresh,
+        setSearchQuery,
+        setFilters,
+        setFilterModalVisible,
+        handleMarkAsTaken,
+        toggleDosePreparedStatus,
+        handleNavigateToTime,
+        handleSkipDose,
+        handleRescheduleDose,
+        setDoseMealPreference,
+    } = useMedicationSchedule();
+    
+    const renderDoseItem = useCallback(({ item }: { item: GroupedDose }) => (
         <TimeSlotCard
-            key={item.time}
             group={item}
             onMarkAsTaken={handleMarkAsTaken}
             onTogglePrepared={toggleDosePreparedStatus}
@@ -143,11 +43,10 @@ const MedicationScheduleView = () => {
             onRescheduleDose={handleRescheduleDose}
             onSetMealPreference={setDoseMealPreference}
         />
-    );
-
+    ), [groupDosesForSelectedDay, handleMarkAsTaken, toggleDosePreparedStatus, handleNavigateToTime, handleSkipDose, handleRescheduleDose, setDoseMealPreference]);
+    
     const renderEmptyListComponent = () => {
-        if (isLoading || error) return null;
-
+        if (isLoading) return null;
         return (
             <View style={styles.centeredContent}>
                 <Text style={styles.emptyText}>
@@ -166,6 +65,10 @@ const MedicationScheduleView = () => {
             <TimeSlotCardSkeleton />
         </View>
     );
+
+    if (error) {
+        return <View style={[styles.container, styles.centeredContent]}><Text style={styles.errorText}>Lỗi: {error}</Text></View>;
+    }
 
     return (
         <View style={styles.container}>
@@ -187,8 +90,8 @@ const MedicationScheduleView = () => {
                 renderSkeleton()
             ) : (
                 <FlatList
-                    style={styles.list}
                     ref={flatListRef}
+                    style={styles.list}
                     data={filteredData}
                     renderItem={renderDoseItem}
                     keyExtractor={item => item.time}

@@ -26,3 +26,12 @@ export const GET_DOSES_BY_SELECTED_DATE = gql`
     }
   }
 `;  
+
+export const GET_DOSE_DETAILS_BY_ID = gql`
+  query GetDoseById($id: ID!) {
+    doseById(id: $id) {
+      id
+      due_at
+    }
+  }
+`;

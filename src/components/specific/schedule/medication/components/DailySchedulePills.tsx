@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES } from '@/constants/theme';
-import dayjs from 'dayjs';
-import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
-import { Dose } from '@/types/dtos/dose/dose.dto';
+import { COLORS } from '@/constants/theme';
 import { DoseStatus, GroupedDoseStatus } from '@/types';
+import { Dose } from '@/types/dtos/dose/dose.dto';
+import { GroupedDose } from '@/types/dtos/dose/grouped-dose.dto';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import dayjs from 'dayjs';
+import React, { useEffect, useMemo } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    useSharedValue,
+    Easing,
     useAnimatedStyle,
+    useSharedValue,
     withRepeat,
     withSequence,
     withTiming,
-    Easing,
 } from 'react-native-reanimated';
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
@@ -28,6 +28,7 @@ interface MedicationPill {
 interface DailySchedulePillsProps {
     currentDose: Dose;
     allDosesForDay: GroupedDose[];
+    
     onPillPress: (time: string) => void;
 }
 
@@ -72,6 +73,7 @@ const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ currentDose, al
     }, [allDosesForDay, currentDose.medication_name, currentDose.id]);
 
     const scale = useSharedValue(1);
+
     useEffect(() => {
         scale.value = withRepeat(
             withSequence(
@@ -85,7 +87,6 @@ const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ currentDose, al
         );
     }, []);
 
-    // 4. Tạo style động
     const animatedCurrentPillStyle = useAnimatedStyle(() => {
         return {
             transform: [{ scale: scale.value }],
@@ -109,7 +110,6 @@ const DailySchedulePills: React.FC<DailySchedulePillsProps> = ({ currentDose, al
                             styles.pill,
                             style,
                             index === 0 && styles.pillFirst,
-                            // Áp dụng style gốc và style động
                             pill.isCurrentPill && [styles.currentPill, animatedCurrentPillStyle]
                         ]}
                         onPress={() => onPillPress(pill.time)}

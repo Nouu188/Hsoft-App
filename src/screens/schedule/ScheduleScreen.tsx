@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
@@ -6,6 +6,12 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import SegmentedControl from '@/components/common/SegmentedControl';
 import MedicationScheduleView from '@/components/specific/schedule/medication/MedicationScheduleView';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { MainTabsScreenProps } from '@/navigation/types';
+import dayjs from 'dayjs';
+import { useScheduleStore } from '@/store/useScheduleStore';
+import { GET_DOSE_DETAILS_BY_ID } from '@/api/queries/doseQueries';
+import { schedulingClient } from '@/api/apoloClient';
 
 const AppointmentView = () => (
   <View style={styles.placeholderContainer}>
@@ -13,7 +19,65 @@ const AppointmentView = () => (
   </View>
 );
 
+type ScheduleScreenRouteProp = MainTabsScreenProps<'Schedule'>['route'];
+
 const ScheduleScreen: React.FC = () => {
+  const route = useRoute<ScheduleScreenRouteProp>();
+  const navigation = useNavigation();
+  
+  // Lấy các action từ store
+  const setSelectedDate = useScheduleStore(state => state.setSelectedDate);
+  const setDoseIdToFocus = useScheduleStore(state => state.setDoseIdToFocus);
+
+  useFocusEffect(
+    useCallback(() => {
+      const doseIds = route.params?.doseIdsToFocus;
+      
+      if (doseIds && doseIds.length > 0) {
+        const firstDoseId = doseIds[0];
+        console.log(`[ScheduleScreen] Focus effect detected doseIdsToFocus:`, doseIds);
+
+        const findAndNavigate = async (doseId: string) => {
+          try {
+            console.log(`[ScheduleScreen] Looking up details for doseId: ${doseId}`);
+            
+            const { data } = await schedulingClient.query({
+              query: GET_DOSE_DETAILS_BY_ID,
+              variables: { id: doseId },
+              fetchPolicy: 'network-only',
+            });
+
+            const targetDose = data?.doseById;
+
+            if (targetDose && targetDose.due_at) {
+              const targetDate = dayjs(targetDose.due_at);
+              
+              console.log(`[ScheduleScreen] Dose found. Navigating to date: ${targetDate.format('YYYY-MM-DD')}`);
+              
+              // 1. Chuyển đến đúng ngày
+              setSelectedDate(targetDate);
+              
+              // 2. Set ID cần focus vào store
+              setDoseIdToFocus(firstDoseId);
+
+              // 3. Xóa params để tránh lặp lại
+              navigation.setParams({ doseIdsToFocus: undefined } as any);
+            } else {
+              console.warn(`[ScheduleScreen] Dose with ID ${doseId} not found on server.`);
+              // Vẫn xóa params để tránh lỗi lặp
+              navigation.setParams({ doseIdsToFocus: undefined } as any);
+            }
+          } catch (error) {
+            console.error(`[ScheduleScreen] Failed to fetch dose details for ID ${doseId}`, error);
+            navigation.setParams({ doseIdsToFocus: undefined } as any);
+          }
+        };
+
+        findAndNavigate(firstDoseId);
+      }
+    }, [route.params?.doseIdsToFocus]) // Chỉ chạy lại callback này khi params thay đổi
+  );
+
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const { width: screenWidth } = useWindowDimensions();
 
@@ -69,7 +133,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: SIZES.padding,
-    paddingVertical: SIZES.padding,
+    paddingBottom: SIZES.padding*0.8,
+    paddingTop: SIZES.padding*0.6,
     backgroundColor: COLORS.primary,
   },
   headerTitle: {

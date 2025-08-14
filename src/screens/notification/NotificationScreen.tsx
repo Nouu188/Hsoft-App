@@ -13,7 +13,6 @@ import { NotificationHistory, NotificationStatus, NotificationType } from '@/typ
 import { MainTabsNavigationProp } from '@/navigation/types';
 
 const NotificationScreen = () => {
-  // Sử dụng type an toàn cho navigation
   const navigation = useNavigation<MainTabsNavigationProp<'Notification'>>();
   
   const {
@@ -35,17 +34,13 @@ const NotificationScreen = () => {
     return unsubscribe;
   }, [navigation, fetchNotifications]);
 
-  /**
-   * Xử lý điều hướng thông minh dựa trên loại thông báo.
-   */
+  // Hàm xử lý khi người dùng nhấn vào một thông báo
   const handleNotificationPress = (item: NotificationHistory) => {
-    // 1. Đánh dấu đã đọc (Optimistic Update)
     if (item.status !== NotificationStatus.READ) {
       markAsRead(item.id);
     }
 
     if (item.type === NotificationType.RESULT_AVAILABLE) {
-      // TypeScript sẽ báo lỗi nếu bạn truyền sai params hoặc sai tên màn hình
       navigation.navigate('MedicalRecordsStack', {
         screen: 'RecordDetail',
         params: { 
@@ -55,12 +50,10 @@ const NotificationScreen = () => {
       });
     }
 
-    // 2. Logic điều hướng dựa trên `type` và `payload`
     switch (item.type) {
       case NotificationType.DOSE_REMINDER:
-        navigation.navigate('Schedule', { 
-          timeToFocus: item.payload?.doseTime 
-        });
+        console.log('Navigating to Schedule with doseIds:', item.payload?.doseIds);
+        navigation.navigate('Schedule', { doseIdsToFocus: item.payload?.doseIds });
         break;
       
       case NotificationType.RESULT_AVAILABLE:
@@ -74,9 +67,8 @@ const NotificationScreen = () => {
 
       case NotificationType.APPOINTMENT_REMINDER:
       case NotificationType.APPOINTMENT_CONFIRMED:
-        // Điều hướng đến màn hình chi tiết lịch hẹn
         if (item.payload?.appointmentId) {
-          navigation.navigate('AppointmentStack', { // Giả sử có stack này
+          navigation.navigate('AppointmentStack', {
             screen: 'AppointmentDetail',
             params: { appointmentId: item.payload.appointmentId }
           });
@@ -84,9 +76,8 @@ const NotificationScreen = () => {
         break;
       
       case NotificationType.PAYMENT_DUE:
-        // Điều hướng đến màn hình thanh toán
         if (item.payload?.paymentId) {
-          navigation.navigate('PaymentStack', { // Giả sử có stack này
+          navigation.navigate('PaymentStack', { 
             screen: 'PaymentDetail',
             params: { paymentId: item.payload.paymentId }
           });
@@ -94,7 +85,6 @@ const NotificationScreen = () => {
         break;
 
       default:
-        // Không làm gì cho các thông báo chung
         console.log('Navigating for a general notification, no action defined.');
         break;
     }

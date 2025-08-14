@@ -1,18 +1,19 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StyleProp, ViewStyle, TextStyle } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import { DoseStatus, MealRelation } from '@/types';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import React from 'react';
+import { StyleProp, StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from 'react-native';
 
 interface MealTimeSetterProps {
   mealRelation?: MealRelation | null;
   doseStatus: DoseStatus;
+
   onPress: () => void;
 }
 
 const MealTimeSetter: React.FC<MealTimeSetterProps> = ({ mealRelation, doseStatus, onPress }) => {
   const isActionLocked = doseStatus === DoseStatus.TAKEN || doseStatus === DoseStatus.SKIPPED;
-  
+
   const hasValue = mealRelation && (mealRelation.minutes !== undefined || mealRelation.type === 'WITH');
 
   const getDisplayText = () => {
@@ -45,10 +46,10 @@ const MealTimeSetter: React.FC<MealTimeSetterProps> = ({ mealRelation, doseStatu
 
   return (
     <TouchableOpacity style={containerStyle} onPress={onPress} disabled={isActionLocked}>
-      <Ionicons 
-        name={"restaurant-outline"} 
-        size={16} 
-        color={isActionLocked ? COLORS.primary : iconColor} 
+      <Ionicons
+        name={"restaurant-outline"}
+        size={16}
+        color={isActionLocked ? COLORS.primary : iconColor}
       />
       <Text style={textStyle}>
         {getDisplayText()}
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
     elevation: 2
   },
   disabledContainer: {
-    backgroundColor: '#F1F5F9', 
+    backgroundColor: '#F1F5F9',
   },
   text: {
     marginLeft: 6,

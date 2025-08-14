@@ -1,14 +1,12 @@
-// src/components/specific/schedule/TimeSlotCard.tsx (Đã Refactor)
-
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { Shadow } from 'react-native-shadow-2';
-import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
-import dayjs from 'dayjs';
-import DoseItem from './DoseItem';
-import { GroupedDose, Dose, MealRelation } from '@/types';
+import { GroupedDose, MealRelation } from '@/types';
 import { GroupedDoseStatus } from '@/types/enums/grouped-dose-status.enum';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Shadow } from 'react-native-shadow-2';
+import DoseItem from './DoseItem';
 
 interface TimeSlotCardProps {
     group: GroupedDose;
@@ -39,7 +37,7 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
     const {
         group,
         allDosesForDay,
-        onMarkAsTaken, 
+        onMarkAsTaken,
         onTogglePrepared,
         onNavigateToTime,
         onSkipDose,
@@ -115,11 +113,11 @@ const TimeSlotCard: React.FC<TimeSlotCardProps> = (props) => {
                             key={dose.id}
                             dose={dose}
                             allDosesForDay={allDosesForDay}
-                            onTogglePrepared={handleTogglePrepared} 
+                            onTogglePrepared={handleTogglePrepared}
                             onNavigateToTime={onNavigateToTime}
                             onSkipDose={onSkipDose}
                             onSetMealPreference={onSetMealPreference}
-                            onRescheduleDose={onRescheduleDose} 
+                            onRescheduleDose={onRescheduleDose}
                         />
                     ))}
                 </View>
