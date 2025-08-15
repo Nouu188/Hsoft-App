@@ -1,15 +1,13 @@
-import { StyleSheet, Dimensions, Text, ImageBackground, View } from 'react-native';
-import React from 'react';
-import Animated, {
-  Extrapolation,
-  SharedValue,
-  interpolate,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
-import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES } from '@/constants/theme';
 import { AppointmentCardData } from '@/constants/mockData';
+import { COLORS, SIZES } from '@/constants/theme';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import dayjs from 'dayjs';
+import React from 'react';
+import { Dimensions, ImageBackground, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  SharedValue
+} from 'react-native-reanimated';
+import { useCarouselCardAnimation } from '../hooks/useCarouselCardAnimation';
 
 const OFFSET = 45;
 const ITEM_WIDTH = Dimensions.get('window').width - OFFSET * 2;
@@ -23,69 +21,49 @@ interface CarouselItemProps {
 };
 
 const CarouselItem: React.FC<CarouselItemProps> = ({ item, scrollX, index, total }) => {
-  const inputRange = [
-    (index - 1) * ITEM_WIDTH,
-    index * ITEM_WIDTH,
-    (index + 1) * ITEM_WIDTH,
-  ];
+  const { cardStyle, textStyle, imageStyle } = useCarouselCardAnimation(scrollX, index, ITEM_WIDTH);
 
-  // --- LOGIC ANIMATION GIỮ NGUYÊN ---
-  const cardStyle = useAnimatedStyle(() => {
-    const scale = interpolate(scrollX.value, inputRange, [0.85, 0.92, 0.85], Extrapolation.CLAMP);
-    const opacity = interpolate(scrollX.value, inputRange, [0.8, 1, 0.8], Extrapolation.CLAMP);
-    return { transform: [{ scale }], opacity };
-  });
-
-  const imageStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(scrollX.value, inputRange, [-ITEM_WIDTH * 0.02, 0, ITEM_WIDTH * 0.02], Extrapolation.CLAMP);
-    return { transform: [{ translateX }] };
-  });
-
-  const textStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(scrollX.value, inputRange, [0, 1, 0], Extrapolation.CLAMP);
-    const translateY = interpolate(scrollX.value, inputRange, [35, 0, 35], Extrapolation.CLAMP);
-    return { opacity, transform: [{ translateY }] };
-  });
 
   return (
-    <Animated.View
-      style={[
-        styles.cardContainer,
-        {
-          marginLeft: index === 0 ? OFFSET : undefined,
-          marginRight: index === total - 1 ? OFFSET : undefined,
-        },
-        cardStyle,
-      ]}
-    >
-      <Animated.View style={[{ width: ITEM_WIDTH, height: ITEM_HEIGHT, overflow: 'hidden' }, imageStyle]}>
-        <ImageBackground
-          source={{ uri: item.image, cache: 'force-cache' }}
-          style={styles.imageBackgroundStyle}
-          resizeMethod="resize"
-        >
-          <View style={styles.overlay} pointerEvents="none" />
-          <Animated.View style={[styles.textContainer, textStyle]}>
-            <Text style={styles.doctorName}>{item.doctorName}</Text>
-            <Text style={styles.specialty}>{item.specialty}</Text>
-            <View style={styles.infoRow}>
-              <Ionicons name="calendar-outline" size={16} color="#fff" />
-              <Text style={styles.infoText}>{dayjs(item.date).format('dddd, DD/MM/YYYY')}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Ionicons name="time-outline" size={16} color="#fff" />
-              <Text style={styles.infoText}>{item.time}</Text>
-            </View>
-          </Animated.View>
-        </ImageBackground>
+    <View style={{ width: ITEM_WIDTH }}>
+      <Animated.View
+        style={[
+          styles.cardContainer,
+          {
+            marginVertical: 10,
+          },
+          cardStyle,
+        ]}
+      >
+        <Animated.View style={[{ width: ITEM_WIDTH, height: ITEM_HEIGHT, overflow: 'hidden' }, imageStyle]}>
+          <ImageBackground
+            source={{ uri: item.image, cache: 'force-cache' }}
+            style={styles.imageBackgroundStyle}
+            resizeMethod="resize"
+          >
+            <View style={styles.overlay} pointerEvents="none" />
+            <Animated.View style={[styles.textContainer, textStyle]}>
+              <Text style={styles.doctorName}>{item.doctorName}</Text>
+              <Text style={styles.specialty}>{item.specialty}</Text>
+              <View style={styles.infoRow}>
+                <Ionicons name="calendar-outline" size={16} color="#fff" />
+                <Text style={styles.infoText}>{dayjs(item.date).format('dddd, DD/MM/YYYY')}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Ionicons name="time-outline" size={16} color="#fff" />
+                <Text style={styles.infoText}>{item.time}</Text>
+              </View>
+            </Animated.View>
+          </ImageBackground>
+        </Animated.View>
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   cardContainer: {
-    width: ITEM_WIDTH,
+    width: '100%',
     height: ITEM_HEIGHT,
     overflow: 'hidden',
     borderRadius: 24,

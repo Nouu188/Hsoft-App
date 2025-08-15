@@ -74,8 +74,6 @@ export default ParallaxCarouselPagination;
 const styles = StyleSheet.create({
   paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
     paddingVertical: 10,
   },
   dots: {
