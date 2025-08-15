@@ -38,7 +38,7 @@ export const useCarouselCardAnimation = (
   });
 
   const imageStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(scrollX.value, inputRange, [-itemWidth * 0.02, 0, itemWidth * 0.02], Extrapolation.CLAMP);
+    const translateX = interpolate(scrollX.value, inputRange, [-itemWidth * 0, 0, itemWidth * 0.0], Extrapolation.CLAMP);
     return { transform: [{ translateX }] };
   });
 

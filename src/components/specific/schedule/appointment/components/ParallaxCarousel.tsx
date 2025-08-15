@@ -3,8 +3,6 @@ import { Dimensions, StyleSheet, View, FlatList, TouchableOpacity, Text } from '
 import Animated, { 
   useSharedValue, 
   useAnimatedScrollHandler, 
-  useAnimatedReaction,
-  runOnJS,
   interpolate,
   useAnimatedStyle,
   withSpring
@@ -15,10 +13,7 @@ import ParallaxCarouselPagination from './Pagination';
 import { COLORS, SIZES } from '@/constants/theme';
 import ViewMoreCard from './ViewMoreCard';
 import Ionicons from '@react-native-vector-icons/ionicons';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const ITEM_WIDTH = SCREEN_WIDTH * 0.75;
-const ITEM_SPACING = 20;
+import { SCREEN_WIDTH, ITEM_WIDTH, ITEM_SPACING, SNAP_INTERVAL, SIDE_PADDING } from '../carouselConfig';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
@@ -33,7 +28,6 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
   const flatListRef = useRef<FlatList>(null);
   const isScrolling = useSharedValue(false);
 
-
   const carouselData = useMemo(() => [
     ...data,
     { id: 'view-more' } as const
@@ -41,11 +35,13 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
 
   const totalItems = carouselData.length;
 
-  // Animated scroll handler với throttling tối ưu
+  // Animated scroll handler with corrected index calculation for centered alignment
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x;
-      const newIndex = Math.round(event.contentOffset.x / (ITEM_WIDTH + ITEM_SPACING));
+      const center = event.contentOffset.x + SCREEN_WIDTH / 2;
+      const adjusted = center - SNAP_INTERVAL / 2;
+      const newIndex = Math.round(adjusted / SNAP_INTERVAL);
       if (newIndex !== activeIndex.value && newIndex >= 0 && newIndex < totalItems) {
         activeIndex.value = newIndex;
       }
@@ -58,24 +54,17 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
     }
   });
 
-  // Tối ưu scroll to index với animation mượt
+  // Optimized scroll to index using scrollToIndex with viewPosition for centering
   const scrollToIndex = useCallback((index: number) => {
     if (index < 0 || index >= totalItems) return;
-    
-    const toValue = index * (ITEM_WIDTH + ITEM_SPACING);
-    scrollX.value = withSpring(toValue, {
-      damping: 20,
-      stiffness: 90,
-      mass: 0.8
-    });
-    
-    flatListRef.current?.scrollToOffset({
-      offset: toValue,
+    flatListRef.current?.scrollToIndex({
+      index,
       animated: true,
+      viewPosition: 0.5,
     });
-  }, [totalItems, scrollX]);
+  }, [totalItems]);
 
-  // Navigation handlers với debounce
+  // Navigation handlers with debounce
   const handlePrev = useCallback(() => {
     if (isScrolling.value) return;
     const currentIndex = activeIndex.value;
@@ -92,7 +81,7 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
     }
   }, [scrollToIndex, activeIndex, isScrolling, totalItems]);
 
-  // Animated styles cho navigation buttons
+  // Animated styles for navigation buttons
   const prevButtonStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       activeIndex.value,
@@ -117,39 +106,36 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
     };
   });
 
-  // Optimized render item với useCallback
+  // Optimized render item with useCallback and slot for centering
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-      if (item.id === 'view-more') {
-        return (
-          <View style={[styles.itemContainer]}>
+      return (
+        <View style={styles.itemSlot}>
+          {item.id === 'view-more' ? (
             <ViewMoreCard 
               onPress={onViewAllPress}
               scrollX={scrollX}
               index={index}
             />
-          </View>
-        );
-      }
-      return (
-        <View style={[styles.itemContainer, { width: ITEM_WIDTH }]}>
-          <CarouselItem
-            item={item}
-            index={index}
-            scrollX={scrollX}
-            total={data.length}
-          />
+          ) : (
+            <CarouselItem
+              item={item}
+              index={index}
+              scrollX={scrollX}
+              total={data.length}
+            />
+          )}
         </View>
       );
     },
     [scrollX, data.length, onViewAllPress]
   );
 
-  // Optimized getItemLayout cho performance tốt hơn
+  // Optimized getItemLayout for better performance with corrected length/offset
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
-      length: ITEM_WIDTH + ITEM_SPACING,
-      offset: (ITEM_WIDTH + ITEM_SPACING) * index,
+      length: SNAP_INTERVAL,
+      offset: SNAP_INTERVAL * index,
       index,
     }),
     []
@@ -162,7 +148,7 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
 
   return (
     <View style={styles.container}>
-      {/* Navigation Buttons với animated styles */}
+      {/* Navigation Buttons with animated styles */}
       <Animated.View style={[styles.navButton, styles.prevButton, prevButtonStyle]}>
         <TouchableOpacity 
           onPress={handlePrev}
@@ -195,8 +181,8 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         decelerationRate="normal"
-        snapToInterval={ITEM_WIDTH + ITEM_SPACING}
-        snapToAlignment="start"
+        snapToInterval={SNAP_INTERVAL}
+        snapToAlignment="center"
         bounces={false}
         bouncesZoom={false}
         removeClippedSubviews={true}
@@ -206,14 +192,16 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
         contentContainerStyle={styles.flatListContainer}
         onMomentumScrollEnd={(event) => {
           const offsetX = event.nativeEvent.contentOffset.x;
-          const index = Math.round(offsetX / (ITEM_WIDTH + ITEM_SPACING));
+          const center = offsetX + SCREEN_WIDTH / 2;
+          const adjusted = center - SNAP_INTERVAL / 2;
+          const index = Math.round(adjusted / SNAP_INTERVAL);
           if (index !== activeIndex.value) {
             activeIndex.value = index;
           }
         }}
       />
 
-      {/* Pagination và View All */}
+      {/* Pagination and View All */}
       <View style={styles.paginationWrapper}>
         <View style={[styles.viewAllButton, styles.invisibleButton]}>
           <Text style={styles.viewAllText}>Xem tất cả</Text>
@@ -245,15 +233,18 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   flatListContainer: {
-    paddingHorizontal: (SCREEN_WIDTH - ITEM_WIDTH) / 3,
+    // No padding needed with centered snap alignment
   },
-  itemContainer: {
-    marginHorizontal: ITEM_SPACING / 3,
+  itemSlot: {
+    width: SNAP_INTERVAL,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   navButton: {
     position: 'absolute',
     top: '40%',
-    transform: [{ translateY: -20 }],
+    transform: [{ translateY: -0 }],
     width: 40,
     height: 40,
     borderRadius: 20,
