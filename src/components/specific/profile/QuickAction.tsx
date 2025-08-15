@@ -14,7 +14,7 @@ const QuickActions = () => {
     <View style={styles.quickActionsContainer}>
       {actions.map((action) => (
         <TouchableOpacity key={action.name} style={styles.quickActionButton}>
-          <Ionicons name={action.icon as any} size={24} color={COLORS.primary} />
+          <Ionicons name={action.icon as any} size={24} color={COLORS.textDark} />
           <Text style={styles.quickActionText}>{action.name}</Text>
         </TouchableOpacity>
       ))}
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   },
   quickActionText: {
     ...FONTS.body5,
-    color: COLORS.text,
+    color: COLORS.textLight,
     marginTop: SIZES.base,
     fontWeight: '500',
   },

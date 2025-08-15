@@ -12,7 +12,7 @@ interface SettingsMenuItemProps {
 const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({ icon, text, onPress }) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
         <View style={styles.menuItemIconContainer}>
-            <Ionicons name={icon as any} size={22} color={COLORS.primary} />
+            <Ionicons name={icon as any} size={22} color={COLORS.textDark} />
         </View>
         <Text style={styles.menuItemText}>{text}</Text>
         <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textLight} />
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: SIZES.padding,
         fontWeight: '600',
-        color: COLORS.textDark,
+        color: COLORS.textLight,
     },
 });
 

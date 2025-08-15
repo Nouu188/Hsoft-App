@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     tag: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: SIZES.radius },
     tagText: { color: COLORS.white, fontWeight: '700', fontSize: 12 },
     doseList: { paddingTop: SIZES.padding * 0.75, borderTopWidth: 1, borderTopColor: COLORS.border, marginTop: SIZES.padding / 2 },
-    actionButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.primary, paddingVertical: 12, borderRadius: SIZES.radius, marginTop: SIZES.padding / 2 },
+    actionButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.textLight, paddingVertical: 12, borderRadius: SIZES.radius, marginTop: SIZES.padding / 2 },
     actionButtonText: { color: COLORS.white, fontSize: 16, fontWeight: 'bold', marginLeft: 10 },
     actionButtonDisabled: {
         opacity: 0.7,

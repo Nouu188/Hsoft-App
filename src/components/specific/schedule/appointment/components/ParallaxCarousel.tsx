@@ -155,7 +155,7 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
           style={styles.buttonTouchable}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-back" size={24} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={24} color={COLORS.textDark} />
         </TouchableOpacity>
       </Animated.View>
 
@@ -165,7 +165,7 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
           style={styles.buttonTouchable}
           activeOpacity={0.7}
         >
-          <Ionicons name="chevron-forward" size={24} color={COLORS.primary} />
+          <Ionicons name="chevron-forward" size={24} color={COLORS.textDark} />
         </TouchableOpacity>
       </Animated.View>
 
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     opacity: 0,
   },
   viewAllText: {
-    color: COLORS.primary,
+    color: COLORS.textDark,
     fontWeight: '600',
     fontSize: 14,
   },

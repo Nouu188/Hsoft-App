@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     ...FONTS.body5,
-    color: COLORS.primary,
+    color: COLORS.textLight,
     fontWeight: '600',
     marginLeft: SIZES.base / 2,
   },

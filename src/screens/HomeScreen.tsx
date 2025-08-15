@@ -68,7 +68,7 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <Text style={styles.greeting}>Chào buổi sáng{'\n'}<Text style={styles.userName}>Thịnh</Text></Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity style={styles.notificationButton}>
-                  <Ionicons name="search-outline" size={23} color={COLORS.lightGray} />
+                  <Ionicons name="search-outline" size={23} color={COLORS.lightGray}  />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.notificationButton}
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 20,
-    fontWeight: '300',
+    fontWeight: '4400',
     color: COLORS.white
   },
   userName: {

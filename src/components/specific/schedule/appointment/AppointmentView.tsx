@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { APPOINTMENT_DATA } from '@/constants/mockData';
-import { SIZES } from '@/constants/theme';
+import { COLORS,SIZES } from '@/constants/theme';
 import ParallaxCarousel from './components/ParallaxCarousel';
 
 const AppointmentView = () => {
@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: SIZES.padding,
     marginTop: SIZES.padding,
+    color:COLORS.textDark
   },
 });
 

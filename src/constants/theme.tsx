@@ -7,7 +7,7 @@ const { width, height } = Dimensions.get('window');
 // Dựa trên màu chủ đạo #5A8D9E và các màu phụ trợ từ thiết kế.
 export const COLORS = {
   // Màu chủ đạo
-  primary: '#5A8D9E', // Màu xanh xám chính, dùng cho các nút active, icon, điểm nhấn
+  primary: '#B6CAE5', // Màu xanh xám chính, dùng cho các nút active, icon, điểm nhấn
   primaryLight: '#E8EDF3', // Một phiên bản rất nhạt của màu primary, dùng cho nền card
   
   // Màu phụ trợ
@@ -20,9 +20,9 @@ export const COLORS = {
   danger: '#C0392B',   // Đỏ cho lỗi hoặc hành động xóa
 
   // Màu văn bản (Text)
-  textDark: '#2C3E50',  // Gần như đen, cho tiêu đề và văn bản chính
+  textDark: '#3A5C94',  // Gần như đen, cho tiêu đề và văn bản chính
   text: '#34495E',      // Xám đậm cho văn bản phụ
-  textLight: '#64748B', // Xám nhạt cho các ghi chú, placeholder
+  textLight: '#7192B4', // Xám nhạt cho các ghi chú, placeholder
   textOnPrimary: '#FFFFFF', // Màu chữ trên nền màu chủ đạo
 
   // Màu nền (Background)
