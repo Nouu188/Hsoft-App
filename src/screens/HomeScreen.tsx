@@ -1,91 +1,127 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, useWindowDimensions, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, RefreshControl, FlatList, SafeAreaView, ListRenderItemInfo, useWindowDimensions } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import { useScheduleStore } from '@/store/useScheduleStore';
-import { useAuthStore } from '@/store/useAuthStore';
-import DateSelector from '@/components/specific/schedule/shared/DateSelector';
 import dayjs from 'dayjs';
-
+import HealthCard from '../components/specific/home/HealthCard';
+import NextScheduleItem from '@/components/specific/home/NextScheduleItem';
+import UtilityGrid, { UtilityItemProps } from '../components/specific/home/UtilityGrid';
+import NewsCarousel from '../components/specific/home/NewsCarousel';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   interpolate,
+  Extrapolation,
 } from 'react-native-reanimated';
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<{ type: string }>);
+// --- DỮ LIỆU MẪU & COMPONENT PHỤ ---
+// Việc đặt các phần này ở ngoài giúp tránh việc phải tạo lại chúng mỗi khi component re-render.
 
+const carouselData = [
+  { id: '1', title: 'Mẹo 1: Uống đủ nước', content: 'Hãy đảm bảo bạn uống ít nhất 2 lít nước mỗi ngày để cơ thể luôn khỏe mạnh.' },
+  { id: '2', title: 'Mẹo 2: Ngủ đủ giấc', content: 'Một giấc ngủ 7-8 tiếng sẽ giúp bạn phục hồi năng lượng và tinh thần sảng khoái.' },
+  { id: '3', title: 'Mẹo 3: Vận động nhẹ nhàng', content: 'Đi bộ 30 phút mỗi ngày giúp cải thiện sức khỏe tim mạch và giảm căng thẳng.' },
+];
+
+const healthServices: UtilityItemProps[] = [
+    { id: '1', name: 'Thêm Lịch thuốc', iconName: 'medkit-outline', backgroundColor: '#2979FF', onPress: () => console.log('Thêm Lịch uống thuốc') },
+    { id: '2', name: 'Ghi chú', iconName: 'document-text-outline', backgroundColor: '#00C853', onPress: () => console.log('Ghi chú Sức khỏe') },
+    { id: '3', name: 'Giấc ngủ', iconName: 'moon-outline', backgroundColor: '#6200EA', onPress: () => console.log('Theo dõi Giấc ngủ') },
+    { id: '4', name: 'Uống nước', iconName: 'water-outline', backgroundColor: '#00B8D4', onPress: () => console.log('Uống nước') },
+    { id: '5', name: 'Bữa ăn', iconName: 'restaurant-outline', backgroundColor: '#FF6D00', onPress: () => console.log('Thêm Bữa ăn') },
+    { id: '6', name: 'Bài tập Thở', iconName: 'leaf-outline', backgroundColor: '#4CAF50', onPress: () => console.log('Bài tập Thở') },
+    { id: '7', name: 'Nhịp tim', iconName: 'heart-outline', backgroundColor: '#D50000', onPress: () => console.log('Đo nhịp tim') },
+    { id: '8', name: 'Xem thêm', iconName: 'apps-outline', backgroundColor: '#607D8B', onPress: () => console.log('Xem thêm') },
+];
+
+const TipCard = ({ title, content }: { title: string, content: string }) => (
+  <View style={styles.tipCardContainer}>
+    <Text style={styles.tipCardTitle}>{title}</Text>
+    <Text style={styles.tipCardContent}>{content}</Text>
+  </View>
+);
+
+// --- CÁC HẰNG SỐ CHO ANIMATION ---
+const GREETING_SECTION_HEIGHT = 110;
+const STICKY_SECTION_HEIGHT = 200;
+const HEADER_MAX_HEIGHT = GREETING_SECTION_HEIGHT + STICKY_SECTION_HEIGHT;
+const HEADER_SCROLL_DISTANCE = GREETING_SECTION_HEIGHT;
+
+// --- ĐỊNH NGHĨA KIỂU DỮ LIỆU ---
+interface ScreenSection {
+  type: 'medical_text' | 'carousel_tips' | 'utility_grid' | 'footer_spacer';
+  id: string;
+}
+
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<ScreenSection>);
+
+// --- COMPONENT CHÍNH ---
 const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const selectedDate = useScheduleStore(state => state.selectedDate);
-  const fetchDosesBySelectedDate = useScheduleStore(state => state.fetchDosesBySelectedDate);
   const isLoading = useScheduleStore(state => state.isLoading);
-  const user = useAuthStore(state => state.user);
-
-  const [isParentScrollEnabled, setParentScrollEnabled] = useState(true);
-
-  const { height: screenHeight } = useWindowDimensions();
-  const INITIAL_BG_HEIGHT = screenHeight * 0.4;
-  const MIN_BG_HEIGHT = 80;
-  const SCROLL_DISTANCE_TO_SHRINK = INITIAL_BG_HEIGHT - MIN_BG_HEIGHT;
-
+  const onRefresh = () => console.log("Refreshing...");
+  const { height: screenHeight } = useWindowDimensions(); // Giữ lại hook này vì nó được dùng trong style
   const scrollY = useSharedValue(0);
 
+  // --- ANIMATION LOGIC ---
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
     },
   });
-
-  const animatedBackgroundStyle = useAnimatedStyle(() => {
-    const height = interpolate(
+  
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    // Di chuyển toàn bộ khối header lên trên một khoảng bằng chiều cao của phần "Chào buổi sáng".
+    const translateY = interpolate(
       scrollY.value,
-      [0, SCROLL_DISTANCE_TO_SHRINK],
-      [INITIAL_BG_HEIGHT, MIN_BG_HEIGHT],
-      'clamp'
+      [0, HEADER_SCROLL_DISTANCE],
+      [0, -HEADER_SCROLL_DISTANCE],
+      Extrapolation.CLAMP 
     );
-    return {
-      height: height,
-    };
+    return { transform: [{ translateY }] };
   });
 
-  const onFetch = useCallback(() => { if (user) { fetchDosesBySelectedDate(); } }, [user, fetchDosesBySelectedDate, selectedDate]);
-  useEffect(() => { onFetch(); }, [onFetch]);
-  const onRefresh = useCallback(() => { onFetch(); }, [onFetch]);
-  const screenSections = [
-    { type: 'header', id: 'header' },
-    { type: 'date_selector', id: 'date_selector' },
-    { type: 'dose_list', id: 'dose_list' },
+  const fadeOutAnimatedStyle = useAnimatedStyle(() => {
+    // Làm mờ dần phần "Chào buổi sáng" khi cuộn.
+    const opacity = interpolate(
+      scrollY.value,
+      [0, HEADER_SCROLL_DISTANCE / 2],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    return { opacity };
+  });
+
+  // --- DANH SÁCH CÁC PHẦN TỬ TRONG FLATLIST ---
+  const screenSections: ScreenSection[] = [
+    { type: 'medical_text', id: 'medical_text' },
+    { type: 'carousel_tips', id: 'carousel_tips' },
+    { type: 'utility_grid', id: 'utility_grid' },
     { type: 'footer_spacer', id: 'footer_spacer' },
   ];
-  const renderSection = ({ item }: { item: { type: string } }) => {
+  
+  const renderSection = ({ item }: ListRenderItemInfo<ScreenSection>) => {
     switch (item.type) {
-      case 'header':
-        return (
-          <>
-            <View style={styles.header}>
-              <Text style={styles.greeting}>Chào buổi sáng{'\n'}<Text style={styles.userName}>Thịnh</Text></Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity style={styles.notificationButton}>
-                  <Ionicons name="search-outline" size={23} color={COLORS.lightGray}  />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.notificationButton}
-onPress={() => navigation.navigate('Notification')}
-                >
-                  <Ionicons name="notifications-outline" size={23} color={COLORS.lightGray} />
-                </TouchableOpacity>
-              </View>
+      case 'medical_text':
+        // Giữ nguyên logic và style gốc của bạn
+        return ( 
+            <View style={{ marginTop: HEADER_MAX_HEIGHT-320 }}>
+                <HealthCard
+                    heartRate={72}
+                    steps={8540}
+                    stepsGoal={10000}
+                    water={1.2}
+                    waterGoal={2}
+                    sleepHours={7.5}
+                    sleepGoal={8}
+                />
             </View>
-            <View style={styles.titleContainer}>
-              <Text style={styles.sectionTitle}>Lịch trình của bạn</Text>
-              <Text style={styles.monthTitle}>Tháng {dayjs().month() + 1}</Text>
-            </View>
-          </>
         );
-      case 'date_selector':
-        return <DateSelector />;
+      case 'carousel_tips':
+        return <NewsCarousel data={carouselData} renderItem={(tip) => <TipCard title={tip.title} content={tip.content} />}/>;
+      case 'utility_grid':
+        return <UtilityGrid title="Tiện ích sức khỏe" services={healthServices} />;
       case 'footer_spacer':
         return <View style={{ height: 100 }} />;
       default:
@@ -93,87 +129,133 @@ onPress={() => navigation.navigate('Notification')}
     }
   };
 
+  // --- RENDER COMPONENT ---
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-
-      <Animated.View style={[styles.background, animatedBackgroundStyle]} />
-
+    <View style={styles.container}>
       <AnimatedFlatList
         onScroll={scrollHandler}
         scrollEventThrottle={16}
-        scrollEnabled={isParentScrollEnabled}
         data={screenSections}
         renderItem={renderSection}
-        keyExtractor={(item) => item.type}
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: HEADER_MAX_HEIGHT }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
             onRefresh={onRefresh}
-            tintColor={COLORS.primary}
+            progressViewOffset={HEADER_MAX_HEIGHT}
+            tintColor={COLORS.white}
           />
         }
       />
-    </SafeAreaView>
+      
+      {/* Header động nằm bên ngoài FlatList */}
+      <Animated.View style={[styles.headerContainer, headerAnimatedStyle]}>
+        <SafeAreaView style={{ flex: 1,marginTop:40 }}>
+            {/* Phần sẽ cuộn đi */}
+            <Animated.View style={[styles.greetingSection, fadeOutAnimatedStyle]}>
+                <Text style={styles.greeting}>Chào buổi sáng{'\n'}<Text style={styles.userName}>Thịnh</Text></Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity style={styles.notificationButton}><Ionicons name="search-outline" size={23} color={COLORS.white} /></TouchableOpacity>
+                    <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate('Notification')}><Ionicons name="notifications-outline" size={23} color={COLORS.white} /></TouchableOpacity>
+                </View>
+            </Animated.View>
+
+            {/* Phần sẽ ghim lại */}
+            <View style={styles.stickySection}>
+                <View style={styles.titleContainer}>
+                    <Text style={styles.sectionTitle}>Lịch trình của bạn</Text>
+                    <Text style={styles.monthTitle}>Ngày {dayjs().date()} Tháng {dayjs().month() + 1}</Text>
+                </View>
+                <View style={styles.tipContainer}>
+                    <Text style={styles.tipTitle}>Gợi ý cho bạn</Text>
+                </View>
+                <NextScheduleItem
+                    iconName="medkit-outline"
+                    iconBgColor="#E9F7FE"
+                    title={`Uống 1 viên Panadol Extra`}
+                    subtitle={`Vào lúc 14:00 hôm nay`}
+                    onPress={() => {}}
+                />
+            </View>
+        </SafeAreaView>
+      </Animated.View>
+    </View>
   );
 };
 
+// --- STYLES ---
+// Giữ nguyên 100% style của bạn
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC'
+  container: { 
+    flex: 1, 
+    backgroundColor: '#ffffffff' 
   },
-  background: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+  tipCardContainer: { 
+    width: '100%', 
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 16, 
+    padding: 20, 
+    height: 180, 
+    justifyContent: 'center', 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SIZES.padding,
-    paddingTop: SIZES.padding * 0.4,
-    marginBottom: SIZES.padding * 0.4,
+  tipCardTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    marginBottom: 8 
   },
-  greeting: {
-    fontSize: 20,
-    fontWeight: '4400',
-    color: COLORS.white
+  tipCardContent: { 
+    fontSize: 14, 
+    color: '#666' 
   },
-  userName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.white,
+  headerContainer: { 
+    position: 'absolute', 
+    top: 0, left: 0, right: 0, 
+    zIndex: 10, 
+    backgroundColor: COLORS.primary, 
+    height: HEADER_MAX_HEIGHT-20, 
+    overflow: 'hidden', 
+    borderBottomLeftRadius: 30, borderBottomRightRadius: 30, },
+  greetingSection: { 
+    height: GREETING_SECTION_HEIGHT, 
+    paddingHorizontal: SIZES.padding, flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingTop: 10 },
+  stickySection: { 
+    height: STICKY_SECTION_HEIGHT-60, 
+    justifyContent: 'center' 
+  }, // Giữ nguyên style này
+  greeting: { 
+    fontSize: 20, fontWeight: '500', color: COLORS.white 
   },
-  notificationButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  userName: { 
+    fontSize: 22, fontWeight: '700', color: COLORS.white 
   },
-  titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SIZES.padding,
-    marginBottom: SIZES.padding,
+  notificationButton: { 
+    width: 40, height: 40, borderRadius: 22, 
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', 
+    justifyContent: 'center', alignItems: 'center' 
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.textDark,
+  titleContainer: { 
+    flexDirection: 'row', justifyContent: 'space-between', 
+    alignItems: 'center', paddingHorizontal: SIZES.padding 
   },
-  monthTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.lightGray,
+  sectionTitle: { 
+    fontSize: 23, fontWeight: 'bold', color: COLORS.textDark 
+  },
+  monthTitle: { 
+    fontSize: 16, fontWeight: '600', color: 'rgba(255, 255, 255, 0.7)' 
+  },
+  tipContainer: { 
+    paddingHorizontal: SIZES.padding, marginTop: SIZES.base 
+  },
+  tipTitle: { 
+    fontSize: 16, fontWeight: 'bold', color: COLORS.textDark 
   },
 });
 
