@@ -4,10 +4,12 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import { useScheduleStore } from '@/store/useScheduleStore';
 import dayjs from 'dayjs';
-import HealthCard from '../components/specific/home/HealthCard';
-import NextScheduleItem from '@/components/specific/home/NextScheduleItem';
-import UtilityGrid, { UtilityItemProps } from '../components/specific/home/UtilityGrid';
-import NewsCarousel from '../components/specific/home/NewsCarousel';
+import HealthCardsView from '../components/specific/home/healthcards/HeartStatView';
+import NextScheduleView from '@/components/specific/home/next_schedule/components/ScheduleItem';
+import NoScheduleView from '@/components/specific/home/next_schedule/components/NoScheduleItem';
+import UtilitiesView from '../components/specific/home/utilities_grid/UtilitiesView';
+import { UtilityItemProps } from '../components/specific/home/utilities_grid/types';
+import NewsCarouselView from '../components/specific/home/news_carousel/NewsCarouselView';
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
@@ -26,14 +28,14 @@ const carouselData = [
 ];
 
 const healthServices: UtilityItemProps[] = [
-    { id: '1', name: 'Thêm Lịch thuốc', iconName: 'medkit-outline', backgroundColor: '#2979FF', onPress: () => console.log('Thêm Lịch uống thuốc') },
-    { id: '2', name: 'Ghi chú', iconName: 'document-text-outline', backgroundColor: '#00C853', onPress: () => console.log('Ghi chú Sức khỏe') },
-    { id: '3', name: 'Giấc ngủ', iconName: 'moon-outline', backgroundColor: '#6200EA', onPress: () => console.log('Theo dõi Giấc ngủ') },
-    { id: '4', name: 'Uống nước', iconName: 'water-outline', backgroundColor: '#00B8D4', onPress: () => console.log('Uống nước') },
-    { id: '5', name: 'Bữa ăn', iconName: 'restaurant-outline', backgroundColor: '#FF6D00', onPress: () => console.log('Thêm Bữa ăn') },
-    { id: '6', name: 'Bài tập Thở', iconName: 'leaf-outline', backgroundColor: '#4CAF50', onPress: () => console.log('Bài tập Thở') },
-    { id: '7', name: 'Nhịp tim', iconName: 'heart-outline', backgroundColor: '#D50000', onPress: () => console.log('Đo nhịp tim') },
-    { id: '8', name: 'Xem thêm', iconName: 'apps-outline', backgroundColor: '#607D8B', onPress: () => console.log('Xem thêm') },
+    { id: '1', name: 'Thêm Lịch thuốc', iconName: 'medkit-outline', onPress: () => console.log('Thêm Lịch uống thuốc') },
+    { id: '2', name: 'Ghi chú', iconName: 'document-text-outline', onPress: () => console.log('Ghi chú Sức khỏe') },
+    { id: '3', name: 'Giấc ngủ', iconName: 'moon-outline', onPress: () => console.log('Theo dõi Giấc ngủ') },
+    { id: '4', name: 'Uống nước', iconName: 'water-outline', onPress: () => console.log('Uống nước') },
+    { id: '5', name: 'Bữa ăn', iconName: 'restaurant-outline', onPress: () => console.log('Thêm Bữa ăn') },
+    { id: '6', name: 'Bài tập Thở', iconName: 'leaf-outline', onPress: () => console.log('Bài tập Thở') },
+    { id: '7', name: 'Nhịp tim', iconName: 'heart-outline', onPress: () => console.log('Đo nhịp tim') },
+    { id: '8', name: 'Xem thêm', iconName: 'apps-outline', onPress: () => console.log('Xem thêm') },
 ];
 
 const TipCard = ({ title, content }: { title: string, content: string }) => (
@@ -107,21 +109,13 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         // Giữ nguyên logic và style gốc của bạn
         return ( 
             <View style={{ marginTop: HEADER_MAX_HEIGHT-320 }}>
-                <HealthCard
-                    heartRate={72}
-                    steps={8540}
-                    stepsGoal={10000}
-                    water={1.2}
-                    waterGoal={2}
-                    sleepHours={7.5}
-                    sleepGoal={8}
-                />
+                <HealthCardsView/>
             </View>
         );
       case 'carousel_tips':
-        return <NewsCarousel data={carouselData} renderItem={(tip) => <TipCard title={tip.title} content={tip.content} />}/>;
+        return <NewsCarouselView data={carouselData} renderItem={(tip) => <TipCard title={tip.title} content={tip.content} />}/>;
       case 'utility_grid':
-        return <UtilityGrid title="Tiện ích sức khỏe" services={healthServices} />;
+        return <UtilitiesView title="Tiện ích sức khỏe" services={healthServices} />;
       case 'footer_spacer':
         return <View style={{ height: 100 }} />;
       default:
@@ -165,13 +159,13 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {/* Phần sẽ ghim lại */}
             <View style={styles.stickySection}>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.sectionTitle}>Lịch trình của bạn</Text>
+                    <Text style={styles.sectionTitle}>Lịch của bạn</Text>
                     <Text style={styles.monthTitle}>Ngày {dayjs().date()} Tháng {dayjs().month() + 1}</Text>
                 </View>
                 <View style={styles.tipContainer}>
                     <Text style={styles.tipTitle}>Gợi ý cho bạn</Text>
                 </View>
-                <NextScheduleItem
+                <NextScheduleView
                     iconName="medkit-outline"
                     iconBgColor="#E9F7FE"
                     title={`Uống 1 viên Panadol Extra`}
@@ -252,7 +246,7 @@ const styles = StyleSheet.create({
     fontSize: 16, fontWeight: '600', color: 'rgba(255, 255, 255, 0.7)' 
   },
   tipContainer: { 
-    paddingHorizontal: SIZES.padding, marginTop: SIZES.base 
+    paddingHorizontal: SIZES.padding, marginTop: SIZES.base ,marginBottom: SIZES.base,
   },
   tipTitle: { 
     fontSize: 16, fontWeight: 'bold', color: COLORS.textDark 

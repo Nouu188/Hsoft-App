@@ -17,7 +17,6 @@ interface SkipReason {
   detail?: string;
 }
 interface ScheduleState {
-  doses: any;
   selectedDate: dayjs.Dayjs;
   dosesInDateRange: Dose[];
   dosesForSelectedDay: Dose[];
