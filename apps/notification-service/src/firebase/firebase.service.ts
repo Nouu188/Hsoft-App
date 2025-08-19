@@ -1,16 +1,10 @@
-// apps/notification-service/src/firebase/firebase.service.ts (Đã nâng cấp)
-
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { BatchResponse } from 'firebase-admin/lib/messaging/messaging-api';
 
-/**
- * Định nghĩa một kiểu dữ liệu trả về rõ ràng cho kết quả gửi thông báo.
- */
 export interface SendNotificationResult {
   successCount: number;
   failureCount: number;
-  // Mảng chứa các token đã gửi thất bại.
   failedTokens: string[];
 }
 
@@ -22,10 +16,6 @@ export class FirebaseService {
     @Inject('FIREBASE_ADMIN') private readonly firebaseAdmin: admin.app.App
   ) {}
 
-  /**
-   * Gửi thông báo đẩy đến một danh sách các token.
-   * @returns Một object chứa kết quả chi tiết của việc gửi.
-   */
   async sendPushNotification(
     tokens: string[], 
     title: string, 

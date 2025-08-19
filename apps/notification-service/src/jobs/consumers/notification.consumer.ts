@@ -2,6 +2,9 @@ import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { ExchangeName, QueueName, RoutingKey } from '@app/common/rabbitmq';
 import { NotificationService } from '../notification.service';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Counter } from 'prom-client';
+import { MetricName } from '@app/common/metrics/metrics.contracts';
 
 interface GroupedNotificationPayload {
     user_id: string;
@@ -14,7 +17,10 @@ export class NotificationConsumer {
 
     constructor(
         private readonly notificationService: NotificationService,
-    ) {}
+
+        @InjectMetric(MetricName.RABBITMQ_MESSAGES_PROCESSED_TOTAL)
+        private readonly messageCounter: Counter<string>,
+    ) { }
 
     @RabbitSubscribe({
         exchange: ExchangeName.NOTIFICATION,
@@ -25,11 +31,20 @@ export class NotificationConsumer {
         const { user_id, dose_ids } = payload;
         this.logger.log(`Received dose reminder event for user ${user_id} with ${dose_ids.length} doses.`);
 
+        const labels = {
+            exchange: ExchangeName.NOTIFICATION,
+            routing_key: RoutingKey.NOTIFICATION_SCHEDULE
+        };
+
         try {
             await this.notificationService.processDoseReminder(payload);
+
+            this.messageCounter.inc({ ...labels, status: 'acked' });
         } catch (error) {
             this.logger.error(`CRITICAL error processing dose reminder for user ${user_id}. Message will be NACKed.`, error.stack);
-            return new Nack(false); 
+            this.messageCounter.inc({ ...labels, status: 'nacked' });
+
+            return new Nack(false);
         }
     }
 }

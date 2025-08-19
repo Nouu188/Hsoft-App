@@ -12,8 +12,8 @@ import { M2MJwtStrategy } from './strategies/m2m-jwt.strategy';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     ConfigModule.forRoot({
-        isGlobal: true,
-        envFilePath: './libs/auth/.env.local',
+      isGlobal: true,
+      envFilePath: './libs/auth/.env.local',
     }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -32,4 +32,4 @@ import { M2MJwtStrategy } from './strategies/m2m-jwt.strategy';
     M2MJwtStrategy,
   ]
 })
-export class AuthLibModule {}
+export class AuthLibModule { }

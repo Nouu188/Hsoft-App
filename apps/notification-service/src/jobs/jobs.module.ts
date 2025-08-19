@@ -8,9 +8,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NotificationHistory } from '../history/entities/notification-history.entity';
 import { NotificationService } from './notification.service';
 import { HistoryModule } from '../history/history.module';
+import { ConfigModule } from '@nestjs/config';
+import { CommonMetricsProviders } from '@app/common/metrics/metrics.provider';
 
 @Module({
   imports: [
+    ConfigModule,
     HttpModule, 
     ApiClientsModule,
     HistoryModule,
@@ -21,6 +24,7 @@ import { HistoryModule } from '../history/history.module';
     NotificationConsumer, 
     NotificationService,
     JobsResolver, 
+    ...CommonMetricsProviders
   ],
   exports: [NotificationConsumer, NotificationService]
 })

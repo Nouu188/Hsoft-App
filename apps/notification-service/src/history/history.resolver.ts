@@ -6,13 +6,21 @@ import { GetHistoryArgs } from './dto/get-history.args';
 import { NotificationHistory } from './entities/notification-history.entity';
 import { MarkAsReadInput } from './dto/mark-as-read.input';
 import { User } from 'apps/account-service/src/users/entities/user.entity';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { Histogram } from 'prom-client';
+import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
 
 @Resolver(() => NotificationHistory)
-@UseGuards(JwtAuthGuard) 
+@UseGuards(JwtAuthGuard)
 export class HistoryResolver {
   private readonly logger = new Logger(HistoryResolver.name);
-  
-  constructor(private readonly historyService: HistoryService) {}
+
+  constructor(
+    private readonly historyService: HistoryService,
+
+    @InjectMetric(MetricName.GRAPHQL_REQUESTS_DURATION_SECONDS)
+    private readonly requestDuration: Histogram<string>,
+  ) { }
 
   @Query(() => [NotificationHistory], { name: 'myNotificationHistory' })
   async getMyHistory(
@@ -22,13 +30,30 @@ export class HistoryResolver {
     this.logger.debug(`[getMyHistory] Received request for user: ${user.id}`);
     this.logger.debug(`[getMyHistory] With args: ${JSON.stringify(args)}`);
 
+    const end = this.requestDuration.startTimer();
+
     try {
       const result = await this.historyService.getHistoryForUser(user.id, args);
+
       this.logger.debug(`[getMyHistory] Returning ${result.length} notification(s) for user: ${user.id}`);
+
+      end({
+        [MetricLabel.OPERATION_NAME]: 'myNotificationHistory',
+        [MetricLabel.OPERATION_TYPE]: 'query',
+        [MetricLabel.STATUS]: 'success'
+      });
+
       return result;
     } catch (error) {
       this.logger.error(`[getMyHistory] Failed to get history for user: ${user.id}`, error.stack);
-      throw error; 
+
+      end({
+        [MetricLabel.OPERATION_NAME]: 'myNotificationHistory',
+        [MetricLabel.OPERATION_TYPE]: 'query',
+        [MetricLabel.STATUS]: 'error'
+      });
+
+      throw error;
     }
   }
 

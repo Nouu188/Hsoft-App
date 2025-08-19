@@ -10,6 +10,18 @@ export class DosesService {
     private doseRepository: Repository<Dose>,
   ) { }
 
+  private readonly logger = new Logger(DosesService.name);
+
+  async findById(doseId: string, userId: string): Promise<Dose | null> {
+    this.logger.debug(`Finding dose ${doseId} for user ${userId}`);
+    return this.doseRepository.findOne({
+      where: {
+        id: doseId,
+        user_id: userId, 
+      },
+    });
+  }
+
   async updateDoses(user_id: string, updates: UpdateDoseInput[]): Promise<Dose[]> {
     const logger = new Logger('DosesService');
 

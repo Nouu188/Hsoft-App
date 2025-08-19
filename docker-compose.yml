@@ -1,12 +1,57 @@
-version: '3.8'
 services:
+  account-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: account-service
+    env_file:
+      - ./apps/account-service/.env.local
+    depends_on:
+      db-accounts:
+        condition: service_healthy
+      db-auth:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  scheduling-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: scheduling-service
+    env_file:
+      - ./apps/scheduling-service/.env.local
+    depends_on:
+      db-schedules:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: notification-service
+    env_file:
+      - ./apps/notification-service/.env.local
+    depends_on:
+      db-notification:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
   rabbitmq:
     build: ./docker/rabbitmq
     container_name: med-rabbitmq
     restart: always
     environment:
-      # Vẫn cần các biến này để tạo user/pass
-      # Dùng đúng tên biến của image rabbitmq chính thức
       RABBITMQ_DEFAULT_USER: myuser
       RABBITMQ_DEFAULT_PASS: mypassword
       TZ: Asia/Ho_Chi_Minh
@@ -15,6 +60,12 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   # Database cho Account-service
   db-accounts:
@@ -30,8 +81,12 @@ services:
       - "5435:5432" 
     volumes:
       - postgres_account_data:/var/lib/postgresql/data
-  
-  # Database cho Notification-service
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accounts_user -d accounts_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   db-notification:
     image: postgres:17
     container_name: med-db-notification
@@ -45,8 +100,12 @@ services:
       - "5436:5432" 
     volumes:
       - postgres_notification_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notification_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Database cho Scheduling-service
   db-schedules:
     image: postgres:17
     container_name: med-db-schedules
@@ -60,9 +119,9 @@ services:
       - "5433:5432" 
     volumes:
       - postgres_schedules_data:/var/lib/postgresql/data
-    healthcheck: 
-      test: ["CMD-SHELL", "pg_isready -U schedules_user -d schedules_db"]
-      interval: 5s
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d schedules_db"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -78,10 +137,38 @@ services:
       - "5434:5432"
     volumes:
       - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: med-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: med-grafana
+    restart: always
+    ports:
+      - "3004:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
 
 volumes:
   postgres_account_data:
   postgres_schedules_data:
   postgres_auth_data:
   postgres_notification_data:
+  prometheus_data:
   rabbitmq_data: {}
+  grafana_data: {}

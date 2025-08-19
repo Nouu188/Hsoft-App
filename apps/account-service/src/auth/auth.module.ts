@@ -14,6 +14,7 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
+    ConfigModule,
     forwardRef(() => UsersModule),
     TypeOrmModule.forFeature([ ServiceClient ], 'authConnection'),
     AuthLibModule,

@@ -18,6 +18,8 @@ import { Exchanges } from './exchanges';
           exchanges: Exchanges,
           uri,
           prefetchCount: 10,
+          retryAttempts: 10,
+          retryDelay: 5000, 
           connectionInitOptions: { wait: false },
           enableControllerDiscovery: true,
         };
@@ -26,4 +28,4 @@ import { Exchanges } from './exchanges';
   ],
   exports: [RabbitMQModule],
 })
-export class AppRabbitMQModule {}
+export class AppRabbitMQModule { }

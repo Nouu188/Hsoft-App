@@ -1,12 +1,22 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import * as moment from 'moment-timezone';
-import { Dose, DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
-import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import { NotificationApiClientService } from '@app/api-clients/notification/notification-api-client.service';
+import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
+import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { User } from 'apps/account-service/src/users/entities/user.entity';
+import { Dose, DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
+import * as moment from 'moment-timezone';
+import { Counter } from 'prom-client';
+import { In, Repository } from 'typeorm';
 import { YLenhThuoc } from '../../doses/dto/ylenhthuoc.payload';
+
+interface SyncResult {
+    created: number;
+    deleted: number;
+    notificationsScheduled: number;
+}
 
 @Injectable()
 export class DosesSyncService {
@@ -16,10 +26,20 @@ export class DosesSyncService {
         @InjectRepository(Dose) private doseRepository: Repository<Dose>,
         private readonly hospitalClient: HospitalApiClientService,
         private readonly notificationClient: NotificationApiClientService,
+
+        @InjectMetric(MetricName.NOTIFICATIONS_SCHEDULED_TOTAL)
+        private readonly notificationsScheduledCounter: Counter<string>,
     ) { }
 
     // Trường "ngay" là ngày đi khám của bệnh nhân, cũng như ngày bắt đầu uống thuốc 
-    public async syncDosesInFuture(user: User, ngay: string = ""): Promise<void> {
+    @TrackBusinessMetric(MetricName.DOSES_SYNCED_TOTAL, {
+        labels: (args, result, error) => ({
+            [MetricLabel.SYNC_TYPE]: 'future_only',
+            [MetricLabel.STATUS]: error ? 'error' : 'success',
+        }),
+        value: (args, result: SyncResult) => result.created,
+    })
+    public async syncDosesInFuture(user: User, ngay: string = ""): Promise<SyncResult> {
         const today = moment().tz('Asia/Ho_Chi_Minh');
         const todayString = today.format('DD/MM/YYYY');
 
@@ -33,7 +53,7 @@ export class DosesSyncService {
 
         if (ylenhthuoc.length === 0) {
             this.logger.log(`No treatments found for user ${user.id} on ${todayString}.`);
-            return;
+            return { created: 0, deleted: 0, notificationsScheduled: 0 };
         }
 
         const newDosesMap = new Map<string, Partial<Dose>>();
@@ -98,29 +118,37 @@ export class DosesSyncService {
             this.logger.log(`Deleted ${idsToDelete.length} obsolete pending doses for user ${user.id}.`);
         }
 
+        let notificationsScheduled = 0;
         if (dosesToCreate.length > 0) {
             const savedDoses = await this.doseRepository.save(dosesToCreate);
             this.logger.log(`Created ${savedDoses.length} new doses for user ${user.id}.`);
 
-            await this.notificationClient.scheduleNotifications(savedDoses.map(dose => ({
-                id: dose.id,
-                user_id: dose.user_id,
-                notify_at: dose.notify_at,
-            })));
+            const notificationsToSchedule = savedDoses.flatMap(dose => [
+                { id: dose.id, user_id: dose.user_id, notify_at: dose.notify_at },
+                { id: dose.id, user_id: dose.user_id, notify_at: dose.due_at }
+            ]);
 
-            await this.notificationClient.scheduleNotifications(savedDoses.map(dose => ({
-                id: dose.id,
-                user_id: dose.user_id,
-                notify_at: dose.due_at,
-            })))
+            await this.notificationClient.scheduleNotifications(notificationsToSchedule);
+            notificationsScheduled = notificationsToSchedule.length;
+
+            this.notificationsScheduledCounter.inc({ [MetricLabel.SYNC_TYPE]: 'future_only', [MetricLabel.STATUS]: 'success' }, notificationsScheduled);
         }
 
         if (dosesToCreate.length === 0 && dosesToDelete.length === 0) {
             this.logger.log(`No changes in schedule for user ${user.id}. Sync complete.`);
         }
+
+        return { created: dosesToCreate.length, deleted: dosesToDelete.length, notificationsScheduled };
     }
 
-    public async syncAllDoses(user: User): Promise<void> {
+    @TrackBusinessMetric(MetricName.DOSES_SYNCED_TOTAL, {
+        labels: (args, result, error) => ({
+            [MetricLabel.SYNC_TYPE]: 'full_history',
+            [MetricLabel.STATUS]: error ? 'error' : 'success',
+        }),
+        value: (args, result: SyncResult) => result.created,
+    })
+    public async syncAllDoses(user: User): Promise<SyncResult> {
         this.logger.log(`Starting full history sync for user ${user.id}...`);
         let allYlenhthuoc: YLenhThuoc[];
         try {
@@ -132,7 +160,7 @@ export class DosesSyncService {
 
         if (allYlenhthuoc.length === 0) {
             this.logger.log(`No doses found in from the hospital for user ${user.id}`);
-            return;
+            return { created: 0, deleted: 0, notificationsScheduled: 0 };
         }
 
         const allDosesToCreate = new Map<string, Partial<Dose>>();
@@ -178,7 +206,7 @@ export class DosesSyncService {
 
         if (allDosesToCreate.size === 0) {
             this.logger.log(`No doses to create after processing history for user ${user.id}.`);
-            return;
+            return { created: 0, deleted: 0, notificationsScheduled: 0 };
         }
 
         // Xóa toàn bộ dữ liệu cũ của user để đảm bảo đồng bộ sạch
@@ -201,5 +229,11 @@ export class DosesSyncService {
             user_id: dose.user_id!,
             notify_at: dose.notify_at!,
         })));
+
+        const notificationsScheduled = futureDoses.length;
+
+        this.notificationsScheduledCounter.inc({ [MetricLabel.SYNC_TYPE]: 'full_history', [MetricLabel.STATUS]: 'success' }, notificationsScheduled);
+
+        return { created: dosesToSaveInChunks.length, deleted: 0, notificationsScheduled };
     }
 }

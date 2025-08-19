@@ -1,0 +1,45 @@
+# docker-compose.dev.yml (Hoàn thiện)
+
+version: '3.8'
+
+services:
+  account-service:
+    build:
+      target: development
+    command: npm run dev:docker:account 
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount code để hot-reload
+      - .:/usr/src/app
+      # Volume ẩn danh để bảo vệ node_modules trong container
+      - /usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+
+  scheduling-service:
+    build:
+      target: development
+    command: npm run dev:docker:scheduling
+    ports:
+      - "3002:3002"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+
+  notification-service:
+    build:
+      target: development
+    command: npm run dev:docker:notification
+    ports:
+      - "3003:3003"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100

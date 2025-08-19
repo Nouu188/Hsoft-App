@@ -1,16 +1,20 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
-import { JobsModule } from './jobs/jobs.module';
 import { ApiClientsModule } from '@app/api-clients';
-import { FirebaseModule } from './firebase/firebase.module';
+import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
+import { MetricsModule } from '@app/common/metrics/metrics.module';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
+import { FirebaseModule } from './firebase/firebase.module';
 import { NotificationHistory } from './history/entities/notification-history.entity';
 import { HistoryModule } from './history/history.module';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { join } from 'path';
-import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
+import { JobsModule } from './jobs/jobs.module';
+import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
 
 @Module({
   imports: [
@@ -45,6 +49,20 @@ import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
     FirebaseModule,
     ApiClientsModule,
     HistoryModule,
+    MetricsModule
   ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    }
+  ],
+  exports: [
+    ConfigModule, 
+  ]
 })
-export class NotificationServiceModule { }
+export class NotificationServiceModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

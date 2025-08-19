@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { DosesModule } from './doses/doses.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -13,6 +13,10 @@ import { JobsModule } from './jobs/jobs.module';
 import { AuthLibModule } from '@app/auth';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
+import { MetricsModule } from '@app/common/metrics/metrics.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
+import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
 
 @Module({
   imports: [
@@ -47,9 +51,19 @@ import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
     ApiClientsModule,
     AuthLibModule,
     JobsModule,
+    MetricsModule
   ],
   providers: [
-    DateTimeScalar
+    DateTimeScalar,
+    ConfigModule,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    }
   ],
 })
-export class SchedulingServiceModule { }
+export class SchedulingServiceModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

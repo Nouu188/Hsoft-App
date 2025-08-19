@@ -5,11 +5,11 @@ import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-        isGlobal: true,
-        envFilePath: './libs/common/.env.local',
+      isGlobal: true,
+      envFilePath: './libs/common/.env.local',
     }),
   ],
   providers: [CommonService],
-  exports: [CommonService],
+  exports: [CommonService, ConfigModule],
 })
-export class CommonModule {}
+export class CommonModule { }

@@ -9,10 +9,7 @@ import { AuthApiClientModule } from "../auth/auth-api-client.module";
         HttpModule.register({
             timeout: 15000, 
         }),
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: './libs/api-clients/.env.local',
-        }),
+        ConfigModule,
         AuthApiClientModule
     ],
     providers: [AccountApiClientService,],

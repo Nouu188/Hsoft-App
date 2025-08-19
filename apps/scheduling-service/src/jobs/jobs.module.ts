@@ -10,9 +10,11 @@ import { BatchCreationConsumer } from './consumers/batch-doses-creation.consumer
 import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
 import { UserEventsConsumer } from './consumers/user-events.consumer';
 import { DoseStatusTransitionService } from './services/dose-status-transition.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     HttpModule,
     TypeOrmModule.forFeature([Dose]),
     ApiClientsModule,

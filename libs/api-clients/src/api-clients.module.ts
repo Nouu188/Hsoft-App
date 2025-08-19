@@ -4,9 +4,14 @@ import { NotificationApiClientModule } from './notification/notification-api-cli
 import { DoseApiClientModule } from './doses/dose-api-client.module';
 import { AccountApiClientModule } from './account/account-api-client.module';
 import { AuthApiClientModule } from './auth/auth-api-client.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: './apps/api-clients/.env.local',
+    }),
     HospitalApiClientModule,
     NotificationApiClientModule,
     DoseApiClientModule,
@@ -18,7 +23,8 @@ import { AuthApiClientModule } from './auth/auth-api-client.module';
     NotificationApiClientModule,
     DoseApiClientModule,
     AccountApiClientModule,
-    AuthApiClientModule
+    AuthApiClientModule,
+    ConfigModule
   ],
 })
 export class ApiClientsModule {}

@@ -18,6 +18,16 @@ export class DosesResolver {
     private readonly amqpConnection: AmqpConnection,
   ) { }
 
+  @Query(() => Dose, { name: 'doseById', nullable: true })
+  @UseGuards(JwtAuthGuard) // Đảm bảo chỉ người dùng đã đăng nhập mới có thể gọi
+  async getDoseById(
+    @CurrentUser() user: User,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<Dose | null> {
+    // Gọi service để lấy thông tin, đảm bảo liều thuốc thuộc về người dùng
+    return this.dosesService.findById(id, user.id);
+  }
+
   @Query(() => [Dose], { name: 'dosesByDateRange' })
   @UseGuards(JwtAuthGuard)
   getDosesByDateRange(

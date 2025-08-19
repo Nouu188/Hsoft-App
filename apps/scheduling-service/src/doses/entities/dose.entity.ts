@@ -1,7 +1,7 @@
 // src/modules/doses/entities/dose.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
-import { GraphQLJSONObject } from 'graphql-type-json';
+import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
 
 export enum DoseStatus {
   UPCOMING = 'UPCOMING',

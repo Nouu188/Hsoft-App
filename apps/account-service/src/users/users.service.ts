@@ -6,6 +6,9 @@ import { User } from './entities/user.entity';
 import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
 import { isUUID } from 'class-validator';
+import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
+import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
+import { MeasureDuration } from '@app/common/metrics/decorators/measure-duration.decorator';
 
 @Injectable()
 export class UsersService {
@@ -107,6 +110,16 @@ export class UsersService {
     return await this.hospitalClient.fetchPatientFromHospital(identifier);
   }
 
+  // @MeasureDuration(MetricName.USER_REGISTRATIONS_TOTAL, {
+  //   [MetricLabel.REGISTRATION_SOURCE]: 'createUser',
+  //   [MetricLabel.TABLE_NAME]: 'users',
+  // })
+  @TrackBusinessMetric(MetricName.USER_REGISTRATIONS_TOTAL, {
+    labels: (args: [HospitalPatient], result: User, error?: any) => ({
+      [MetricLabel.REGISTRATION_SOURCE]: 'createUser',
+      [MetricLabel.STATUS]: error ? 'error' : 'success',
+    }),
+  })
   async createUser(payload: HospitalPatient): Promise<User> {
     const { mabn, hoten, namsinh, sodienthoai, socmnd } = payload;
 

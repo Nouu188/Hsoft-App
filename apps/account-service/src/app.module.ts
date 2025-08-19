@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,6 +10,10 @@ import { User } from './users/entities/user.entity';
 import { AuthLibModule } from '@app/auth';
 import { ServiceClient } from './auth/entities/service-client.entity';
 import { AuthModule } from './auth/auth.module';
+import { MetricsModule } from '@app/common/metrics/metrics.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
+import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
 
 @Module({
   imports: [
@@ -58,6 +62,21 @@ import { AuthModule } from './auth/auth.module';
     AuthLibModule,
     AuthModule,
     HospitalApiClientModule,
+    MetricsModule
   ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    },
+  ],
+  exports: [
+    ConfigModule,
+  ]
 })
-export class UserServiceModule {}
+
+export class AccountServiceModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

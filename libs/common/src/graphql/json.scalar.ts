@@ -1,5 +1,3 @@
-// libs/common/src/graphql/json.scalar.ts
-
 import { GraphQLScalarType, Kind } from 'graphql';
 
 // Scalar này cho phép GraphQL hiểu và xử lý các object JSON.
