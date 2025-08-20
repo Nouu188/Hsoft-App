@@ -1,11 +1,9 @@
-// src/navigation/AuthNavigator.tsx
 import React from 'react';
-
 // Import các màn hình bạn muốn điều hướng đến
 import AuthScreen from '../screens/auth/AuthScreen'
 import TabNavigator from './TabNavigator'; // Giả sử đây là màn hình chính sau khi đăng nhập
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import SplashScreen from '@/screens/SplashScreen';
 export type AuthStackParamList = {
   Auth: undefined;
   MainApp: undefined; // Màn hình chính của ứng dụng (chứa các tab)

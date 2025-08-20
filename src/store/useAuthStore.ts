@@ -20,13 +20,14 @@ interface AuthState {
   error: string | null;
   login: (credentials: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
+  register: () => Promise<boolean>;
   hydrate: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: null,
-  isLoading: true,
+  isLoading: false,
   error: null,
 
   login: async (credentials) => {
@@ -82,6 +83,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (e: any) {
       console.error('[AuthStore][logout] Logout failed:', e.message, e);
     }
+  },
+
+  register: async () => {
+    console.log('[AuthStore][register] Register function called (mock implementation)');
+    // Giả lập đăng ký thành công
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log('[AuthStore][register] Registration successful (mock)');
+        resolve(true);
+      }, 1000);
+    });
   },
 
   hydrate: async () => {

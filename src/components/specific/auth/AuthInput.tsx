@@ -1,6 +1,6 @@
 // src/components/AuthInput.tsx
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text,KeyboardTypeOptions } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES, FONTS } from '../../../constants/theme';
 
@@ -11,6 +11,7 @@ interface AuthInputProps {
   onChangeText: (text: string) => void;
   isPassword?: boolean;
   error?: string;
+  keyboardType?: KeyboardTypeOptions;
 }
 
 const AuthInput: React.FC<AuthInputProps> = ({ icon, placeholder, value, onChangeText, isPassword = false, error }) => {
@@ -49,9 +50,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.lightGray,
     borderRadius: SIZES.radius,
-    paddingHorizontal: SIZES.padding,
+    paddingHorizontal: SIZES.padding*0.8,
     borderWidth: 2,
     borderColor: 'transparent',
+    height:SIZES.base*6.25
   },
   inputContainerFocused: {
     borderColor: COLORS.primary,

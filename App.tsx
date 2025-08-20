@@ -1,47 +1,43 @@
-import React, { useEffect } from 'react';
-import { StatusBar, View, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { COLORS } from './src/constants/theme';
+/**
+ * @file App.tsx
+ * @description Đây là component gốc (root component) của toàn bộ ứng dụng.
+ * Nhiệm vụ chính của nó là:
+ * 1. Khởi tạo `NavigationContainer` để quản lý việc điều hướng.
+ * 2. Render `RootNavigator` là navigator chính chứa tất cả các màn hình và luồng của ứng dụng.
+ * 3. Sử dụng custom hook `useAppInitializer` để xử lý logic khởi tạo ban đầu.
+ */
 
-import AuthNavigator from './src/navigation/AuthNavigator';
-import TabNavigator from './src/navigation/TabNavigator';
-import { useAuthStore } from './src/store/useAuthStore';
-import { MenuProvider } from 'react-native-popup-menu';
+import React, { useRef } from 'react';
+import { StatusBar } from 'react-native';
+import {
+  NavigationContainer,
+  NavigationContainerRef,
+} from '@react-navigation/native';
+
+import RootNavigator, { RootStackParamList } from './src/navigation/RootNavigator';
+import { useAppInitializer } from './src/hooks/useAppInitializer';
 
 const App: React.FC = () => {
-  const accessToken = useAuthStore(state => state.accessToken);
-  const isLoadingAuth = useAuthStore(state => state.isLoading);
-  const hydrateAuth = useAuthStore(state => state.hydrate);
+  // Tạo một `ref` để có thể truy cập vào các hàm của `NavigationContainer` từ bên ngoài.
+  // `ref` này sẽ được truyền vào custom hook để nó có thể thực hiện việc điều hướng.
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
 
-  useEffect(() => {
-    hydrateAuth();
-  }, [hydrateAuth]);
-
-  if (isLoadingAuth) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
+  // Gọi custom hook `useAppInitializer`.
+  // Toàn bộ logic phức tạp về kiểm tra auth, timer, và điều hướng ban đầu
+  // đã được đóng gói gọn gàng trong hook này.
+  useAppInitializer(navigationRef);
 
   return (
-    <MenuProvider>
-      <NavigationContainer>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
-        {accessToken ? <TabNavigator /> : <AuthNavigator />}
-      </NavigationContainer>
-    </MenuProvider>
+    // `NavigationContainer` là component phải bọc ngoài cùng của mọi ứng dụng dùng React Navigation.
+    <NavigationContainer ref={navigationRef}>
+      {/* Cấu hình thanh trạng thái (status bar) của điện thoại. */}
+      <StatusBar barStyle="dark-content" />
+      
+      {/* `RootNavigator` là navigator chính, chứa tất cả các màn hình của bạn. */}
+      {/* Nó sẽ bắt đầu với màn hình Splash theo cấu hình trong `RootNavigator.tsx`. */}
+      <RootNavigator />
+    </NavigationContainer>
   );
 };
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-});
 
 export default App;
