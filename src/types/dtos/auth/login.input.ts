@@ -1,4 +1,5 @@
 interface LoginInput {
-    identifier: string,
+    email?: string,
+    identifier?: string,
     password: string,
 }

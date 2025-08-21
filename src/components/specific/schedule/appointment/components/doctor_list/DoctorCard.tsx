@@ -1,5 +1,3 @@
-// src/components/doctor_list/DoctorCard.tsx
-
 import React from 'react';
 import {
   View,
@@ -14,7 +12,7 @@ import {
 import Ionicons from '@react-native-vector-icons/ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import { COLORS } from '@/constants/theme';
-// --- Types (Không đổi) ---
+
 export type Doctor = {
   id: string;
   name: string;
@@ -40,9 +38,8 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ name, specialty, hospital, gend
   );
 
   return (
-    // 1. Thay thế View gốc bằng LinearGradient
     <LinearGradient
-      colors={[COLORS.primaryLight,COLORS.primary]} // Màu gradient
+      colors={[COLORS.primaryLight,COLORS.primary]} 
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}>
@@ -81,9 +78,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ name, specialty, hospital, gend
   );
 };
 
-// --- Styles (Cập nhật) ---
 const styles = StyleSheet.create({
-  // Style cho thẻ chính
   card: {
     borderRadius: 8,
     padding: 15,
@@ -96,9 +91,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden', // <-- Rất quan trọng: Ẩn các phần thừa của vòng tròn mờ
+    overflow: 'hidden', 
   },
-  // Các vòng tròn mờ ảo làm nền
   blurCircle1: {
     position: 'absolute',
     width: 180,
@@ -117,11 +111,10 @@ const styles = StyleSheet.create({
     bottom: -80,
     right: -60,
   },
-  // --- Các style cho nội dung (giữ nguyên từ code cũ) ---
   doctorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'transparent', // Đảm bảo nền trong suốt để thấy gradient
+    backgroundColor: 'transparent', 
   },
   avatar: {
     width: 60,
@@ -151,7 +144,7 @@ const styles = StyleSheet.create({
   },
   availabilityContainer: {
     marginTop: 15,
-    backgroundColor: 'transparent', // Đảm bảo nền trong suốt
+    backgroundColor: 'transparent',
   },
   availableToday: {
     fontSize: 16,
@@ -159,7 +152,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   timeSlot: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Làm màu nền của nút giờ hơi trong suốt
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,

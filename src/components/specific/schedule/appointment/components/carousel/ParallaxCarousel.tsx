@@ -1,19 +1,19 @@
-import React, { useCallback, useRef, useMemo } from 'react';
-import { Dimensions, StyleSheet, View, FlatList, TouchableOpacity, Text } from 'react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedScrollHandler, 
+import { AppointmentCardData } from '@/constants/mockData';
+import { COLORS, SIZES } from '@/constants/theme';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, {
   interpolate,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
+  useSharedValue,
   withSpring
 } from 'react-native-reanimated';
-import { AppointmentCardData } from '@/constants/mockData';
+import { SCREEN_WIDTH, SNAP_INTERVAL } from '../../carouselConfig';
 import CarouselItem from './CarouselItem';
 import ParallaxCarouselPagination from './Pagination';
-import { COLORS, SIZES } from '@/constants/theme';
 import ViewMoreCard from './ViewMoreCard';
-import Ionicons from '@react-native-vector-icons/ionicons';
-import { SCREEN_WIDTH, ITEM_WIDTH, ITEM_SPACING, SNAP_INTERVAL, SIDE_PADDING } from '../../carouselConfig';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
@@ -112,7 +112,7 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
       return (
         <View style={styles.itemSlot}>
           {item.id === 'view-more' ? (
-            <ViewMoreCard 
+            <ViewMoreCard
               onPress={onViewAllPress}
               scrollX={scrollX}
               index={index}
@@ -150,7 +150,7 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
     <View style={styles.container}>
       {/* Navigation Buttons with animated styles */}
       <Animated.View style={[styles.navButton, styles.prevButton, prevButtonStyle]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={handlePrev}
           style={styles.buttonTouchable}
           activeOpacity={0.7}
@@ -160,7 +160,7 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
       </Animated.View>
 
       <Animated.View style={[styles.navButton, styles.nextButton, nextButtonStyle]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={handleNext}
           style={styles.buttonTouchable}
           activeOpacity={0.7}
@@ -206,16 +206,16 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
         <View style={[styles.viewAllButton, styles.invisibleButton]}>
           <Text style={styles.viewAllText}>Xem tất cả</Text>
         </View>
-        
+
         <View style={styles.paginationContainer}>
-          <ParallaxCarouselPagination 
-            data={data} 
+          <ParallaxCarouselPagination
+            data={data}
             scrollX={scrollX}
           />
         </View>
-        
-        <TouchableOpacity 
-          style={styles.viewAllButton} 
+
+        <TouchableOpacity
+          style={styles.viewAllButton}
           onPress={onViewAllPress}
           activeOpacity={0.8}
         >

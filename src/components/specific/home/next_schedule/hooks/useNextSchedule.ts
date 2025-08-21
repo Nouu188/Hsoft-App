@@ -10,7 +10,6 @@ export const useNextSchedule = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Hàm giả lập việc fetch dữ liệu từ API
     const fetchSchedule = () => {
       // --- Kịch bản 1: Có lịch trình ---
       const scheduleData: ScheduleData = {

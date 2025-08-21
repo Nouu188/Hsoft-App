@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { FlatList, ViewabilityConfig, ViewToken } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { FlatList, ViewToken } from 'react-native';
 
-// Props cho custom hook
 interface UseCarouselProps<T> {
   data: T[];
   autoplay: boolean;

@@ -67,13 +67,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: SIZES.radius,
     padding: SIZES.padding * 0.8,
-    marginHorizontal: SIZES.padding, // Căn đều 2 bên
+    marginHorizontal: SIZES.padding,
     marginTop:10,
     
     marginBottom: SIZES.padding,
-    // Thêm hiệu ứng đổ bóng cho đẹp hơn
-    elevation: 3, // for Android
-    shadowColor: '#000', // for iOS
+    elevation: 3, 
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -81,13 +80,13 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 44,
     height: 44,
-    borderRadius: 22, // Bo tròn thành hình tròn
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SIZES.padding * 0.8,
   },
   textContainer: {
-    flex: 1, // Quan trọng: Giúp text chiếm hết không gian còn lại
+    flex: 1,
     justifyContent: 'center',
     height: '100%', 
   },
@@ -103,7 +102,7 @@ const styles = StyleSheet.create({
   },
   noScheduleContainer: {
     justifyContent: 'center',
-    backgroundColor: '#F8F9FA' // Màu nền hơi khác một chút
+    backgroundColor: '#F8F9FA'
   },
   noScheduleText: {
     fontSize: SIZES.font,

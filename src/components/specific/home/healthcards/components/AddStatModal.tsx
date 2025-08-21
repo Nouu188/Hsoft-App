@@ -1,11 +1,8 @@
-// src/components/AddStatModal.tsx
-
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES, FONTS } from '@/constants/theme';
 
-// --- Props cho component này ---
 interface AddStatModalProps {
   onPress: () => void;
 }
@@ -19,7 +16,6 @@ const AddStatModal: React.FC<AddStatModalProps> = ({ onPress }) => {
   );
 };
 
-// --- Styles cho Component này ---
 const styles = StyleSheet.create({
   addButton: {
     width: '100%',
@@ -27,7 +23,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#EAEBF0', // Sửa lại mã màu (có vẻ 'O' là lỗi gõ phím)
+    borderColor: '#EAEBF0',
     borderStyle: 'dashed',
     borderRadius: SIZES.radius * 2,
     backgroundColor: COLORS.white

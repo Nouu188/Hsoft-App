@@ -56,7 +56,7 @@ const NotificationSetting = () => {
               </TouchableOpacity>
             </View>
           </Pressable>
-        </Modal>  
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   modalOptionText: {
-fontSize: 16,
+    fontSize: 16,
     color: '#333',
     marginLeft: 16,
   },

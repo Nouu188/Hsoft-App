@@ -1,4 +1,3 @@
-// src/components/specific/notification/NotificationItem.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';

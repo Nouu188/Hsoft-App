@@ -1,13 +1,9 @@
-// src/screens/HealthStatsScreen/components/StatCard.tsx
-
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { COLORS, FONTS, SHADOWS, SIZES } from '@/constants/theme';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES, FONTS, SHADOWS } from '@/constants/theme';
-import { Stat, HealthStatsProps,StatCardProps } from '../types';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { StatCardProps } from '../types';
 
-
-// --- Hàm logic cho Nhịp tim (không đổi) ---
 const getHeartRateStatus = (rate: number): { text: string; color: string; advice: string | null } => {
     if (rate < 40) return { text: 'Rất chậm', color: COLORS.accent, advice: '⚠️ Nguy hiểm: Nhịp tim quá thấp, hãy gọi cấp cứu ngay lập tức.' };
     if (rate < 50) return { text: 'Chậm đáng kể', color: COLORS.warning, advice: 'Nếu có mệt, chóng mặt hoặc ngất, hãy đi khám ngay.' };
@@ -16,7 +12,6 @@ const getHeartRateStatus = (rate: number): { text: string; color: string; advice
     return { text: 'Nhanh', color: COLORS.accent, advice: 'Hãy nghỉ ngơi, uống nước, thử hít thở sâu. Nếu kéo dài, hãy đi khám.' };
 };
 
-// --- Component ---
 const StatCard: React.FC<StatCardProps> = React.memo(({ stat, healthProps, large = false }) => {
   const progressValue = stat.progress ? stat.progress(healthProps) : 0;
   const displayValue = stat.getValue(healthProps);
@@ -55,7 +50,6 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ stat, healthProps, large
                 <Text style={[styles.statusText, { color: heartStatus.color }]}>
                   {heartStatus.text}
                 </Text>
-                {/* THAY ĐỔI 2: Thêm code để hiển thị advice */}
                 {heartStatus.advice && (
                   <Text style={styles.adviceText}>{heartStatus.advice}</Text>
                 )}
@@ -76,7 +70,6 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ stat, healthProps, large
   );
 });
 
-// --- Styles cho Component này ---
 const styles = StyleSheet.create({
     card: {
         backgroundColor: COLORS.white,
@@ -101,11 +94,11 @@ const styles = StyleSheet.create({
 
     heartRateContainer: {
         height: '85%',
-        justifyContent: 'space-between', // Đẩy phần số và phần text ra xa nhau
+        justifyContent: 'space-between',
     },
     heartRateDisplay: {
       flexDirection: 'row',
-      alignItems: 'baseline', // Căn chỉnh cho số và chữ 'bpm' thẳng hàng
+      alignItems: 'baseline', 
     },
     heartRateValue: {
         ...FONTS.h1,
@@ -113,7 +106,7 @@ const styles = StyleSheet.create({
         color: COLORS.textDark,
     },
     largeHeartRateValue: {
-      fontSize: 48, // Tăng font size cho ấn tượng
+      fontSize: 48, 
       fontWeight: 'bold',
       color: '#3A5C94',
     },
@@ -124,13 +117,12 @@ const styles = StyleSheet.create({
     },
     pulseIconWrapper: {
       marginHorizontal: SIZES.base,
-      paddingBottom: SIZES.base, // Giúp icon căn thẳng hàng hơn với đường baseline
+      paddingBottom: SIZES.base,
     },
     statusText: {
         ...FONTS.body3,
         fontWeight: '600',
     },
-    // THAY ĐỔI 3: Thêm style cho lời khuyên
     adviceText: {
         ...FONTS.body4,
         color: COLORS.text,

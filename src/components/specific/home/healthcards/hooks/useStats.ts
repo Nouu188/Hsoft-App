@@ -8,7 +8,6 @@ export const useStats = (initialStats: Stat[]) => {
     setStats((prev) => [...prev, newStat]);
   }, []);
 
-  // Dùng useMemo để tối ưu, chỉ tính toán lại khi `stats` thay đổi
   const heartStat = useMemo(() => stats.find((s) => s.key === 'heart'), [stats]);
   const stepStat = useMemo(() => stats.find((s) => s.key === 'steps'), [stats]);
   const extraStats = useMemo(() => stats.filter((s) => s.key !== 'heart' && s.key !== 'steps'), [stats]);

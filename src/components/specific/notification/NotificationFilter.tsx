@@ -1,4 +1,3 @@
-// src/components/specific/notification/NotificationFilter.tsx
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { SIZES, COLORS } from '@/constants/theme';

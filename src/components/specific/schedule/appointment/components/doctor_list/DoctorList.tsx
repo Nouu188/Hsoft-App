@@ -1,5 +1,3 @@
-// src/components/specific/schedule/appointment/components/doctor_list/DoctorList.tsx
-
 import React from 'react';
 // 1. Import thêm các kiểu và component cần thiết
 import { FlatList, StyleSheet, ListRenderItemInfo, FlatListProps } from 'react-native';

@@ -1,4 +1,3 @@
-// src/components/AuthInput.tsx
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text,KeyboardTypeOptions } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';

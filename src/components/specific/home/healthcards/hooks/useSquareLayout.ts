@@ -6,11 +6,11 @@ export const useSquareLayout = () => {
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
-    // Chỉ cập nhật nếu size thay đổi để tránh render lại vô ích
+
     if (width !== size) {
       setSize(width);
     }
-  }, [size]); // Phụ thuộc vào `size` để có thể so sánh
+  }, [size]); 
 
   return { size, onLayout };
 };

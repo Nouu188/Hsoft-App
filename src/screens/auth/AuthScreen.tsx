@@ -1,19 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { LinearTransition } from 'react-native-reanimated';
 import Ionicons from '@react-native-vector-icons/ionicons';
-
-import { COLORS, SIZES, FONTS } from '../../constants/theme';
+import React from 'react';
+import { Alert, Dimensions, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { useAuthStore } from '../../store/useAuthStore';
-
-// Import các thành phần đã được tách ra
-
-import { useAuthForm } from './useAuthForm';
 import LoginForm from './child_form/LoginForm';
 import RegisterForm from './child_form/RegisterForm';
+import { useAuthForm } from './useAuthForm';
 
 const { width } = Dimensions.get('window');
+
+export const buildLoginPayload = (account: string, password: string): LoginInput => {
+  const isEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
+  const isPhoneNumber = (value: string) => /^0\d{9}$/.test(value);
+  const isCCCD = (value: string) => /^\d{12}$/.test(value);
+
+  if (isEmail(account)) {
+    return { email: account, password };
+  }
+
+  if (isPhoneNumber(account) || isCCCD(account)) {
+    return { identifier: account, password };
+  }
+
+  return { identifier: account, password };
+};
 
 const AuthScreen: React.FC = () => {
   // Hook quản lý logic giao diện (animation, chuyển tab)
@@ -25,7 +37,9 @@ const AuthScreen: React.FC = () => {
   const error = useAuthStore((state) => state.error);
 
   // Hàm xử lý logic đăng nhập, được truyền xuống LoginForm
-  const handleLogin = async (credentials: any) => {
+  const handleLogin = async (account: string, password: string) => {
+    const credentials = buildLoginPayload(account, password);
+
     try {
       await login(credentials);
       // Điều hướng sẽ tự động xảy ra trong App.tsx khi accessToken thay đổi

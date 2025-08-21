@@ -3,15 +3,15 @@ import { COLORS, SIZES } from '@/constants/theme';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import dayjs from 'dayjs';
 import React from 'react';
-import { StyleSheet, Text, View, ImageBackground } from 'react-native';
+import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 import Animated, { SharedValue } from 'react-native-reanimated';
+import { ITEM_WIDTH, SNAP_INTERVAL } from '../../carouselConfig';
 import { useCarouselCardAnimation } from '../../hooks/useCarouselCardAnimation';
-import { ITEM_WIDTH, ITEM_SPACING, SNAP_INTERVAL } from '../../carouselConfig';
 
 const ITEM_HEIGHT = 420;
 
 interface CarouselItemProps {
-  scrollX: SharedValue<number>; // ĐÃ chuẩn hoá: offset - SIDE_PADDING
+  scrollX: SharedValue<number>;
   index: number;
   total: number;
   item: AppointmentCardData;
@@ -51,7 +51,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({ item, scrollX, index }) => 
 const styles = StyleSheet.create({
   cardContainer: {
     width: ITEM_WIDTH,
-    height: ITEM_HEIGHT-250,
+    height: ITEM_HEIGHT - 250,
     overflow: 'hidden',
     borderRadius: 24,
     elevation: 4,

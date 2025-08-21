@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
-import { LOGIN_MUTATION } from '../api/mutations/authMutations';
+import { LOGIN_BY_EMAIL_MUTATION, LOGIN_BY_IDENTIFIER_MUTATION } from '../api/mutations/authMutations';
 import { accountClient } from '@/api/apoloClient';
 import { fcmService } from '@/services/fcmService';
 
@@ -16,7 +16,7 @@ interface JwtPayload {
 interface AuthState {
   user: User | null;
   accessToken: string | null;
-  isLoading: boolean; 
+  isLoading: boolean;
   error: string | null;
   login: (credentials: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
@@ -36,13 +36,27 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       console.log('[AuthStore][login] Sending login mutation to accountClient...');
-      const { data } = await accountClient.mutate({
-        mutation: LOGIN_MUTATION,
-        variables: {
-          identifier: credentials.identifier,
-          password: credentials.password,
-        },
-      });
+      
+      let data;
+      if (credentials.email) {
+        const res = await accountClient.mutate({
+          mutation: LOGIN_BY_EMAIL_MUTATION,
+          variables: {
+            email: credentials.email,
+            password: credentials.password,
+          },
+        });
+        data = res.data;
+      } else {
+        const res = await accountClient.mutate({
+          mutation: LOGIN_BY_IDENTIFIER_MUTATION,
+          variables: {
+            identifier: credentials.identifier,
+            password: credentials.password,
+          },
+        });
+        data = res.data;
+      }
       console.log('[AuthStore][login] Login response:', data);
 
       const { accessToken, user } = data.login;
@@ -104,19 +118,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (token) {
         const decoded: JwtPayload = jwtDecode(token);
         console.log('[AuthStore][hydrate] Decoded JWT:', decoded);
-        
+
         // KIỂM TRA THỜI GIAN HẾT HẠN
         const currentTime = Date.now();
         const tokenExpiry = decoded.exp * 1000;
         console.log('[AuthStore][hydrate] Current time:', currentTime, 'Token expiry:', tokenExpiry);
-        
+
         if (tokenExpiry < currentTime) {
           console.log('[AuthStore][hydrate] Token expired. Triggering logout.');
           useAuthStore.getState().logout();
         } else {
           console.log('[AuthStore][hydrate] Token is valid. Setting user state.');
           const user: User = { id: decoded.sub, identifier: decoded.identifier, roles: decoded.roles };
-          
+
           set({ accessToken: token, user });
           console.log('[AuthStore][hydrate] User state updated:', user);
 

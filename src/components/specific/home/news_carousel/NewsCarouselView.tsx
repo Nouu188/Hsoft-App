@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { CarouselProps } from './types';
 import { useCarousel } from './hooks/useCarousel';
-import Pagination from './components/Pagination'; // <-- IMPORT COMPONENT MỚI
+import Pagination from './components/Pagination';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -58,8 +58,7 @@ const NewsCarouselView = <T extends { id: string | number }>({
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}
       />
-      
-      {/* SỬ DỤNG COMPONENT PAGINATION MỚI */}
+
       {showPagination && data.length > 1 && (
         <Pagination dataLength={data.length} activeIndex={activeIndex} />
       )}
@@ -67,7 +66,6 @@ const NewsCarouselView = <T extends { id: string | number }>({
   );
 };
 
-// Styles giờ đây đã gọn gàng hơn
 const styles = StyleSheet.create({
   container: {
     height: 200,

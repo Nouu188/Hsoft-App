@@ -1,11 +1,8 @@
-// src/screens/HealthStatsScreen/types.ts
-
 import { ComponentProps } from 'react';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
-// Định nghĩa cho một thẻ chỉ số
 export interface Stat {
   key: string;
   title: string;
@@ -18,7 +15,6 @@ export interface Stat {
   progress?: (p: HealthStatsProps) => number;
 }
 
-// Định nghĩa cho các props dữ liệu sức khỏe
 export interface HealthStatsProps {
   heartRate: number;
   steps: number;

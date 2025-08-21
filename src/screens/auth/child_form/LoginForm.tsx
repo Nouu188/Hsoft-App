@@ -6,7 +6,7 @@ import { COLORS, SIZES, FONTS, SHADOWS } from '../../../constants/theme';
 
 interface LoginFormProps {
   isLoading: boolean;
-  onLogin: (credentials: { identifier: string; password: string }) => void;
+  onLogin: (identifier: string, password: string ) => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
@@ -15,7 +15,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
   const [password, setPassword] = useState('');
 
   const handlePressLogin = () => {
-    onLogin({ identifier, password });
+    onLogin(identifier, password);
   };
 
   return (

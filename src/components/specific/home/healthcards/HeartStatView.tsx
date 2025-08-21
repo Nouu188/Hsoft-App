@@ -1,13 +1,10 @@
-// HealthStatsScreen.tsx (Đã được cập nhật)
-
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { SIZES } from '@/constants/theme';
 import { Stat, HealthStatsProps } from './types';
 import StatCard from './components/StatCard';
-import AddStatModal from './components/AddStatModal'; // BƯỚC 1: Import component mới
+import AddStatModal from './components/AddStatModal'; 
 
-// --- Dữ liệu ban đầu ---
 const initialStats: Stat[] = [
   {
     key: 'heart',
@@ -44,28 +41,23 @@ const HealthStatsView = () => {
     setStats([...stats, newCard]);
   };
 
-  // --- Render Bố cục Ban đầu ---
   const renderInitialLayout = () => (
     <View style={styles.initialContainer}>
-      {/* Cột trái */}
       <View style={styles.leftColumn}>
         <StatCard stat={stats[0]} healthProps={healthProps} large />
       </View>
 
-      {/* Cột phải */}
       <View style={styles.rightColumn}>
         <View style={styles.rightCardWrapper}>
           <StatCard stat={stats[1]} healthProps={healthProps} />
         </View>
         <View style={styles.rightCardWrapper}>
-          {/* BƯỚC 2: Sử dụng component AddStatModal */}
           <AddStatModal onPress={addNewCard} />
         </View>
       </View>
     </View>
   );
 
-  // --- Render Bố cục Lưới (sau khi thêm) ---
   const renderGridLayout = () => (
     <View style={styles.gridContainer}>
       {stats.map((stat) => (
@@ -92,7 +84,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FC',
   },
-  // --- Styles cho Layout Ban đầu ---
   initialContainer: {
     flexDirection: 'row',
     padding: SIZES.padding,
@@ -111,8 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: SIZES.base,
   },
-  
-  // --- Styles cho Layout Lưới ---
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -124,9 +113,6 @@ const styles = StyleSheet.create({
     height: 160,
     marginBottom: SIZES.base * 2,
   },
-
-  // BƯỚC 3: Xóa các style không còn cần thiết ở đây
-  // addButton và addButtonText đã được chuyển vào AddStatModal.tsx
 });
 
 export default HealthStatsView;
