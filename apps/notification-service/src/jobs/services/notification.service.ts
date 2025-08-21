@@ -1,12 +1,10 @@
-// apps/notification-service/src/notification.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
 import { DoseApiClientService } from '@app/api-clients/doses/dose-api-client.service';
 import { DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
-import { FirebaseService } from '../firebase/firebase.service';
-import { HistoryService } from '../history/history.service';
-import { NotificationStatus, NotificationType } from '../history/entities/notification-history.entity';
+import { FirebaseService } from '../../firebase/firebase.service';
+import { HistoryService } from '../../history/history.service';
+import { NotificationStatus, NotificationType } from '../../history/entities/notification-history.entity';
 
 interface GroupedNotificationPayload {
   user_id: string;

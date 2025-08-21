@@ -1,97 +1,238 @@
-    import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-    import { JwtService } from '@nestjs/jwt';
-    import { User } from '../users/entities/user.entity';
-    import * as bcrypt from 'bcrypt';
-    import { UsersService } from '../users/users.service';
-    import { InjectRepository } from '@nestjs/typeorm';
-    import { Repository } from 'typeorm';
-    import { ServiceClient } from './entities/service-client.entity';
-    import { LoginInput } from './dto/login.input';
-    import { AuthPayload } from '../../../../libs/auth/src/dtos/auth.payload';
-    import { Role } from '../../../../libs/auth/src/enums/role.enum';
-    import { CreateServiceClientInput } from './dto/create-service-client.input';
-    import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-    import { ExchangeName } from '@app/common/rabbitmq/exchanges';
-    import { RoutingKey } from '@app/common/rabbitmq';
+import { RoutingKey } from '@app/common/rabbitmq';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { MailerService } from '@nestjs-modules/mailer';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import { Repository } from 'typeorm';
+import { AuthPayload } from '../../../../libs/auth/src/dtos/auth.payload';
+import { Role } from '../../../../libs/auth/src/enums/role.enum';
+import { UsersService } from '../users/users.service';
+import { CreateServiceClientInput } from './dto/create-service-client.input';
+import { LoginInputByEmail, LoginInputByIdentifier } from './dto/login.input';
+import { LoginResponse } from './dto/login.response';
+import { RegisterByEmailInput } from './dto/register.input';
+import { VerifyEmailInput } from './dto/verify-email.input';
+import { ServiceClient } from './entities/service-client.entity';
 
-    @Injectable()
-    export class AuthService {
-        private readonly logger = new Logger(AuthService.name);
+@Injectable()
+export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
 
-        constructor(
-            private usersService: UsersService,
-            private jwtService: JwtService,
-            private readonly amqpConnection: AmqpConnection,
-            @InjectRepository(ServiceClient, 'authConnection')
-            private serviceClientRepository: Repository<ServiceClient>,
-        ) { }
+    constructor(
+        private usersService: UsersService,
 
-        async login(loginInput: LoginInput): Promise<{ user: User, accessToken: string }> {
-            const { identifier, password } = loginInput;
+        private jwtService: JwtService,
 
-            let user = await this.usersService.findByIdentifier(identifier);
-            if (user) {
-                const isPasswordMatching = await bcrypt.compare(password!, user.password);
-                if (isPasswordMatching) {
-                    this.logger.log(`User ${user.sodienthoai} logged in from internal DB.`);
+        private readonly amqpConnection: AmqpConnection,
 
-                    const accessToken = this.generateToken(user.id, user.roles);
-                    return { accessToken, user };
-                }
+        @InjectRepository(ServiceClient, 'authConnection')
+        private serviceClientRepository: Repository<ServiceClient>,
 
-                throw new UnauthorizedException("Invalid credentials");
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+
+        private readonly mailerService: MailerService
+    ) { }
+
+    async loginByIdentifier(loginInput: LoginInputByIdentifier): Promise<LoginResponse> {
+        const { identifier, password } = loginInput;
+        if (!identifier && !password) {
+            throw new ConflictException("Invalid input");
+        }
+
+        let user = await this.usersService.findByIdentifier(identifier);
+        if (user) {
+            const isPasswordMatching = await bcrypt.compare(password!, user.password);
+            if (isPasswordMatching) {
+                this.logger.log(`User ${user.sodienthoai} logged in from internal DB.`);
+
+                const accessToken = this.generateToken(user.id, user.roles);
+                const { password: _password, ...userResult } = user;
+
+                return { accessToken, user: userResult };
             }
 
-            this.logger.log(`User with identifier "${identifier}" not found. Attempting to fetch from hospital API...`);
-
-            const hospitalPatient = await this.usersService.fetchPatientFromHospital(identifier);
-            if (!hospitalPatient) {
-                throw new UnauthorizedException('Patient information not found in hospital system.');
-            }
-
-            const yearOfBirth = hospitalPatient.namsinh;
-            if (loginInput.password !== yearOfBirth) {
-                throw new UnauthorizedException('Invalid credentials.');
-            }
-
-            this.logger.log(`First-time login successful for mabn ${hospitalPatient.mabn}. Creating local user...`);
-            user = await this.usersService.createUser(hospitalPatient);
-
-            this.logger.log(`Publishing 'user.first_login' event for user ${user.id}`);
-            this.amqpConnection.publish(
-                ExchangeName.USER_EVENTS,
-                RoutingKey.USER_FIRST_LOGIN,
-                { user_id: user.id }, 
-            );  
-
-            const { password: _password, ...userResult } = user;
-            const accessToken = this.generateToken(userResult.id, userResult.roles);
-
-            return { accessToken, user: userResult as User }
+            throw new UnauthorizedException("Invalid credentials");
         }
 
-        private generateToken(user_id: string, roles: Role[]): string {
-            const payload: AuthPayload = {
-                sub: user_id,
-                roles,
-            };
-            return this.jwtService.sign(payload);
+        this.logger.log(`User with identifier "${identifier}" not found. Attempting to fetch from hospital API...`);
+
+        const hospitalPatient = await this.usersService.fetchPatientFromHospital(identifier);
+        if (!hospitalPatient) {
+            throw new UnauthorizedException('Patient information not found in hospital system.');
         }
 
-        generateM2MToken(client: ServiceClient): { accessToken: string } {
-            const payload: AuthPayload = {
-                sub: client.client_id,
-                scopes: client.scopes,
-            };
-            return { accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }) };
+        const yearOfBirth = hospitalPatient.namsinh;
+        if (loginInput.password !== yearOfBirth) {
+            throw new UnauthorizedException('Invalid credentials.');
         }
 
-        async createServiceClient(input: CreateServiceClientInput): Promise<Partial<ServiceClient>> {
-            const newClient = this.serviceClientRepository.create(input);
-            // Mật khẩu sẽ được hash tự động bởi hook @BeforeInsert trong entity
-            await this.serviceClientRepository.save(newClient);
-            const { client_secret, ...res } = newClient;
+        this.logger.log(`First-time login successful for mabn ${hospitalPatient.mabn}. Creating local user...`);
+        user = await this.usersService.createUserByIdentifier(hospitalPatient);
 
-            return res;
-        }
+        this.logger.log(`Publishing 'user.first_login' event for user ${user.id}`);
+        this.amqpConnection.publish(
+            ExchangeName.USER_EVENTS,
+            RoutingKey.USER_FIRST_LOGIN,
+            { user_id: user.id },
+        );
+
+        const { password: _password, ...userResult } = user;
+        const accessToken = this.generateToken(userResult.id, userResult.roles);
+
+        return { accessToken, user: userResult }
     }
+
+    async loginByEmail(loginInput: LoginInputByEmail): Promise<LoginResponse> {
+        const { email, password } = loginInput;
+        if (!email && !password) {
+            this.logger.warn('Login attempt with missing email or password');
+            throw new ConflictException('Email and password are required');
+        }
+
+        this.logger.debug(`Login attempt for email: ${email}`);
+
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            this.logger.warn(`Login failed: User with email ${email} not found`);
+            throw new UnauthorizedException('Invalid email or password');
+        }
+
+        const isPasswordValid = await bcrypt.compare(password as string, user.password);
+        if (!isPasswordValid) {
+            this.logger.warn(`Login failed: Invalid password for email ${email}`);
+            throw new UnauthorizedException('Invalid email or password');
+        }
+
+        this.logger.log(`Login successful for email: ${email}`);
+
+        const accessToken = this.generateToken(user.id, user.roles);
+
+        const { password: _, ...userResult } = user;
+
+        return { user: userResult, accessToken };
+    }
+
+    async requestEmailVerification(registerInput: RegisterByEmailInput): Promise<boolean> {
+        const { email, hoten } = registerInput;
+        this.logger.log(`[OTP] Received verification request for email: ${email}`);
+
+        // Kiểm tra email đã tồn tại chưa
+        const existingUser = await this.usersService.findByEmail(email);
+        if (existingUser) {
+            this.logger.warn(`[OTP] Email already registered: ${email}`);
+            throw new ConflictException('Email này đã được sử dụng.');
+        }
+
+        // Kiểm tra retry count
+        const retryKey = `otp:retry-count:verify-email:${email}`;
+        const retryCount = (await this.cacheManager.get<number>(retryKey)) || 0;
+        this.logger.log(`[OTP] Current retry count for ${email}: ${retryCount}`);
+
+        if (retryCount >= 5) {
+            this.logger.warn(`[OTP] Retry limit reached for ${email}`);
+            throw new BadRequestException('Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 1 giờ.');
+        }
+
+        // Cập nhật retry count (TTL 1 giờ)
+        await this.cacheManager.set(retryKey, retryCount + 1, 3600);
+        this.logger.log(`[OTP] Incremented retry count for ${email} to ${retryCount + 1}`);
+
+        // Tạo OTP
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const otpKey = `otp:verify-email:${email}`;
+        const registrationData = { otp, attempts: 0, registerInput };
+
+        // Lưu OTP trong cache (TTL 5 phút)
+        await this.cacheManager.set(otpKey, JSON.stringify(registrationData), 300000);
+        this.logger.log(`[OTP] Stored OTP in cache for ${email} with TTL 5 phút: ${otp}`);
+
+        try {
+            // Gửi email OTP
+            await this.mailerService.sendMail({
+                to: email,
+                subject: `[MedPlusApp] Mã xác thực của bạn là ${otp}`,
+                template: './verification',
+                context: { name: hoten, otp },
+            });
+            this.logger.log(`[OTP] Sent verification OTP to ${email} successfully`);
+        } catch (error) {
+            this.logger.error(`[OTP] Failed to send OTP to ${email}: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Không thể gửi OTP. Vui lòng thử lại sau.');
+        }
+
+        return true;
+    }
+
+    async verifyEmailAndRegister(verifyInput: VerifyEmailInput): Promise<LoginResponse> {
+        const { email, otp } = verifyInput;
+        const otpKey = `otp:verify-email:${email}`;
+        this.logger.log(`Verifying OTP for email: ${email}`);
+
+        const storedDataString = await this.cacheManager.get<string>(otpKey);
+
+        if (!storedDataString) {
+            throw new BadRequestException('OTP đã hết hạn hoặc không hợp lệ.');
+        }
+
+        const storedData = JSON.parse(storedDataString) as { otp: string, attempts: number, registerInput: RegisterByEmailInput };
+
+        if (storedData.attempts >= 5) {
+            await this.cacheManager.del(otpKey);
+            throw new BadRequestException('Bạn đã nhập sai OTP quá 5 lần. Vui lòng yêu cầu OTP mới.');
+        }
+
+        if (storedData.otp !== otp) {
+            storedData.attempts += 1;
+            const remainingTTL = await (this.cacheManager.stores as any).ttl(otpKey);
+            await this.cacheManager.set(otpKey, JSON.stringify(storedData), remainingTTL);
+            throw new BadRequestException(`OTP không chính xác. Bạn còn ${5 - storedData.attempts} lần thử.`);
+        }
+
+        const { registerInput } = storedData;
+
+        const newUser = await this.usersService.createUserByEmail({
+            email: registerInput.email,
+            hoten: registerInput.hoten,
+            password: registerInput.password,
+        });
+
+        await this.cacheManager.del(otpKey);
+        const retryKey = `otp:retry-count:verify-email:${email}`;
+        await this.cacheManager.del(retryKey);
+
+        const accessToken = this.generateToken(newUser.id, newUser.roles);
+        const { password: _, ...userResult } = newUser;
+        return { user: userResult, accessToken };
+    }
+
+    private generateToken(user_id: string, roles: Role[]): string {
+        const payload: AuthPayload = {
+            sub: user_id,
+            roles,
+        };
+
+        return this.jwtService.sign(payload);
+    }
+
+    generateM2MToken(client: ServiceClient): { accessToken: string } {
+        const payload: AuthPayload = {
+            sub: client.client_id,
+            scopes: client.scopes,
+        };
+        return { accessToken: this.jwtService.sign(payload, { expiresIn: '1h' }) };
+    }
+
+    async createServiceClient(input: CreateServiceClientInput): Promise<Partial<ServiceClient>> {
+        const newClient = this.serviceClientRepository.create(input);
+
+        await this.serviceClientRepository.save(newClient);
+        const { client_secret, ...res } = newClient;
+
+        return res;
+    }
+}

@@ -1,0 +1,113 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Appointment {
+  appointmentTime: DateTime!
+  appointmentType: AppointmentType!
+  clinic: Clinic
+  doctor: Doctor
+  id: ID!
+  notes: String
+  patientDob: String!
+  patientGender: String!
+  patientName: String!
+  patientPhone: String!
+  queueNumber: Int!
+  status: AppointmentStatus!
+}
+
+enum AppointmentStatus {
+  CANCELLED
+  COMPLETED
+  CONFIRMED
+}
+
+enum AppointmentType {
+  CLINIC
+  DOCTOR
+}
+
+input BookByClinicInput {
+  appointmentTime: String!
+  clinicId: ID!
+  notes: String
+  patientDob: String!
+  patientGender: String!
+  patientName: String!
+  patientPhone: String!
+}
+
+type Clinic {
+  """Mã khoa phòng từ hệ thống bệnh viện"""
+  externalMakp: String!
+
+  """ID nội bộ của phòng khám"""
+  id: ID!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Doctor {
+  avatarUrl: String
+  bio: String
+
+  """Phòng khám nơi bác sĩ làm việc"""
+  clinic: [Clinic!]!
+  id: ID!
+  name: String!
+}
+
+input HospitalClinicInput {
+  makp: String!
+  tenkp: String!
+}
+
+type Mutation {
+  bookAppointmentByClinic(input: BookByClinicInput!): Appointment!
+
+  """Hủy một lịch hẹn đã đặt."""
+  cancelAppointment(id: ID!): Boolean!
+
+  """
+  Đồng bộ danh sách phòng khám từ dữ liệu bệnh viện (tạo mới, cập nhật, vô hiệu hóa).
+  """
+  upsertClinics(hospitalClinics: [HospitalClinicInput!]!): UpsertClinicResult!
+}
+
+type Query {
+  """
+  Lấy danh sách tất cả các phòng khám đang hoạt động để người dùng có thể đặt lịch.
+  """
+  activeClinics: [Clinic!]!
+  myAppointments: [Appointment!]!
+}
+
+"""Các vai trò của user"""
+enum Role {
+  ADMIN
+  USER
+}
+
+type UpsertClinicResult {
+  created: Int!
+  deactivated: Int!
+  updated: Int!
+}
+
+type UserResponseDto {
+  apn_tokens: [String!]
+  diachi: String
+  email: String
+  fcm_tokens: [String!]
+  hoten: String!
+  id: String!
+  mabn: String
+  namsinh: String
+  roles: [Role!]!
+  socmnd: String
+  sodienthoai: String
+}

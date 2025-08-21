@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+  account-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: account-service
+    env_file:
+      - ./apps/account-service/.env.local
+    depends_on:
+      db-accounts:
+        condition: service_healthy
+      db-auth:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  scheduling-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: scheduling-service
+    env_file:
+      - ./apps/scheduling-service/.env.local
+    depends_on:
+      db-schedules:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: notification-service
+    env_file:
+      - ./apps/notification-service/.env.local
+    depends_on:
+      db-notification:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+  
+  appointment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: appointment-service
+    env_file:
+      - ./apps/appointment-service/.env.local
+    depends_on:
+      db-appointment:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
+  # immunization-service:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     args:
+  #       APP_NAME: immunization-service
+  #   env_file:
+  #     - ./apps/immunization-service/.env.local
+  #   depends_on:
+  #     db-auth:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+
+  # billing-service:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     args:
+  #       APP_NAME: billing-service
+  #   env_file:
+  #     - ./apps/billing-service/.env.local
+  #   depends_on:
+  #     db-billing:
+  #       condition: service_healthy
+  #     db-auth:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy

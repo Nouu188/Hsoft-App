@@ -40,7 +40,7 @@ import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
         username: configService.get<string>('NOTIFICATION_DB_USER'),
         password: configService.get<string>('NOTIFICATION_DB_PASS'),
         database: configService.get<string>('NOTIFICATION_DB_NAME'),
-        entities: [NotificationHistory],
+        entities: [ NotificationHistory ],
         synchronize: true,
       }),
     }),

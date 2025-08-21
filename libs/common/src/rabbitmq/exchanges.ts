@@ -5,6 +5,7 @@ export const ExchangeName = {
   SYNC: 'sync.exchange',
   BATCH_SYNC: 'batch.sync.exchange',
   USER_EVENTS: 'user.events.exchange', 
+  APPOINTMENT_EVENTS: 'appointment.events.exchange'
 };
 
 export const Exchanges: RabbitMQExchangeConfig[] = [
@@ -31,6 +32,11 @@ export const Exchanges: RabbitMQExchangeConfig[] = [
   },
   {
     name: ExchangeName.USER_EVENTS,
+    type: 'direct',
+    options: { durable: true },
+  },
+  {
+    name: ExchangeName.APPOINTMENT_EVENTS,
     type: 'direct',
     options: { durable: true },
   },

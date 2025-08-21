@@ -54,5 +54,5 @@
       "**/node_modules",
       "dist"
     ]
-  },
+  }
 }

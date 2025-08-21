@@ -1,8 +1,8 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Logger, Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthLibModule } from '@app/auth'; 
+import { AuthLibModule } from '@app/auth';
 
 import { UsersModule } from '../users/users.module';
 import { ServiceClient } from './entities/service-client.entity';
@@ -11,12 +11,17 @@ import { AuthResolver } from './auth.resolver';
 import { AuthController } from './controllers/auth.controller';
 import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { CacheModule } from '@nestjs/cache-manager';
+import { join } from 'path';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
     ConfigModule,
     forwardRef(() => UsersModule),
-    TypeOrmModule.forFeature([ ServiceClient ], 'authConnection'),
+    TypeOrmModule.forFeature([ServiceClient], 'authConnection'),
     AuthLibModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -26,7 +31,56 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
         signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN', '1d') },
       }),
     }),
-    AppRabbitMQModule
+    AppRabbitMQModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const host = configService.get<string>('REDIS_HOST');
+        const port = configService.get<number>('REDIS_PORT');
+
+        const logger = new Logger('RedisCache');
+
+        logger.log(`[Redis] Configuring Redis cache with host: ${host}, port: ${port}`);
+
+        try {
+          const cacheConfig = {
+            store: redisStore,
+            host,
+            port,
+          };
+          logger.log(`[Redis] Redis cache configuration successfully prepared`);
+          return cacheConfig;
+        } catch (error) {
+          logger.error(`[Redis] Failed to configure Redis cache: ${error.message}`, error.stack);
+          throw error;
+        }
+      },
+    }),
+    MailerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        transport: {
+          host: configService.get<string>('SMTP_HOST'),
+          port: configService.get<number>('SMTP_PORT'),
+          secure: false,
+          auth: {
+            user: configService.get<string>('SMTP_USER'),
+            pass: configService.get<string>('SMTP_PASS'),
+          },
+        },
+        defaults: {
+          from: `"MedPlusApp" <${configService.get<string>('SMTP_FROM')}>`,
+        },
+        template: {
+          dir: join(process.cwd(), 'apps/account-service/src/auth/templates'),
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+    }),
   ],
   controllers: [AuthController],
   providers: [
@@ -35,4 +89,4 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
     ClientCredentialsStrategy,
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

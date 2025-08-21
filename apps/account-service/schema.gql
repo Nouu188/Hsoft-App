@@ -9,27 +9,48 @@ input CreateServiceClientInput {
   scopes: [String!]!
 }
 
-input LoginInput {
+input LoginInputByEmail {
+  email: String!
+  hoten: String!
+  password: String!
+}
+
+input LoginInputByIdentifier {
   identifier: String!
   password: String!
 }
 
 type LoginResponse {
   accessToken: String!
-  user: User!
+  user: UserResponseDto!
 }
 
 type Mutation {
   admin_createServiceClient(input: CreateServiceClientInput!): ServiceClient!
-  login(loginInput: LoginInput!): LoginResponse!
+  loginByEmail(loginInput: LoginInputByEmail!): LoginResponse!
+  loginByIdentifier(loginInput: LoginInputByIdentifier!): LoginResponse!
   registerFcmToken(fcm_token: String!): Boolean!
   removeFcmTokens(tokens: [String!]!, userId: ID!): Boolean!
+  requestEmailVerification(registerInput: RegisterByEmailInput!): Boolean!
+  verifyEmailAndRegister(verifyInput: VerifyEmailInput!): LoginResponse!
 }
 
 type Query {
   findAllUser: User!
   findByIdentifier(identifier: String!): User
   me: User!
+}
+
+input RegisterByEmailInput {
+  email: String!
+  hoten: String!
+  password: String!
+}
+
+"""Các vai trò của user"""
+enum Role {
+  ADMIN
+  USER
 }
 
 type ServiceClient {
@@ -46,12 +67,32 @@ type ServiceClient {
 type User {
   apn_tokens: [String!]
   diachi: String
+  email: String!
   fcm_tokens: [String!]
-  hoTen: String!
+  hoten: String!
   id: ID!
   mabn: String!
   namsinh: String
   roles: [String!]!
   socmnd: String!
   sodienthoai: String!
+}
+
+type UserResponseDto {
+  apn_tokens: [String!]
+  diachi: String
+  email: String
+  fcm_tokens: [String!]
+  hoten: String!
+  id: String!
+  mabn: String
+  namsinh: String
+  roles: [Role!]!
+  socmnd: String
+  sodienthoai: String
+}
+
+input VerifyEmailInput {
+  email: String!
+  otp: String!
 }

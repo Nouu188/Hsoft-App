@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import * as bcrypt from 'bcrypt'
 import { Role } from '@app/auth/enums/role.enum';
@@ -12,19 +12,23 @@ export class User {
 
   @Field()
   @Column({ nullable: true })
-  hoTen: string;
+  hoten: string;
 
   @Field()
   @Column({ unique: true, nullable: true })
-  mabn: string;
-
-  @Field()
-  @Column({ unique: true })
-  sodienthoai: string;
+  email?: string;
 
   @Field()
   @Column({ unique: true, nullable: true })
-  socmnd: string;
+  mabn?: string;
+
+  @Field()
+  @Column({ unique: true, nullable: true })
+  sodienthoai?: string;
+
+  @Field()
+  @Column({ unique: true, nullable: true })
+  socmnd?: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
@@ -49,6 +53,7 @@ export class User {
   @Column({ type: 'enum', enum: Role, array: true, default: [Role.USER] })
   roles: Role[];
 
+  @BeforeInsert()
   async hashPassword() {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);

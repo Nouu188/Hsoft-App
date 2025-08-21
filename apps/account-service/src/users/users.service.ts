@@ -1,17 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Not, Repository } from 'typeorm';
-import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
-import { User } from './entities/user.entity';
-import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
-import { isUUID } from 'class-validator';
+import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
 import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
+import { BadRequestException, ConflictException, HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { isUUID } from 'class-validator';
+import { IsNull, Not, Repository } from 'typeorm';
+import { Role } from '../../../../libs/auth/src/enums/role.enum';
+import { CreateUserByEmailInput, CreateUserByIdentifierInput } from './dto/create-user-input.dto';
+import { User } from './entities/user.entity';
 import { MeasureDuration } from '@app/common/metrics/decorators/measure-duration.decorator';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User, 'accountConnection')
     private usersRepository: Repository<User>,
@@ -99,6 +102,18 @@ export class UsersService {
     }) ?? undefined;
   }
 
+  async findByEmail(email: string): Promise<User | undefined> {
+    if (!email) {
+      throw new ConflictException("Invalid email !");
+    }
+
+    return await this.usersRepository.findOne({
+      where: {
+        email
+      }
+    }) ?? undefined;
+  }
+
   async findAllUser(): Promise<User[]> {
     return await this.usersRepository.find({
       where: { mabn: Not(IsNull()) },
@@ -111,29 +126,94 @@ export class UsersService {
   }
 
   // @MeasureDuration(MetricName.USER_REGISTRATIONS_TOTAL, {
-  //   [MetricLabel.REGISTRATION_SOURCE]: 'createUser',
+  //   [MetricLabel.REGISTRATION_SOURCE]: 'createUserByIdentifier',
   //   [MetricLabel.TABLE_NAME]: 'users',
   // })
-  @TrackBusinessMetric(MetricName.USER_REGISTRATIONS_TOTAL, {
-    labels: (args: [HospitalPatient], result: User, error?: any) => ({
-      [MetricLabel.REGISTRATION_SOURCE]: 'createUser',
-      [MetricLabel.STATUS]: error ? 'error' : 'success',
-    }),
-  })
-  async createUser(payload: HospitalPatient): Promise<User> {
-    const { mabn, hoten, namsinh, sodienthoai, socmnd } = payload;
+  // @TrackBusinessMetric(MetricName.USER_REGISTRATIONS_TOTAL, {
+  //   labels: (args: [HospitalPatient], result: User, error?: any) => ({
+  //     [MetricLabel.REGISTRATION_SOURCE]: 'createUserByIdentifier',
+  //     [MetricLabel.STATUS]: error ? 'error' : 'success',
+  //   }),
+  // })
+  async createUserByIdentifier(payload: CreateUserByIdentifierInput): Promise<User> {
+    const { mabn, hoten, namsinh, sodienthoai, socmnd, password } = payload;
 
-    const newUser = this.usersRepository.create({
-      mabn: mabn,
-      sodienthoai: sodienthoai,
-      socmnd: socmnd,
-      hoTen: hoten,
-      namsinh: namsinh,
-      password: namsinh,
-      roles: [Role.USER],
-    });
+    try {
+      if (!mabn && !sodienthoai && !socmnd) {
+        this.logger.warn(`Thiếu thông tin định danh khi tạo user: ${JSON.stringify(payload)}`);
+        throw new BadRequestException('Cần có mã bệnh nhân, số điện thoại hoặc số CMND để tạo user');
+      }
 
-    await newUser.hashPassword();
-    return this.usersRepository.save(newUser);
+      this.logger.debug(
+        `Đang tạo user mới: mabn=${mabn ?? 'N/A'}, sdt=${sodienthoai ?? 'N/A'}, socmnd=${socmnd ?? 'N/A'}`
+      );
+
+      const rawPassword = password || (namsinh && `${namsinh}`);
+
+      let newUser = this.usersRepository.create({
+        mabn,
+        sodienthoai,
+        socmnd,
+        hoten,
+        namsinh,
+        password: rawPassword,
+        roles: [Role.USER],
+      });
+
+      const savedUser = await this.usersRepository.save(newUser);
+      this.logger.log(`Tạo user thành công: id=${savedUser.id}, email=${savedUser.email ?? 'N/A'}`);
+
+      return savedUser;
+    } catch (error) {
+      this.logger.error(`Lỗi khi tạo user: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Không thể tạo user, vui lòng thử lại');
+    }
   }
+
+  // @MeasureDuration(MetricName.USER_REGISTRATIONS_TOTAL, {
+  //   [MetricLabel.REGISTRATION_SOURCE]: 'createUserByIEmail',
+  //   [MetricLabel.TABLE_NAME]: 'users',
+  // })
+  // @TrackBusinessMetric(MetricName.USER_REGISTRATIONS_TOTAL, {
+  //   labels: (args: [HospitalPatient], result: User, error?: any) => ({
+  //     [MetricLabel.REGISTRATION_SOURCE]: 'createUserByEmail',
+  //     [MetricLabel.STATUS]: error ? 'error' : 'success',
+  //   }),
+  // })
+  async createUserByEmail(payload: CreateUserByEmailInput): Promise<User> {
+    const { email, password, hoten } = payload;
+
+    try {
+      if (!email || !password) {
+        this.logger.warn(`Thiếu email hoặc password khi tạo user: ${JSON.stringify(payload)}`);
+        throw new BadRequestException('Email và mật khẩu là bắt buộc');
+      }
+
+      const existingUser = await this.usersRepository.findOne({ where: { email } });
+      if (existingUser) {
+        this.logger.warn(`Email đã tồn tại: ${email}`);
+        throw new ConflictException('Email đã được sử dụng');
+      }
+
+      this.logger.debug(`Tạo user mới bằng email: ${email}`);
+
+      const newUser = this.usersRepository.create({
+        email,
+        hoten,
+        password,
+        roles: [Role.USER],
+      });
+
+      const savedUser = await this.usersRepository.save(newUser);
+      this.logger.log(`Tạo user thành công: id=${savedUser.id}, email=${savedUser.email}`);
+
+      return savedUser;
+    } catch (error) {
+      this.logger.error(`Lỗi khi tạo user bằng email: ${error.message}`, error.stack);
+      throw error instanceof HttpException
+        ? error
+        : new InternalServerErrorException('Không thể tạo user, vui lòng thử lại');
+    }
+  }
+
 }

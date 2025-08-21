@@ -1,10 +1,13 @@
 import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { ExchangeName, QueueName, RoutingKey } from '@app/common/rabbitmq';
-import { NotificationService } from '../notification.service';
+import { NotificationService } from '../services/notification.service';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter } from 'prom-client';
-import { MetricName } from '@app/common/metrics/metrics.contracts';
+import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
+import { MeasureDuration } from '@app/common/metrics/decorators/measure-duration.decorator';
+import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
+import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
 
 interface GroupedNotificationPayload {
     user_id: string;
@@ -17,11 +20,18 @@ export class NotificationConsumer {
 
     constructor(
         private readonly notificationService: NotificationService,
-
-        @InjectMetric(MetricName.RABBITMQ_MESSAGES_PROCESSED_TOTAL)
-        private readonly messageCounter: Counter<string>,
     ) { }
 
+    @MeasureDuration(MetricName.NOTIFICATIONS_SCHEDULED_TOTAL, {
+        [MetricLabel.REGISTRATION_SOURCE]: "handleSendGroupedNotification",
+        [MetricLabel.TABLE_NAME]: "doses",
+    })
+    @TrackBusinessMetric(MetricName.NOTIFICATIONS_SCHEDULED_TOTAL, {
+        labels: (args: [HospitalPatient], error?: any) => ({
+            [MetricLabel.REGISTRATION_SOURCE]: 'handleSendGroupedNotification',
+            [MetricLabel.STATUS]: error ? 'error' : 'success',
+        }),
+    })
     @RabbitSubscribe({
         exchange: ExchangeName.NOTIFICATION,
         routingKey: RoutingKey.NOTIFICATION_SCHEDULE,
@@ -39,10 +49,8 @@ export class NotificationConsumer {
         try {
             await this.notificationService.processDoseReminder(payload);
 
-            this.messageCounter.inc({ ...labels, status: 'acked' });
         } catch (error) {
             this.logger.error(`CRITICAL error processing dose reminder for user ${user_id}. Message will be NACKed.`, error.stack);
-            this.messageCounter.inc({ ...labels, status: 'nacked' });
 
             return new Nack(false);
         }

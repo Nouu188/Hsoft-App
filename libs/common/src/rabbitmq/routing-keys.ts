@@ -12,4 +12,8 @@ export const RoutingKey = {
   
   // Notification Events
   NOTIFICATION_SCHEDULE: 'notification.schedule', 
+
+  // Appointment Events
+  APPOINTMENT_CANCELLED: 'appointment.cancelled',
+  APPOINTMENT_BOOKED: 'appointment.booked',
 };

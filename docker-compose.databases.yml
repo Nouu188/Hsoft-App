@@ -1,0 +1,98 @@
+version: "3.9"
+
+services:
+  db-accounts:
+    image: postgres:17
+    container_name: med-db-account
+    environment:
+      POSTGRES_USER: accounts_user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: accounts_db
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_account_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accounts_user -d accounts_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-notification:
+    image: postgres:17
+    container_name: med-db-notification
+    environment:
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: notification_db
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_notification_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_user -d notification_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-schedules:
+    image: postgres:17
+    container_name: med-db-schedules
+    environment:
+      POSTGRES_USER: schedules_user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: schedules_db
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_schedules_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schedules_user -d schedules_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-appointment:
+    image: postgres:17
+    container_name: med-db-appointment
+    environment:
+      POSTGRES_USER: appointment_user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: appointment_db
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_appointment_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appointment_user -d appointment_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-auth:
+    image: postgres:17
+    container_name: med-db-auth
+    environment:
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: auth_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_account_data:
+  postgres_schedules_data:
+  postgres_auth_data:
+  postgres_notification_data:
+  postgres_appointment_data:
