@@ -11,8 +11,8 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '../../constants/theme'; // Điều chỉnh đường dẫn
 
 import { useOTP } from './useOTP';
-import OTPInput from './components/OTPInput';
-import OTPResendButton from './components/OTPResendButton';
+import OTPInput from '../../components/specific/auth/otp/OTPInput';
+import OTPResendButton from '../../components/specific/auth/otp/OTPResendButton';
 
 const OTPScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   

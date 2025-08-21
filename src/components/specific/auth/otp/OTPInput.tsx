@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { COLORS, SIZES } from '../../../constants/theme'; // Điều chỉnh đường dẫn
+import { COLORS, SIZES } from '../../../../constants/theme'; // Điều chỉnh đường dẫn
 
 interface OTPInputProps {
   otp: string[];

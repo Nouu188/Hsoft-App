@@ -9,7 +9,7 @@ export const LOGIN_BY_IDENTIFIER_MUTATION = gql`
             accessToken    
         }
     }
-`
+`;
 
 export const LOGIN_BY_EMAIL_MUTATION = gql`
     mutation LOGIN($email: String!, $password: String!) {
@@ -20,7 +20,22 @@ export const LOGIN_BY_EMAIL_MUTATION = gql`
             accessToken    
         }
     }
-`
+`;
+
+export const LOGIN_WITH_GOOGLE_MUTATION = gql`
+  mutation LoginWithGoogle($googleLoginInput: GoogleLoginInput!) {
+    loginWithGoogle(googleLoginInput: $googleLoginInput) {
+      accessToken
+      user {
+        id
+        hoTen
+        email
+        avatarUrl
+        roles
+      }
+    }
+  }
+`;
 
 export const REGISTER_BY_EMAIL_MUTATION = gql`
     mutation REGISTER($email: String!, $password: String!, $hoten: String!) {
@@ -32,4 +47,4 @@ export const REGISTER_BY_EMAIL_MUTATION = gql`
             accessToken    
         }
     }
-`
+`;

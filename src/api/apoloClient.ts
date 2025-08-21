@@ -15,10 +15,12 @@ const getBaseUrl = (port: number) => {
 const ACCOUNT_SERVICE_URI = `${getBaseUrl(3001)}/graphql`;
 const SCHEDULING_SERVICE_URI = `${getBaseUrl(3002)}/graphql`;
 const NOTIFICATION_SERVICE_URI = `${getBaseUrl(3003)}/graphql`;
+const APPOINTMENT_SERVICE_URI = `${getBaseUrl(3004)}/graphql`;
 
 const httpLinkAccount = createHttpLink({ uri: ACCOUNT_SERVICE_URI });
 const httpLinkScheduling = createHttpLink({ uri: SCHEDULING_SERVICE_URI });
 const httpLinkNotification = createHttpLink({ uri: NOTIFICATION_SERVICE_URI });
+const httpLinkAppointment = createHttpLink({ uri: APPOINTMENT_SERVICE_URI });
 
 const authLink = setContext(async (_, { headers }) => {
   const token = await AsyncStorage.getItem('accessToken');
@@ -42,5 +44,10 @@ export const schedulingClient = new ApolloClient({
 
 export const notificationClient = new ApolloClient({
   link: authLink.concat(httpLinkNotification),
+  cache: new InMemoryCache(),
+});
+
+export const appointmentClient = new ApolloClient({
+  link: authLink.concat(httpLinkAppointment),
   cache: new InMemoryCache(),
 });

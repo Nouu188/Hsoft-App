@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { COLORS, SIZES } from '../../../constants/theme'; // Điều chỉnh đường dẫn
+import { COLORS, SIZES } from '../../../../constants/theme'; // Điều chỉnh đường dẫn
 
 interface OTPResendButtonProps {
   countdown: number;

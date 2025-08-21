@@ -11,7 +11,7 @@ import { useEffect, useState, RefObject } from 'react';
 import { NavigationContainerRef, CommonActions } from '@react-navigation/native';
 import { useAuthStore } from '../store/useAuthStore';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { storageService } from '../store/storage';
+import { storageService } from '../services/storage';
 
 // Đặt thời gian chờ tối thiểu cho Splash Screen (tính bằng mili giây).
 // Việc này đảm bảo splash screen không biến mất quá nhanh, tạo cảm giác mượt mà.

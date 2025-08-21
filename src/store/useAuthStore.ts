@@ -18,6 +18,7 @@ interface AuthState {
   accessToken: string | null;
   isLoading: boolean;
   error: string | null;
+  setAuthData: (user: User, token: string) => Promise<void>;
   login: (credentials: LoginInput) => Promise<void>;
   logout: () => Promise<void>;
   register: () => Promise<boolean>;
@@ -108,6 +109,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         resolve(true);
       }, 1000);
     });
+  },
+
+  setAuthData: async (user, token) => {
+    try {
+      await AsyncStorage.setItem('accessToken', token);
+      set({ user, accessToken: token, isLoading: false });
+    } catch (error) {
+      console.error("Failed to save auth data", error);
+    }
   },
 
   hydrate: async () => {

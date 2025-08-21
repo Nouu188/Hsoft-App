@@ -8,7 +8,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import LoginForm from './child_form/LoginForm';
 import RegisterForm from './child_form/RegisterForm';
 import { useAuthForm } from './useAuthForm';
-import { StackNavigationProp } from '@react-navigation/stack';
 
 const { width } = Dimensions.get('window');
 
