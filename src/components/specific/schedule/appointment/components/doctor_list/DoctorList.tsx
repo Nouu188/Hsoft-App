@@ -15,18 +15,14 @@ const DOCTORS: Doctor[] = [
   { id: '6', name: 'Dr. Ben White', specialty: 'Dermatologist', hospital: 'Medical Centre', gender: 'male', availableTimes: ['11:15 am', '12:00 pm', '2:30 pm', '3:15 pm', '4:00 pm'] },
 ];
 
-// 2. Tạo một AnimatedFlatList để tương thích với Reanimated
-const AnimatedFlatList = Animated.createAnimatedComponent<FlatList<Doctor>>(FlatList);
-
+// 2. SỬA LỖI: Bỏ đi kiểu generic <FlatList<Doctor>> ở đây
+const TypedAnimatedFlatList = Animated.createAnimatedComponent(FlatList) as React.ComponentType<Animated.AnimateProps<FlatListProps<Doctor>>>;
 // 3. Định nghĩa props mới cho DoctorList
-// Nó sẽ nhận tất cả props của một FlatList thông thường,
-// ngoại trừ 'data' và 'renderItem' vì component này tự quản lý chúng.
 interface DoctorListProps extends Omit<FlatListProps<Doctor>, 'data' | 'renderItem'> {}
 
 // --- Component ---
-// 4. Cập nhật component để nhận và sử dụng props mới
 const DoctorList: React.FC<DoctorListProps> = (props) => {
-  // Hàm render cho danh sách bác sĩ (không đổi)
+  // Hàm render (không đổi)
   const renderItem = ({ item }: ListRenderItemInfo<Doctor>) => (
     <DoctorCard
       name={item.name}
@@ -37,26 +33,23 @@ const DoctorList: React.FC<DoctorListProps> = (props) => {
     />
   );
 
-  // 5. Tách các props từ bên ngoài, đặc biệt là contentContainerStyle
+  // Lấy các props từ bên ngoài (không đổi)
   const { contentContainerStyle, ...rest } = props;
 
   return (
-    // 6. Loại bỏ SafeAreaView và sử dụng AnimatedFlatList
-    // Truyền vào tất cả các props từ cha (...rest)
-    <AnimatedFlatList
+    // 4. SỬA LỖI: Thêm kiểu generic <Doctor> vào lúc sử dụng component
+    <TypedAnimatedFlatList
       data={DOCTORS}
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
-      // Hợp nhất style từ cha và style mặc định của component
       contentContainerStyle={[styles.listContentContainer, contentContainerStyle]}
-      {...rest} // Áp dụng các props còn lại như onScroll, scrollEventThrottle,...
+      {...rest}
     />
   );
 };
 
 // --- Styles ---
 const styles = StyleSheet.create({
-  // Bỏ style container vì component cha sẽ quản lý layout
   listContentContainer: {
     padding: SIZES.base * 1.25,
     backgroundColor: COLORS.white,

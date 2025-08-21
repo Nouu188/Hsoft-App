@@ -7,9 +7,10 @@ import { COLORS, SIZES, FONTS, SHADOWS } from '../../../constants/theme';
 interface LoginFormProps {
   isLoading: boolean;
   onLogin: (identifier: string, password: string ) => void;
+  onForgotPasswordPress: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin,onForgotPasswordPress  }) => {
   // State riêng chỉ dành cho form này
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +25,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
       <AuthInput icon="person-outline" placeholder="Tài khoản" value={identifier} onChangeText={setIdentifier} />
       <AuthInput icon="lock-closed-outline" placeholder="Mật khẩu" value={password} onChangeText={setPassword} isPassword />
       
-      <TouchableOpacity>
+      <TouchableOpacity onPress={onForgotPasswordPress}>
         <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
       </TouchableOpacity>
       

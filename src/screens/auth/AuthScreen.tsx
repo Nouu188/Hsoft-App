@@ -8,6 +8,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import LoginForm from './child_form/LoginForm';
 import RegisterForm from './child_form/RegisterForm';
 import { useAuthForm } from './useAuthForm';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +28,7 @@ export const buildLoginPayload = (account: string, password: string): LoginInput
   return { identifier: account, password };
 };
 
-const AuthScreen: React.FC = () => {
+const AuthScreen: React.FC<{navigation: any}> = ({ navigation }) => {
   // Hook quản lý logic giao diện (animation, chuyển tab)
   const { isLoginView, formAnimatedStyle, switchToLogin, switchToRegister } = useAuthForm();
 
@@ -59,14 +60,16 @@ const AuthScreen: React.FC = () => {
       Alert.alert('Đăng ký thất bại', e.message || 'Đã có lỗi xảy ra.');
     }
   };
-
+  const handleForgotPassword = () => {
+    navigation.navigate('OTPScreen'); // 'OTPScreen' là tên màn hình bạn đã đăng ký trong Stack Navigator
+  };
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
             <Ionicons name="medkit" size={60} color={COLORS.primary} />
-            <Text style={styles.title}>MedCompanion</Text>
+            <Text style={styles.title}>MedPlus</Text>
             <Text style={styles.subtitle}>Your daily health partner</Text>
           </View>
 
@@ -85,7 +88,7 @@ const AuthScreen: React.FC = () => {
             <View style={{ overflow: 'hidden' }}>
               <Animated.View style={[styles.animatedForm, formAnimatedStyle]}>
                 {/* Truyền các hàm xử lý và state xuống component con */}
-                <LoginForm isLoading={isLoading} onLogin={handleLogin} />
+                <LoginForm isLoading={isLoading} onLogin={handleLogin} onForgotPasswordPress={handleForgotPassword}/>
                 <RegisterForm isLoading={isLoading} onRegister={handleRegister} />
               </Animated.View>
             </View>
