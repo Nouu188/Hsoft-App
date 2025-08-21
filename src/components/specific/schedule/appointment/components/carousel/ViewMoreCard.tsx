@@ -5,7 +5,7 @@ import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import Animated, {
   SharedValue
 } from 'react-native-reanimated';
-import { useCarouselCardAnimation } from '../hooks/useCarouselCardAnimation';
+import { useCarouselCardAnimation } from '../../hooks/useCarouselCardAnimation';
 
 const OFFSET = 45;
 const ITEM_WIDTH = Dimensions.get('window').width - OFFSET * 2;
@@ -57,7 +57,7 @@ const ViewMoreCard: React.FC<ViewMoreCardProps> = ({ onPress, scrollX, index }) 
 const styles = StyleSheet.create({
   cardContainer: {
     width: '100%',
-    height: ITEM_HEIGHT,
+    height: ITEM_HEIGHT-250,
     backgroundColor: '#F8FAFC',
     borderRadius: 24,
     elevation: 4,

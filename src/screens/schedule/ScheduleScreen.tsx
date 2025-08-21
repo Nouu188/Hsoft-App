@@ -98,8 +98,7 @@ const ScheduleScreen: React.FC = () => {
           <Text style={styles.headerTitle}>Lịch trình uống thuốc</Text>
           <View style={styles.headerIcons}>
             <TouchableOpacity><Ionicons name="search-outline" size={24} color={COLORS.textDark} /></TouchableOpacity>
-            <TouchableOpacity><Ionicons name="filter-outline" size={24} color={COLORS.textDark} /></TouchableOpacity>
-            <TouchableOpacity><Ionicons name="eye-outline" size={24} color={COLORS.textDark} /></TouchableOpacity>
+            <TouchableOpacity><Ionicons name="notifications-outline" size={24} color={COLORS.textDark} /></TouchableOpacity>
           </View>
         </View>
 

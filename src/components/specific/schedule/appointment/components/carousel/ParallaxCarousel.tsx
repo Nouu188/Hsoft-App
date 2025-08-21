@@ -13,7 +13,7 @@ import ParallaxCarouselPagination from './Pagination';
 import { COLORS, SIZES } from '@/constants/theme';
 import ViewMoreCard from './ViewMoreCard';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { SCREEN_WIDTH, ITEM_WIDTH, ITEM_SPACING, SNAP_INTERVAL, SIDE_PADDING } from '../carouselConfig';
+import { SCREEN_WIDTH, ITEM_WIDTH, ITEM_SPACING, SNAP_INTERVAL, SIDE_PADDING } from '../../carouselConfig';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 

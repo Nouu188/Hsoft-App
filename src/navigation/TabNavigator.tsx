@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ScheduleScreen from '../screens/schedule/ScheduleScreen';
-import RecordScreen from '../screens/RecordScreen';
+import RecordScreen from '../screens/AppointmentBookingScreen';
 import CustomTabBar from './CustomTabBar';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import HomeScreenNavigator from './HomeScreenNavigator';

@@ -61,7 +61,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
               iconName = isFocused ? 'ellipse' : 'ellipse-outline';
               break;
             case 'Record':
-              iconName = isFocused ? 'stats-chart' : 'stats-chart-outline';
+              iconName = isFocused ? 'clipboard' : 'clipboard-outline';
               break;
             case 'ProfileStack':
               iconName = isFocused ? 'person' : 'person-outline';

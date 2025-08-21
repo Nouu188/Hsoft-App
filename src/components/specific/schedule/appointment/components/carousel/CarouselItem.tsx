@@ -5,8 +5,8 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { StyleSheet, Text, View, ImageBackground } from 'react-native';
 import Animated, { SharedValue } from 'react-native-reanimated';
-import { useCarouselCardAnimation } from '../hooks/useCarouselCardAnimation';
-import { ITEM_WIDTH, ITEM_SPACING, SNAP_INTERVAL } from '../carouselConfig';
+import { useCarouselCardAnimation } from '../../hooks/useCarouselCardAnimation';
+import { ITEM_WIDTH, ITEM_SPACING, SNAP_INTERVAL } from '../../carouselConfig';
 
 const ITEM_HEIGHT = 420;
 
@@ -51,7 +51,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({ item, scrollX, index }) => 
 const styles = StyleSheet.create({
   cardContainer: {
     width: ITEM_WIDTH,
-    height: ITEM_HEIGHT,
+    height: ITEM_HEIGHT-250,
     overflow: 'hidden',
     borderRadius: 24,
     elevation: 4,
