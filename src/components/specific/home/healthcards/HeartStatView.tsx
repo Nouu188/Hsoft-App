@@ -48,7 +48,7 @@ const HealthStatsView = () => {
       </View>
 
       <View style={styles.rightColumn}>
-        <View style={styles.rightCardWrapper}>
+        <View style={[styles.rightCardWrapper, { marginBottom: SIZES.base }]}>
           <StatCard stat={stats[1]} healthProps={healthProps} />
         </View>
         <View style={styles.rightCardWrapper}>
@@ -92,26 +92,22 @@ const styles = StyleSheet.create({
   leftColumn: {
     flex: 0.6,
     paddingRight: SIZES.base,
-    height: '97%',
+    height: '100%',
   },
   rightColumn: {
     flex: 0.4,
-    paddingLeft: SIZES.base,
   },
   rightCardWrapper: {
     flex: 1,
-    paddingBottom: SIZES.base,
   },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    padding: SIZES.padding,
   },
   gridCardWrapper: {
     width: '48%',
     height: 160,
-    marginBottom: SIZES.base * 2,
   },
 });
 

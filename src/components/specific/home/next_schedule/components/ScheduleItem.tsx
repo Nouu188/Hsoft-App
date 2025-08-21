@@ -32,7 +32,7 @@ const NextScheduleItem: React.FC<NextScheduleItemProps> = ({
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: SIZES.padding,
-    marginBottom: SIZES.padding,
+    marginBottom: SIZES.padding/4,
   },
   container: {
     flexDirection: 'row',

@@ -1,18 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES } from '@/constants/theme';
-import SegmentedControl from '@/components/common/SegmentedControl';
-import MedicationScheduleView from '@/components/specific/schedule/medication/MedicationScheduleView';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import { MainTabsScreenProps } from '@/navigation/types';
-import dayjs from 'dayjs';
-import { useScheduleStore } from '@/store/useScheduleStore';
-import { GET_DOSE_DETAILS_BY_ID } from '@/api/queries/doseQueries';
 import { schedulingClient } from '@/api/apoloClient';
+import { GET_DOSE_DETAILS_BY_ID } from '@/api/queries/doseQueries';
+import SegmentedControl from '@/components/common/SegmentedControl';
 import AppointmentView from '@/components/specific/schedule/appointment/AppointmentView';
+import MedicationScheduleView from '@/components/specific/schedule/medication/MedicationScheduleView';
+import { COLORS, SIZES } from '@/constants/theme';
+import { MainTabsScreenProps } from '@/navigation/types';
+import { useScheduleStore } from '@/store/useScheduleStore';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import dayjs from 'dayjs';
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ScheduleScreenRouteProp = MainTabsScreenProps<'Schedule'>['route'];
 
@@ -78,18 +78,9 @@ const ScheduleScreen: React.FC = () => {
 
   const contentAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: withTiming(-selectedTabIndex * screenWidth, { duration: 350, easing: Easing.out(Easing.quad) }) }],
+      transform: [{ translateX: withTiming(-selectedTabIndex * screenWidth, { duration: 300, easing: Easing.out(Easing.quad) }) }],
     };
   });
-
-  const renderContent = () => {
-    if (selectedTabIndex === 0) {
-      return <MedicationScheduleView />;
-    }
-    if (selectedTabIndex === 1) {
-      return <AppointmentView />;
-    }
-  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -109,7 +100,14 @@ const ScheduleScreen: React.FC = () => {
         />
 
         <View style={styles.contentWrapper}>
-          {renderContent()}
+          <Animated.View style={[styles.contentSlider, contentAnimatedStyle]}>
+            <View style={{ width: screenWidth }}>
+              <MedicationScheduleView />
+            </View>
+            <View style={{ width: screenWidth }}>
+              <AppointmentView />
+            </View>
+          </Animated.View>
         </View>
       </View>
     </SafeAreaView>

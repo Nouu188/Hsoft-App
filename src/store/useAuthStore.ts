@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       console.log('[AuthStore][login] Login response:', data);
 
-      const { accessToken, user } = data.login;
+      const { accessToken, user } = data.loginByIdentifier;
 
       console.log('[AuthStore][login] AccessToken:', accessToken, 'User:', user);
 

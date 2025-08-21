@@ -7,6 +7,15 @@ export const LOGIN_BY_IDENTIFIER_MUTATION = gql`
             password: $password
         }) {
             accessToken    
+            user {
+                id
+                hoten
+                sodienthoai
+                socmnd
+                email
+                avatarUrl
+                roles
+            } 
         }
     }
 `;
@@ -17,7 +26,16 @@ export const LOGIN_BY_EMAIL_MUTATION = gql`
             email: $email,
             password: $password
         }) {
-            accessToken    
+            accessToken,
+            user {
+                id
+                hoten
+                sodienthoai
+                socmnd
+                email
+                avatarUrl
+                roles
+            } 
         }
     }
 `;
@@ -28,7 +46,9 @@ export const LOGIN_WITH_GOOGLE_MUTATION = gql`
       accessToken
       user {
         id
-        hoTen
+        hoten
+        sodienthoai
+        socmnd
         email
         avatarUrl
         roles

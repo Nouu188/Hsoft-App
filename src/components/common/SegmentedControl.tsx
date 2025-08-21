@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
 import { COLORS, SIZES } from '@/constants/theme';
 
 interface SegmentedControlProps {
@@ -16,9 +16,26 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, selectedIn
 
   const segmentWidth = (width) / options.length;
 
+  const animatedX = useDerivedValue(() =>
+    withTiming(selectedIndex * segmentWidth, {
+      duration: 300,
+      easing: Easing.out(Easing.quad),
+    })
+  );
+
+  const animatedRightRadius = useDerivedValue(() =>
+    withTiming(selectedIndex === 0 ? 16 : 0, { duration: 300 })
+  );
+
+  const animatedLeftRadius = useDerivedValue(() =>
+    withTiming(selectedIndex === options.length - 1 ? 16 : 0, { duration: 300 })
+  );
+
   const animatedIndicatorStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: withTiming(selectedIndex * segmentWidth, { duration: 300, easing: Easing.out(Easing.quad) }) }],
+      transform: [{ translateX: animatedX.value }],
+      borderTopLeftRadius: animatedLeftRadius.value,
+      borderTopRightRadius: animatedRightRadius.value,
     };
   });
 

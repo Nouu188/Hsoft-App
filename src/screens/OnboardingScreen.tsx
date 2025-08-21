@@ -1,27 +1,22 @@
+import type { NavigationProp } from '@react-navigation/native';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   Image,
-  TouchableOpacity,
   SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { COLORS, SIZES, FONTS } from '../constants/theme';
-import type { NavigationProp } from '@react-navigation/native';
+import { SIZES } from '../constants/theme';
 
 const OnboardingScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
-   // Hàm này cho nút "Bắt đầu", sẽ mở ra màn hình đăng nhập mặc định
    const handleNavigateToAuth = () => {
     navigation.navigate('AuthFlow');
   };
 
-  // --- THÊM HÀM NÀY ---
-  // Hàm này cho nút "Đăng ký ngay", sẽ mở ra màn hình đăng ký
    const handleNavigateToRegister = () => {
-    // SỬA LẠI TÊN MÀN HÌNH TỪ 'AuthScreen' THÀNH 'Auth'
-    // Tên này phải khớp với thuộc tính 'name' trong AuthNavigator
     navigation.navigate('AuthFlow', {
       screen: 'Auth', 
       params: { initialView: 'register' },
@@ -35,7 +30,7 @@ const OnboardingScreen = ({ navigation }: { navigation: NavigationProp<any> }) =
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={styles.header}>
-          <Image source={require('../assets/images/logo.png')} style={styles.headerLogo} />
+          <Image source={require('../assets/images/logo-removebg-preview.png')} style={styles.headerLogo} />
           <Text style={styles.headerText}>Medixia</Text>
         </View>
 
@@ -59,9 +54,7 @@ const OnboardingScreen = ({ navigation }: { navigation: NavigationProp<any> }) =
           </TouchableOpacity>
           <View style={styles.signInContainer}>
             <Text style={styles.signInText}>Chưa có tài khoản? </Text>
-            {/* --- SỬA LẠI onPress CỦA TouchableOpacity --- */}
             <TouchableOpacity onPress={handleNavigateToRegister}>
-              {/* Bỏ onPress khỏi Text vì đã có ở TouchableOpacity bên ngoài */}
               <Text style={[styles.signInText, styles.signInLink]}>Đăng ký ngay</Text>
             </TouchableOpacity>
           </View>
@@ -71,7 +64,6 @@ const OnboardingScreen = ({ navigation }: { navigation: NavigationProp<any> }) =
   );
 };
 
-// ... (phần styles giữ nguyên)
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, padding: 24 },

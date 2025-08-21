@@ -1,17 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, StatusBar } from 'react-native';
+import { Image, StatusBar, StyleSheet, Text, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { COLORS,SIZES } from '../constants/theme';
+
 const SplashScreen = () => {
   return (
     <LinearGradient
-      colors={['#E6F0FF', '#FFFFFF']} // Màu gradient từ xanh nhạt đến trắng
+      colors={['#E6F0FF', '#FFFFFF']} 
       style={styles.container}
     >
       <StatusBar barStyle="dark-content" backgroundColor="#E6F0FF" />
       <View style={styles.content}>
         <Image
-          source={require('../assets/images/logo.png')}
+          source={require('../assets/images/logo-removebg-preview.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -31,13 +31,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 160,
+    height: 160,
   },
   appName: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#3A5C94', // Màu chữ Medixia
+    color: '#3A5C94',
   },
 });
 
