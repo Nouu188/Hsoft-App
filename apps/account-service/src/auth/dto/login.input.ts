@@ -17,11 +17,7 @@ export class LoginInputByEmail {
   @Field()
   @IsString()
   email: string; 
-
-  @Field()
-  @IsString()
-  hoten: string; 
-
+  
   @Field()
   @IsString()
   @MinLength(6)

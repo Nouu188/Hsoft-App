@@ -9,9 +9,17 @@ input CreateServiceClientInput {
   scopes: [String!]!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input GoogleLoginInput {
+  idToken: String!
+}
+
 input LoginInputByEmail {
   email: String!
-  hoten: String!
   password: String!
 }
 
@@ -29,6 +37,7 @@ type Mutation {
   admin_createServiceClient(input: CreateServiceClientInput!): ServiceClient!
   loginByEmail(loginInput: LoginInputByEmail!): LoginResponse!
   loginByIdentifier(loginInput: LoginInputByIdentifier!): LoginResponse!
+  loginWithGoogle(googleLoginInput: GoogleLoginInput!): LoginResponse!
   registerFcmToken(fcm_token: String!): Boolean!
   removeFcmTokens(tokens: [String!]!, userId: ID!): Boolean!
   requestEmailVerification(registerInput: RegisterByEmailInput!): Boolean!
@@ -65,17 +74,43 @@ type ServiceClient {
 }
 
 type User {
-  apn_tokens: [String!]
+  """Danh sách APN token cho thiết bị iOS"""
+  apn_tokens: [String]
+
+  """URL ảnh đại diện"""
+  avatarUrl: String
+  createdAt: DateTime!
   diachi: String
-  email: String!
-  fcm_tokens: [String!]
+
+  """Địa chỉ email (duy nhất)"""
+  email: String
+
+  """Danh sách FCM token cho thiết bị Android"""
+  fcm_tokens: [String]
+
+  """ID người dùng từ Google"""
+  googleId: String
+
+  """Họ và tên đầy đủ của người dùng"""
   hoten: String!
   id: ID!
-  mabn: String!
+
+  """Cờ cho biết email đã được xác thực hay chưa"""
+  isEmailVerified: Boolean!
+
+  """Mã bệnh nhân từ hệ thống bệnh viện (duy nhất)"""
+  mabn: String
+
+  """Năm sinh của bệnh nhân"""
   namsinh: String
-  roles: [String!]!
-  socmnd: String!
-  sodienthoai: String!
+  roles: [Role!]!
+
+  """Số CMND/CCCD (duy nhất)"""
+  socmnd: String
+
+  """Số điện thoại (duy nhất)"""
+  sodienthoai: String
+  updatedAt: DateTime!
 }
 
 type UserResponseDto {

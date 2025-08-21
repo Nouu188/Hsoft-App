@@ -18,6 +18,10 @@ import { LoginResponse } from './dto/login.response';
 import { RegisterByEmailInput } from './dto/register.input';
 import { VerifyEmailInput } from './dto/verify-email.input';
 import { ServiceClient } from './entities/service-client.entity';
+import { ConfigService } from '@nestjs/config';
+import { OAuth2Client } from 'google-auth-library';
+import { GoogleLoginInput } from './dto/google-login.input';
+import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +29,11 @@ export class AuthService {
 
     constructor(
         private usersService: UsersService,
+
+        private readonly configService: ConfigService,
+
+        @Inject(GOOGLE_OAUTH2_CLIENT) 
+        private readonly googleClient: OAuth2Client,
 
         private jwtService: JwtService,
 
@@ -115,6 +124,61 @@ export class AuthService {
         const { password: _, ...userResult } = user;
 
         return { user: userResult, accessToken };
+    }
+
+    async loginWithGoogle(googleLoginInput: GoogleLoginInput): Promise<LoginResponse> {
+        const { idToken } = googleLoginInput;
+        this.logger.log('Attempting to log in with Google ID Token.');
+
+        try {
+            const ticket = await this.googleClient.verifyIdToken({
+                idToken: idToken,
+                audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
+            });
+
+            const payload = ticket.getPayload();
+            if (!payload || !payload.email) {
+                throw new UnauthorizedException('Invalid Google token or email not provided.');
+            }
+
+            const { email, name, picture, sub: googleId } = payload;
+            this.logger.log(`Google token verified for email: ${email}`);
+
+            // 2. Tìm hoặc tạo người dùng trong database (Upsert)
+            let user = await this.usersService.findByEmail(email);
+
+            if (!user) {
+                // Nếu người dùng chưa tồn tại, tạo mới
+                this.logger.log(`User with email ${email} not found. Creating a new user.`);
+                user = await this.usersService.createUserFromGoogle({
+                    email,
+                    hoten: name,
+                    avatarUrl: picture,
+                    googleId,
+                });
+                // TODO: Phát sự kiện 'user.registered' nếu cần
+            } else {
+                // Nếu người dùng đã tồn tại, có thể cập nhật thông tin
+                user = await this.usersService.updateUserFromGoogle(user.id, {
+                    avatarUrl: picture,
+                    googleId,
+                });
+            }
+
+            // 3. Tạo và trả về token của hệ thống
+            const accessToken = this.generateToken(user.id, user.roles);
+            const { password, ...userResult } = user;
+
+            this.logger.log(`Successfully authenticated user ${user.id} via Google.`);
+            return { user: userResult, accessToken };
+
+        } catch (error) {
+            this.logger.error('Failed to authenticate with Google.', error.stack);
+            if (error instanceof UnauthorizedException) {
+                throw error;
+            }
+            throw new InternalServerErrorException('An error occurred during Google authentication.');
+        }
     }
 
     async requestEmailVerification(registerInput: RegisterByEmailInput): Promise<boolean> {

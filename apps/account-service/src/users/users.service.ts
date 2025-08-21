@@ -1,15 +1,13 @@
-import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
 import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
-import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
-import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
-import { BadRequestException, ConflictException, HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import * as crypto from "node:crypto";
 import { isUUID } from 'class-validator';
 import { IsNull, Not, Repository } from 'typeorm';
 import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { CreateUserByEmailInput, CreateUserByIdentifierInput } from './dto/create-user-input.dto';
 import { User } from './entities/user.entity';
-import { MeasureDuration } from '@app/common/metrics/decorators/measure-duration.decorator';
 
 @Injectable()
 export class UsersService {
@@ -214,6 +212,38 @@ export class UsersService {
         ? error
         : new InternalServerErrorException('Không thể tạo user, vui lòng thử lại');
     }
+  }
+
+  async createUserFromGoogle(details: { email: string; hoten?: string; avatarUrl?: string; googleId: string }): Promise<User> {
+    const newUser = this.usersRepository.create({
+      email: details.email,
+      hoten: details.hoten || 'Người dùng mới',
+      avatarUrl: details.avatarUrl,
+      googleId: details.googleId,
+      password: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10),
+      isEmailVerified: true,
+    });
+    return this.usersRepository.save(newUser);
+  }
+
+  async updateUserFromGoogle(
+    userId: string,
+    details: { avatarUrl?: string; googleId: string }
+  ): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+
+    if (details.avatarUrl) {
+      user.avatarUrl = details.avatarUrl;
+    }
+    if (details.googleId) {
+      user.googleId = details.googleId;
+    }
+
+    return this.usersRepository.save(user);
   }
 
 }

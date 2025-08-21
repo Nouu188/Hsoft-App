@@ -1,21 +1,23 @@
-import { Logger, Module, forwardRef } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthLibModule } from '@app/auth';
+import { Logger, Module, forwardRef } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UsersModule } from '../users/users.module';
-import { ServiceClient } from './entities/service-client.entity';
-import { AuthService } from './auth.service';
-import { AuthResolver } from './auth.resolver';
-import { AuthController } from './controllers/auth.controller';
-import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { CacheModule } from '@nestjs/cache-manager';
-import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
+import { join } from 'path';
+import { UsersModule } from '../users/users.module';
+import { AuthResolver } from './auth.resolver';
+import { AuthService } from './auth.service';
+import { AuthController } from './controllers/auth.controller';
+import { ServiceClient } from './entities/service-client.entity';
+import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
+import { GoogleModule } from './strategies/google/google.module';
+
 
 @Module({
   imports: [
@@ -81,12 +83,16 @@ import * as redisStore from 'cache-manager-redis-store';
         },
       }),
     }),
+    GoogleModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
     AuthResolver,
     ClientCredentialsStrategy,
+  ],
+  exports: [
+    AuthService,
   ],
 })
 export class AuthModule { }

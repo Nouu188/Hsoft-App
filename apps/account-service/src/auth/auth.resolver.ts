@@ -11,6 +11,7 @@ import { LoginResponse } from './dto/login.response';
 import { RegisterByEmailInput } from './dto/register.input';
 import { VerifyEmailInput } from './dto/verify-email.input';
 import { ServiceClient } from './entities/service-client.entity';
+import { GoogleLoginInput } from './dto/google-login.input';
 
 @Resolver()
 export class AuthResolver {
@@ -47,5 +48,12 @@ export class AuthResolver {
     @Args('verifyInput') verifyInput: VerifyEmailInput,
   ): Promise<LoginResponse> {
     return this.authService.verifyEmailAndRegister(verifyInput);
+  }
+
+  @Mutation(() => LoginResponse, { name: 'loginWithGoogle' })
+  async loginWithGoogle(
+    @Args('googleLoginInput') googleLoginInput: GoogleLoginInput,
+  ): Promise<LoginResponse> {
+    return this.authService.loginWithGoogle(googleLoginInput);
   }
 }
