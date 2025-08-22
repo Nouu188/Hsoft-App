@@ -9,7 +9,7 @@ import { accountClient } from '@/api/apoloClient';
 
 // Lấy webClientId từ file cấu hình của bạn
 // Đây là Client ID của "Web application" mà bạn đã tạo trên Google Cloud Console
-const GOOGLE_WEB_CLIENT_ID = '914111663994-edv0324iog9fj4nu1b36j82hu3cs1h7b.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID = '914111663994-qrtk1mb78ehddf545q1atqpdhikdhb16.apps.googleusercontent.com';
 
 export const useGoogleAuth = () => {
   const [isLoading, setIsLoading] = useState(false);

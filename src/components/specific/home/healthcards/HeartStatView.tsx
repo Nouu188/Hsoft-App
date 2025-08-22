@@ -91,7 +91,6 @@ const styles = StyleSheet.create({
   },
   leftColumn: {
     flex: 0.6,
-    paddingRight: SIZES.base,
     height: '100%',
   },
   rightColumn: {
