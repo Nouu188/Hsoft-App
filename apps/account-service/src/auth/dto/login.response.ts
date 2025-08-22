@@ -27,6 +27,9 @@ export class UserResponseDto {
   @Field({ nullable: true })
   namsinh?: string;
 
+  @Field({ nullable: true })
+  avatarUrl?: string;
+
   @Field(() => [String], { nullable: true })
   fcm_tokens?: string[];
 

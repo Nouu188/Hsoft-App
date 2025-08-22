@@ -46,7 +46,7 @@ export class HospitalApiClientService {
 
         try {
             const response = await firstValueFrom(
-                this.httpService.post(this.hospitalApiUrl!, { query }, { timeout: 15000 })
+                this.httpService.post(this.hospitalApiUrl!, { query }, { timeout: 20000 })
             );
 
             if (response.data.errors) {
@@ -89,7 +89,7 @@ export class HospitalApiClientService {
 
         try {
             const response = await firstValueFrom(
-                this.httpService.post(this.hospitalApiUrl!, { query }, { timeout: 15000 })
+                this.httpService.post(this.hospitalApiUrl!, { query }, { timeout: 20000 })
             );
 
             const patientData = response.data?.data?.ylenhthuoc?.[0];

@@ -115,6 +115,7 @@ type User {
 
 type UserResponseDto {
   apn_tokens: [String!]
+  avatarUrl: String
   diachi: String
   email: String
   fcm_tokens: [String!]
