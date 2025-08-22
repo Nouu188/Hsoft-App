@@ -18,30 +18,6 @@ import UtilitiesView from '../components/specific/home/utilities_grid/UtilitiesV
 import { UtilityItemProps } from '../components/specific/home/utilities_grid/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const carouselData = [
-  { id: '1', title: 'Mẹo 1: Uống đủ nước', content: 'Hãy đảm bảo bạn uống ít nhất 2 lít nước mỗi ngày để cơ thể luôn khỏe mạnh.' },
-  { id: '2', title: 'Mẹo 2: Ngủ đủ giấc', content: 'Một giấc ngủ 7-8 tiếng sẽ giúp bạn phục hồi năng lượng và tinh thần sảng khoái.' },
-  { id: '3', title: 'Mẹo 3: Vận động nhẹ nhàng', content: 'Đi bộ 30 phút mỗi ngày giúp cải thiện sức khỏe tim mạch và giảm căng thẳng.' },
-];
-
-const healthServices: UtilityItemProps[] = [
-  { id: '1', name: 'Thêm Lịch thuốc', iconName: 'medkit-outline', onPress: () => console.log('Thêm Lịch uống thuốc') },
-  { id: '2', name: 'Ghi chú', iconName: 'document-text-outline', onPress: () => console.log('Ghi chú Sức khỏe') },
-  { id: '3', name: 'Giấc ngủ', iconName: 'moon-outline', onPress: () => console.log('Theo dõi Giấc ngủ') },
-  { id: '4', name: 'Uống nước', iconName: 'water-outline', onPress: () => console.log('Uống nước') },
-  { id: '5', name: 'Bữa ăn', iconName: 'restaurant-outline', onPress: () => console.log('Thêm Bữa ăn') },
-  { id: '6', name: 'Bài tập Thở', iconName: 'leaf-outline', onPress: () => console.log('Bài tập Thở') },
-  { id: '7', name: 'Đặt lịch khám', iconName: 'heart-outline', onPress: () => console.log('Đo nhịp tim') },
-  { id: '8', name: 'Xem thêm', iconName: 'apps-outline', onPress: () => console.log('Xem thêm') },
-];
-
-const TipCard = ({ title, content }: { title: string, content: string }) => (
-  <View style={styles.tipCardContainer}>
-    <Text style={styles.tipCardTitle}>{title}</Text>
-    <Text style={styles.tipCardContent}>{content}</Text>
-  </View>
-);
-
 // --- ĐỊNH NGHĨA KIỂU DỮ LIỆU ---
 interface ScreenSection {
   type: 'medical_text' | 'carousel_tips' | 'utility_grid' | 'footer_spacer';
@@ -64,7 +40,29 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const STICKY_SECTION_HEIGHT = SCREEN_HEIGHT * 0.25;
   const HEADER_MAX_HEIGHT = GREETING_SECTION_HEIGHT + STICKY_SECTION_HEIGHT + insets.top;
   const HEADER_SCROLL_DISTANCE = GREETING_SECTION_HEIGHT / 1.6;
+  const carouselData = [
+  { id: '1', title: 'Mẹo 1: Uống đủ nước', content: 'Hãy đảm bảo bạn uống ít nhất 2 lít nước mỗi ngày để cơ thể luôn khỏe mạnh.' },
+  { id: '2', title: 'Mẹo 2: Ngủ đủ giấc', content: 'Một giấc ngủ 7-8 tiếng sẽ giúp bạn phục hồi năng lượng và tinh thần sảng khoái.' },
+  { id: '3', title: 'Mẹo 3: Vận động nhẹ nhàng', content: 'Đi bộ 30 phút mỗi ngày giúp cải thiện sức khỏe tim mạch và giảm căng thẳng.' },
+];
 
+const healthServices: UtilityItemProps[] = [
+  { id: '1', name: 'Thêm Lịch thuốc', iconName: 'medkit-outline', onPress: () => console.log('Thêm Lịch uống thuốc') },
+  { id: '2', name: 'Ghi chú', iconName: 'document-text-outline', onPress: () => navigation.navigate('NoteScreen') },
+  { id: '3', name: 'Giấc ngủ', iconName: 'moon-outline', onPress: () => console.log('Theo dõi Giấc ngủ') },
+  { id: '4', name: 'Uống nước', iconName: 'water-outline', onPress: () => console.log('Uống nước') },
+  { id: '5', name: 'Bữa ăn', iconName: 'restaurant-outline', onPress: () => console.log('Thêm Bữa ăn') },
+  { id: '6', name: 'Bài tập Thở', iconName: 'leaf-outline', onPress: () => console.log('Bài tập Thở') },
+  { id: '7', name: 'Đặt lịch khám', iconName: 'heart-outline', onPress: () => console.log('Đo nhịp tim') },
+  { id: '8', name: 'Xem thêm', iconName: 'apps-outline', onPress: () => console.log('Xem thêm') },
+];
+
+const TipCard = ({ title, content }: { title: string, content: string }) => (
+  <View style={styles.tipCardContainer}>
+    <Text style={styles.tipCardTitle}>{title}</Text>
+    <Text style={styles.tipCardContent}>{content}</Text>
+  </View>
+);
   // --- ANIMATION LOGIC ---
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {

@@ -57,21 +57,26 @@ const AuthScreen: React.FC<{navigation: any}> = ({ navigation }) => {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.header}>
-            <Ionicons name="medkit" size={60} color={COLORS.primary} />
+            <Ionicons name="medkit" size={60} color={COLORS.introduction} />
             <Text style={styles.title}>MedPlus</Text>
             <Text style={styles.subtitle}>Your daily health partner</Text>
           </View>
 
           <View style={styles.formWrapper}>
             <View style={styles.toggleContainer}>
-              <TouchableOpacity style={styles.toggleButton} onPress={switchToLogin}>
-                <Text style={[styles.toggleText, isLoginView && styles.toggleTextActive]}>Đăng nhập</Text>
-                {isLoginView && <Animated.View style={styles.activeIndicator} layout={LinearTransition.duration(300)} />}
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toggleButton} onPress={switchToRegister}>
-                <Text style={[styles.toggleText, !isLoginView && styles.toggleTextActive]}>Đăng ký</Text>
-                {!isLoginView && <Animated.View style={styles.activeIndicator} layout={LinearTransition.duration(300)} />}
-              </TouchableOpacity>
+             <TouchableOpacity style={styles.toggleButton} onPress={switchToLogin}>
+              <Text style={[styles.toggleText, isLoginView ? styles.toggleTextActive : styles.toggleTextInactive]}>
+                Đăng nhập
+              </Text>
+              {isLoginView && <Animated.View style={styles.activeIndicator} layout={LinearTransition.duration(300)} />}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.toggleButton} onPress={switchToRegister}>
+              <Text style={[styles.toggleText, !isLoginView ? styles.toggleTextActive : styles.toggleTextInactive]}>
+                Đăng ký
+              </Text>
+              {!isLoginView && <Animated.View style={styles.activeIndicator} layout={LinearTransition.duration(300)} />}
+            </TouchableOpacity>
             </View>
 
             <View style={{ overflow: 'hidden' }}>
@@ -92,15 +97,19 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   scrollContainer: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: SIZES.padding },
   header: { alignItems: 'center', marginBottom: SIZES.padding * 2 },
-  title: { ...FONTS.h1, marginTop: SIZES.padding, color: COLORS.primary },
+  title: { ...FONTS.h1, marginTop: SIZES.padding, color: COLORS.introduction },
   subtitle: { ...FONTS.body3, color: COLORS.textLight, marginTop: SIZES.base },
   formWrapper: {},
-  toggleContainer: { flexDirection: 'row', backgroundColor: COLORS.lightGray, borderRadius: SIZES.radius * 2, marginBottom: SIZES.padding * 1.5 },
+  toggleContainer: { flexDirection: 'row', backgroundColor: COLORS.primaryLight, borderRadius: SIZES.radius * 2, marginBottom: SIZES.padding * 1.5 },
   toggleButton: { flex: 1, alignItems: 'center', paddingVertical: SIZES.padding * 0.75 },
   toggleText: { ...FONTS.h4, color: COLORS.textLight, fontWeight: '500', },
-  toggleTextActive: { color: COLORS.primary, fontWeight: 'bold' },
+  toggleTextActive: { color: COLORS.introduction, fontWeight: 'bold' },
   activeIndicator: { position: 'absolute', bottom: -SIZES.base / 2, height: 3, width: '40%', backgroundColor: COLORS.primary, borderRadius: 2 },
   animatedForm: { flexDirection: 'row', width: width * 2, marginLeft: -SIZES.padding },
+  toggleTextInactive: { // Style khi không được chọn
+    color: COLORS.textLight,
+    opacity: 0.7, // Làm mờ đi
+  },
 });
 
 export default AuthScreen;

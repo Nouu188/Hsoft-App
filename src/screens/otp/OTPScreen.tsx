@@ -8,7 +8,7 @@ import { COLORS, SIZES } from '../../constants/theme';
 import { useOTP } from './useOTP';
 
 const OTPScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
-  const { email, hoten, password } = route.params; // truyền từ màn đăng ký
+  const { email, hoten, password } = route.params || {};
   
   const setAuthData = useAuthStore(state => state.setAuthData);
   const requestOtp = useAuthStore(state => state.requestOtp);

@@ -31,6 +31,8 @@ export const COLORS = {
   lightGray: '#F1F5F9',  // Xám rất nhạt cho các dải phân cách, nền input
   border: '#D8DEE9',     // Màu viền
 
+  placeholderColor:'#b3b0b0ff', //màu của placeholder
+  introduction:'#4ca9beff',//màu cho giao diện đăng nhập
   // Màu trong suốt
   transparent: 'transparent',
 };

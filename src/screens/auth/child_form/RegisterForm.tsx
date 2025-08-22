@@ -60,7 +60,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   formPage: { width: Dimensions.get('window').width, paddingHorizontal: SIZES.padding, paddingBottom: 20 },
-  submitButton: { backgroundColor: COLORS.primary, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center', marginTop: SIZES.padding },
+  submitButton: { backgroundColor: COLORS.introduction, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center', marginTop: SIZES.padding },
   submitButtonText: { ...FONTS.h3, color: COLORS.white, fontWeight: 'bold' },
 });
 

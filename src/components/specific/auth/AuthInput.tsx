@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text,KeyboardTypeOptions } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES, FONTS } from '../../../constants/theme';
+import { COLORS, SIZES, FONTS, SHADOWS } from '../../../constants/theme';
 
 interface AuthInputProps {
   icon: string;
@@ -47,12 +47,13 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.lightGray,
+    backgroundColor: COLORS.primaryLight,
     borderRadius: SIZES.radius,
     paddingHorizontal: SIZES.padding*0.8,
     borderWidth: 2,
     borderColor: 'transparent',
-    height:SIZES.base*6.25
+    height:SIZES.base*6.25,
+    ...SHADOWS.medium
   },
   inputContainerFocused: {
     borderColor: COLORS.primary,

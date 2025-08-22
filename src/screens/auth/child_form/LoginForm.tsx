@@ -22,7 +22,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin, onForgotPassw
   const handlePressLogin = () => {
     onLogin(identifier, password);
   };
-
+  
   return (
     <View style={styles.formPage}>
       <Text style={styles.loginHint}>*Bạn có thể đăng nhập bằng CCCD, email hoặc SĐT.</Text>
@@ -63,8 +63,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin, onForgotPassw
 
 const styles = StyleSheet.create({
   formPage: { width: Dimensions.get('window').width, paddingHorizontal: SIZES.padding, paddingBottom: 20 },
-  forgotPassword: { ...FONTS.body4, color: COLORS.primary, textAlign: 'right', marginBottom: SIZES.padding * 1.5, fontWeight: '500' },
-  submitButton: { backgroundColor: COLORS.primary, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center', },
+  forgotPassword: { ...FONTS.body4, color: COLORS.introduction, textAlign: 'right', marginBottom: SIZES.padding * 1.5, fontWeight: '500' },
+  submitButton: { backgroundColor: COLORS.introduction, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center', },
   optionalButton: { backgroundColor: COLORS.white, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center' },
   submitButtonText: { ...FONTS.h3, color: COLORS.white, fontWeight: 'bold' },
   optionalButtonText: { ...FONTS.h3, color: COLORS.textDark, fontWeight: 'bold' },
