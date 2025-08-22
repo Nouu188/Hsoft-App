@@ -22,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleLoginInput } from './dto/google-login.input';
 import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
+import { RequestOtpResponse } from './dto/request-otp-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -181,7 +182,7 @@ export class AuthService {
         }
     }
 
-    async requestEmailVerification(registerInput: RegisterByEmailInput): Promise<boolean> {
+    async requestEmailVerification(registerInput: RegisterByEmailInput): Promise<RequestOtpResponse> {
         const { email, hoten } = registerInput;
         this.logger.log(`[OTP] Received verification request for email: ${email}`);
 
@@ -207,7 +208,7 @@ export class AuthService {
         this.logger.log(`[OTP] Incremented retry count for ${email} to ${retryCount + 1}`);
 
         // Tạo OTP
-        const otp = crypto.randomInt(100000, 999999).toString();
+        const otp = crypto.randomInt(1000, 9999).toString();
         const otpKey = `otp:verify-email:${email}`;
         const registrationData = { otp, attempts: 0, registerInput };
 
@@ -224,12 +225,11 @@ export class AuthService {
                 context: { name: hoten, otp },
             });
             this.logger.log(`[OTP] Sent verification OTP to ${email} successfully`);
+            return { success: true, message: 'OTP đã được gửi thành công.' };
         } catch (error) {
             this.logger.error(`[OTP] Failed to send OTP to ${email}: ${error.message}`, error.stack);
-            throw new InternalServerErrorException('Không thể gửi OTP. Vui lòng thử lại sau.');
+            return { success: false, message: 'Không thể gửi OTP. Vui lòng thử lại sau.' };
         }
-
-        return true;
     }
 
     async verifyEmailAndRegister(verifyInput: VerifyEmailInput): Promise<LoginResponse> {

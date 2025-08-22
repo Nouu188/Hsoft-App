@@ -40,7 +40,7 @@ type Mutation {
   loginWithGoogle(googleLoginInput: GoogleLoginInput!): LoginResponse!
   registerFcmToken(fcm_token: String!): Boolean!
   removeFcmTokens(tokens: [String!]!, userId: ID!): Boolean!
-  requestEmailVerification(registerInput: RegisterByEmailInput!): Boolean!
+  requestEmailVerification(registerInput: RegisterByEmailInput!): RequestOtpResponse!
   verifyEmailAndRegister(verifyInput: VerifyEmailInput!): LoginResponse!
 }
 
@@ -54,6 +54,11 @@ input RegisterByEmailInput {
   email: String!
   hoten: String!
   password: String!
+}
+
+type RequestOtpResponse {
+  message: String!
+  success: Boolean!
 }
 
 """Các vai trò của user"""

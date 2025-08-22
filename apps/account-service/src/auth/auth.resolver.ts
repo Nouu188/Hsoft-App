@@ -12,6 +12,7 @@ import { RegisterByEmailInput } from './dto/register.input';
 import { VerifyEmailInput } from './dto/verify-email.input';
 import { ServiceClient } from './entities/service-client.entity';
 import { GoogleLoginInput } from './dto/google-login.input';
+import { RequestOtpResponse } from './dto/request-otp-response.dto';
 
 @Resolver()
 export class AuthResolver {
@@ -36,10 +37,10 @@ export class AuthResolver {
     return this.authService.loginByEmail(loginInput);
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => RequestOtpResponse)
   async requestEmailVerification(
     @Args('registerInput') registerInput: RegisterByEmailInput,
-  ): Promise<boolean> {
+  ): Promise<RequestOtpResponse> {
     return this.authService.requestEmailVerification(registerInput);
   }
 
