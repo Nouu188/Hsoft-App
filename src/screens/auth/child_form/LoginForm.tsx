@@ -3,20 +3,21 @@ import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions
 import Ionicons from '@react-native-vector-icons/ionicons';
 import AuthInput from '@/components/specific/auth/AuthInput';
 import { COLORS, SIZES, FONTS, SHADOWS } from '../../../constants/theme';
-import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface LoginFormProps {
   isLoading: boolean;
-  onLogin: (identifier: string, password: string ) => void;
+  onLogin: (identifier: string, password: string) => void;
   onForgotPasswordPress: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin,onForgotPasswordPress  }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin, onForgotPasswordPress }) => {
   // State riêng chỉ dành cho form này
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
 
-  const { isGoogleLoading, signInWithGoogle } = useGoogleAuth();
+  const isGoogleLoading = useAuthStore(state => state.isGoogleLoading);
+  const loginWithGoogle = useAuthStore(state => state.loginWithGoogle);
 
   const handlePressLogin = () => {
     onLogin(identifier, password);
@@ -27,11 +28,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin,onForgotPasswo
       <Text style={styles.loginHint}>*Bạn có thể đăng nhập bằng CCCD, email hoặc SĐT.</Text>
       <AuthInput icon="person-outline" placeholder="Tài khoản" value={identifier} onChangeText={setIdentifier} />
       <AuthInput icon="lock-closed-outline" placeholder="Mật khẩu" value={password} onChangeText={setPassword} isPassword />
-      
+
       <TouchableOpacity onPress={onForgotPasswordPress}>
         <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity style={[styles.submitButton, { marginBottom: 10 }]} onPress={handlePressLogin} disabled={isLoading || isGoogleLoading}>
         {isLoading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.submitButtonText}>Đăng nhập</Text>}
       </TouchableOpacity>
@@ -41,10 +42,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin,onForgotPasswo
         <Text style={styles.text}>Hoặc</Text>
         <View style={styles.line} />
       </View>
-      
-      <TouchableOpacity 
-        style={[styles.optionalButton, { flexDirection: 'row' }]} 
-        onPress={signInWithGoogle} // <-- Gắn handler
+
+      <TouchableOpacity
+        style={[styles.optionalButton, { flexDirection: 'row' }]}
+        onPress={loginWithGoogle} // <-- Gắn handler
         disabled={isLoading || isGoogleLoading} // <-- Vô hiệu hóa khi đang xử lý
       >
         {isGoogleLoading ? (
@@ -63,7 +64,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin,onForgotPasswo
 const styles = StyleSheet.create({
   formPage: { width: Dimensions.get('window').width, paddingHorizontal: SIZES.padding, paddingBottom: 20 },
   forgotPassword: { ...FONTS.body4, color: COLORS.primary, textAlign: 'right', marginBottom: SIZES.padding * 1.5, fontWeight: '500' },
-  submitButton: { backgroundColor: COLORS.primary, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center',  },
+  submitButton: { backgroundColor: COLORS.primary, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center', },
   optionalButton: { backgroundColor: COLORS.white, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center' },
   submitButtonText: { ...FONTS.h3, color: COLORS.white, fontWeight: 'bold' },
   optionalButtonText: { ...FONTS.h3, color: COLORS.textDark, fontWeight: 'bold' },

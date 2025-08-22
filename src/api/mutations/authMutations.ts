@@ -57,14 +57,36 @@ export const LOGIN_WITH_GOOGLE_MUTATION = gql`
   }
 `;
 
-export const REGISTER_BY_EMAIL_MUTATION = gql`
-    mutation REGISTER($email: String!, $password: String!, $hoten: String!) {
+export const REQUEST_EMAIL_VERIFICATION_MUTATION = gql`
+    mutation RequestEmailVerification($email: String!, $password: String!, $hoten: String!) {
         requestEmailVerification(registerInput: {
             email: $email,
             hoten: $hoten,
             password: $password
         }) {
-            accessToken    
+            success
+            message    
         }
     }
 `;
+
+export const EMAIL_REGISTER_MUTATION = gql`
+    mutation VerifyEmailAndRegister($email: String!, $otp: String!) {
+        verifyEmailAndRegister(verifyInput: {
+            email: $email,
+            otp: $otp
+        }) {
+            accessToken 
+            user {
+                id
+                hoten
+                sodienthoai
+                socmnd
+                email
+                avatarUrl
+                roles
+            }   
+        }
+    }
+`;
+

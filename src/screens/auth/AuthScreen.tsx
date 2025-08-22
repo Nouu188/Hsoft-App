@@ -32,7 +32,6 @@ const AuthScreen: React.FC<{navigation: any}> = ({ navigation }) => {
   const { isLoginView, formAnimatedStyle, switchToLogin, switchToRegister } = useAuthForm();
 
   const login = useAuthStore((state) => state.login);
-  const register = useAuthStore((state) => state.register);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
 
@@ -49,19 +48,10 @@ const AuthScreen: React.FC<{navigation: any}> = ({ navigation }) => {
     }
   };
 
-  // Hàm xử lý logic đăng ký, được truyền xuống RegisterForm
-  const handleRegister = async (data: any) => {
-    try {
-      await register();
-      // Sau khi hàm register giả lập chạy xong, có thể hiển thị thông báo
-      Alert.alert('Thành công', 'Tài khoản của bạn đã được tạo (giả lập).');
-    } catch (e: any) {
-      Alert.alert('Đăng ký thất bại', e.message || 'Đã có lỗi xảy ra.');
-    }
-  };
   const handleForgotPassword = () => {
     navigation.navigate('OTPScreen'); // 'OTPScreen' là tên màn hình bạn đã đăng ký trong Stack Navigator
   };
+  
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -88,7 +78,7 @@ const AuthScreen: React.FC<{navigation: any}> = ({ navigation }) => {
               <Animated.View style={[styles.animatedForm, formAnimatedStyle]}>
                 {/* Truyền các hàm xử lý và state xuống component con */}
                 <LoginForm isLoading={isLoading} onLogin={handleLogin} onForgotPasswordPress={handleForgotPassword}/>
-                <RegisterForm isLoading={isLoading} onRegister={handleRegister} />
+                <RegisterForm navigation={navigation} />
               </Animated.View>
             </View>
           </View>

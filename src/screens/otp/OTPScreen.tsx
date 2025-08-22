@@ -1,38 +1,43 @@
-import React from 'react';
-import {
-  SafeAreaView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { useAuthStore } from '@/store/useAuthStore';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES } from '../../constants/theme'; // Điều chỉnh đường dẫn
-
-import { useOTP } from './useOTP';
+import React from 'react';
+import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import OTPInput from '../../components/specific/auth/otp/OTPInput';
 import OTPResendButton from '../../components/specific/auth/otp/OTPResendButton';
+import { COLORS, SIZES } from '../../constants/theme';
+import { useOTP } from './useOTP';
 
-const OTPScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+const OTPScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
+  const { email, hoten, password } = route.params; // truyền từ màn đăng ký
   
-  // Hàm xử lý logic cuối cùng khi OTP hợp lệ
-  const handleFinalSubmit = (enteredOtp: string) => {
-    Alert.alert('Xác thực thành công', `Mã OTP của bạn là: ${enteredOtp}`);
-    // Ví dụ: navigation.navigate('NewPasswordScreen');
+  const setAuthData = useAuthStore(state => state.setAuthData);
+  const requestOtp = useAuthStore(state => state.requestOtp);
+  const verifyOtp = useAuthStore(state => state.verifyOtp);
+
+  const handleFinalSubmit = async (enteredOtp: string) => {
+    try {
+      const { user, accessToken } = await verifyOtp(email, enteredOtp);
+      Alert.alert('Thành công', 'Xác thực OTP thành công!');
+      setAuthData(user, accessToken);
+
+      navigation.navigate('MainApp');
+    } catch (error) {
+      console.log('[OTPScreen] OTP verify failed', error);
+    }
   };
 
-  // Gọi hook để lấy tất cả state và logic
-  const {
-    otp,
-    countdown,
-    isResendDisabled,
-    inputRefs,
-    handleOtpChange,
-    handleKeyPress,
-    handleResend,
-    handleSubmit,
-  } = useOTP({ onSubmit: handleFinalSubmit });
+  const { otp, countdown, isResendDisabled, inputRefs, handleOtpChange, handleKeyPress, handleResend, handleSubmit } =
+    useOTP({ onSubmit: handleFinalSubmit });
+
+  // Override handleResend để gọi API
+  const handleResendWithApi = async () => {
+    try {
+      await requestOtp(email, hoten, password);
+      handleResend();
+    } catch (error) {
+      console.log('[OTPScreen] Resend OTP failed', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -44,22 +49,11 @@ const OTPScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       <View style={styles.content}>
         <Text style={styles.title}>OTP</Text>
-        <Text style={styles.subtitle}>
-          Vui lòng nhập mã xác thực được gửi đến số điện thoại của bạn
-        </Text>
+        <Text style={styles.subtitle}>Vui lòng nhập mã xác thực được gửi đến số điện thoại của bạn</Text>
 
-        <OTPInput
-          otp={otp}
-          inputRefs={inputRefs}
-          handleOtpChange={handleOtpChange}
-          handleKeyPress={handleKeyPress}
-        />
+        <OTPInput otp={otp} inputRefs={inputRefs} handleOtpChange={handleOtpChange} handleKeyPress={handleKeyPress} />
 
-        <OTPResendButton
-          countdown={countdown}
-          isResendDisabled={isResendDisabled}
-          handleResend={handleResend}
-        />
+        <OTPResendButton countdown={countdown} isResendDisabled={isResendDisabled} handleResend={handleResendWithApi} />
       </View>
 
       <View style={styles.footer}>
@@ -70,7 +64,6 @@ const OTPScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

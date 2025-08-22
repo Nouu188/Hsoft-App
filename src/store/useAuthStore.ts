@@ -1,9 +1,17 @@
-import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { jwtDecode } from 'jwt-decode';
-import { LOGIN_BY_EMAIL_MUTATION, LOGIN_BY_IDENTIFIER_MUTATION } from '../api/mutations/authMutations';
 import { accountClient } from '@/api/apoloClient';
+import {
+  EMAIL_REGISTER_MUTATION,
+  LOGIN_BY_EMAIL_MUTATION,
+  LOGIN_BY_IDENTIFIER_MUTATION,
+  LOGIN_WITH_GOOGLE_MUTATION,
+  REQUEST_EMAIL_VERIFICATION_MUTATION,
+} from '@/api/mutations/authMutations';
 import { fcmService } from '@/services/fcmService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { jwtDecode } from 'jwt-decode';
+import { Alert } from 'react-native';
+import { create } from 'zustand';
 
 interface JwtPayload {
   sub: string;
@@ -13,151 +21,213 @@ interface JwtPayload {
   exp: number;
 }
 
+interface User {
+  id: string;
+  identifier: string;
+  roles: string[];
+}
+
+interface LoginInput {
+  email?: string;
+  identifier?: string;
+  password: string;
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   isLoading: boolean;
+  isGoogleLoading: boolean,
   error: string | null;
-  setAuthData: (user: User, token: string) => Promise<void>;
+
   login: (credentials: LoginInput) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  register: () => Promise<boolean>;
+  requestOtp: (email: string, hoten: string, password: string) => Promise<any>;
+  verifyOtp: (email: string, otp: string) => Promise<any>;
+  setAuthData: (user: User, token: string) => Promise<void>;
   hydrate: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+const GOOGLE_WEB_CLIENT_ID = '914111663994-qrtk1mb78ehddf545q1atqpdhikdhb16.apps.googleusercontent.com';
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   isLoading: false,
   error: null,
+  isGoogleLoading: false,
 
-  login: async (credentials) => {
-    console.log('[AuthStore][login] Starting login with credentials:', credentials);
-
+  // ==========================
+  // LOGIN EMAIL / IDENTIFIER
+  // ==========================
+  login: async (credentials: LoginInput) => {
     set({ isLoading: true, error: null });
     try {
-      console.log('[AuthStore][login] Sending login mutation to accountClient...');
-      
       let data;
       if (credentials.email) {
         const res = await accountClient.mutate({
           mutation: LOGIN_BY_EMAIL_MUTATION,
-          variables: {
-            email: credentials.email,
-            password: credentials.password,
-          },
+          variables: { email: credentials.email, password: credentials.password },
         });
-        data = res.data;
+        data = res.data.loginByEmail;
       } else {
         const res = await accountClient.mutate({
           mutation: LOGIN_BY_IDENTIFIER_MUTATION,
-          variables: {
-            identifier: credentials.identifier,
-            password: credentials.password,
-          },
+          variables: { identifier: credentials.identifier, password: credentials.password },
         });
-        data = res.data;
+        data = res.data.loginByIdentifier;
       }
-      console.log('[AuthStore][login] Login response:', data);
 
-      const { accessToken, user } = data.loginByIdentifier;
-
-      console.log('[AuthStore][login] AccessToken:', accessToken, 'User:', user);
+      const { accessToken, user } = data;
 
       await AsyncStorage.setItem('accessToken', accessToken);
-
-      console.log('[AuthStore][login] AccessToken saved to AsyncStorage');
-
       set({ accessToken, user, isLoading: false });
 
-      console.log('[AuthStore][login] Login successful, state updated');
-
-      fcmService.getFcmToken().then(token => {
-        if (token) {
-          fcmService.registerTokenWithServer(token);
-        }
-      });
+      // Đăng ký token FCM
+      const fcmToken = await fcmService.getFcmToken();
+      if (fcmToken) fcmService.registerTokenWithServer(fcmToken);
     } catch (e: any) {
-      console.error('[AuthStore][login] Login failed:', e.message, e);
       set({ error: e.message, isLoading: false });
       throw e;
     }
   },
 
-  logout: async () => {
-    console.log('[AuthStore][logout] Starting logout process...');
+  // ==========================
+  // LOGIN GOOGLE
+  // ==========================
+  loginWithGoogle: async () => {
+    set({ isGoogleLoading: true, error: null }); // Thêm state riêng
     try {
-      await AsyncStorage.removeItem('accessToken');
-      console.log('[AuthStore][logout] AccessToken removed from AsyncStorage');
+      GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: false });
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
 
-      await accountClient.resetStore();
-      console.log('[AuthStore][logout] Apollo Client cache reset');
+      if (!userInfo.data?.idToken) throw new Error('Google ID Token not found.');
 
-      set({ user: null, accessToken: null });
-      console.log('[AuthStore][logout] State reset, logout complete');
-    } catch (e: any) {
-      console.error('[AuthStore][logout] Logout failed:', e.message, e);
+      const { data } = await accountClient.mutate({
+        mutation: LOGIN_WITH_GOOGLE_MUTATION,
+        variables: { googleLoginInput: { idToken: userInfo.data?.idToken } },
+      });
+
+      if (!data?.loginWithGoogle) throw new Error('Invalid response from server.');
+      const { accessToken, user } = data.loginWithGoogle;
+
+      await AsyncStorage.setItem('accessToken', accessToken);
+      set({ accessToken, user });
+
+      const fcmToken = await fcmService.getFcmToken();
+      if (fcmToken) fcmService.registerTokenWithServer(fcmToken);
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) return;
+      if (error.code === statusCodes.IN_PROGRESS) return;
+      if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Lỗi', 'Dịch vụ Google Play không khả dụng hoặc đã lỗi thời.');
+      } else {
+        Alert.alert('Đăng nhập thất bại', error.message || 'Đã có lỗi xảy ra.');
+      }
+    } finally {
+      set({ isGoogleLoading: false });
     }
   },
 
-  register: async () => {
-    console.log('[AuthStore][register] Register function called (mock implementation)');
-    // Giả lập đăng ký thành công
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log('[AuthStore][register] Registration successful (mock)');
-        resolve(true);
-      }, 1000);
-    });
+
+  // ==========================
+  // LOGOUT
+  // ==========================
+  logout: async () => {
+    try {
+      await AsyncStorage.removeItem('accessToken');
+      await accountClient.resetStore();
+      set({ user: null, accessToken: null });
+    } catch (e: any) {
+      console.error('Logout failed:', e);
+    }
   },
 
+  // ==========================
+  // OTP
+  // ==========================
+  requestOtp: async (email: string, hoten: string, password: string) => {
+    try {
+      const { data } = await accountClient.mutate({
+        mutation: REQUEST_EMAIL_VERIFICATION_MUTATION,
+        variables: { email, hoten, password },
+      });
+
+      if (!data?.requestEmailVerification?.success) {
+        throw new Error(data?.requestEmailVerification?.message || 'Xác thực OTP thất bại.');
+      }
+
+      return data.requestEmailVerification;
+    } catch (error: any) {
+      console.error('[requestOtp] Error:', error);
+      Alert.alert('Lỗi', error.message || 'Không thể gửi OTP.');
+      throw error;
+    }
+  },
+
+  verifyOtp: async (email: string, otp: string) => {
+    try {
+      const { data } = await accountClient.mutate({
+        mutation: EMAIL_REGISTER_MUTATION,
+        variables: { email, otp },
+      });
+
+      const accessToken = data?.verifyEmailAndRegister?.accessToken;
+      if (!accessToken) throw new Error('Xác thực OTP thất bại.');
+
+      // Giải mã JWT để lấy thông tin user
+      const decoded: JwtPayload = jwtDecode(accessToken);
+      const user: User = {
+        id: decoded.sub,
+        identifier: decoded.identifier,
+        roles: decoded.roles,
+      };
+
+      return { accessToken, user }; // <-- trả về object đúng
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.message || 'Xác thực OTP thất bại.');
+      throw error;
+    }
+  },
+
+  // ==========================
+  // SET AUTH DATA MANUALLY
+  // ==========================
   setAuthData: async (user, token) => {
     try {
       await AsyncStorage.setItem('accessToken', token);
-      set({ user, accessToken: token, isLoading: false });
+      set({ user, accessToken: token });
     } catch (error) {
-      console.error("Failed to save auth data", error);
+      console.error('Failed to save auth data', error);
     }
   },
 
+  // ==========================
+  // HYDRATE ON APP START
+  // ==========================
   hydrate: async () => {
-    console.log('[AuthStore][hydrate] Starting hydration process...');
+    set({ isLoading: true });
     try {
       const token = await AsyncStorage.getItem('accessToken');
-      console.log('[AuthStore][hydrate] Retrieved token from AsyncStorage:', token);
-      if (token) {
-        const decoded: JwtPayload = jwtDecode(token);
-        console.log('[AuthStore][hydrate] Decoded JWT:', decoded);
+      if (!token) return set({ isLoading: false });
 
-        // KIỂM TRA THỜI GIAN HẾT HẠN
-        const currentTime = Date.now();
-        const tokenExpiry = decoded.exp * 1000;
-        console.log('[AuthStore][hydrate] Current time:', currentTime, 'Token expiry:', tokenExpiry);
-
-        if (tokenExpiry < currentTime) {
-          console.log('[AuthStore][hydrate] Token expired. Triggering logout.');
-          useAuthStore.getState().logout();
-        } else {
-          console.log('[AuthStore][hydrate] Token is valid. Setting user state.');
-          const user: User = { id: decoded.sub, identifier: decoded.identifier, roles: decoded.roles };
-
-          set({ accessToken: token, user });
-          console.log('[AuthStore][hydrate] User state updated:', user);
-
-          fcmService.getFcmToken().then(fcmToken => {
-            if (fcmToken) {
-              fcmService.registerTokenWithServer(fcmToken);
-            }
-          });
-        }
+      const decoded: JwtPayload = jwtDecode(token);
+      const now = Date.now();
+      if (decoded.exp * 1000 < now) {
+        await get().logout();
       } else {
-        console.log('[AuthStore][hydrate] No token found in AsyncStorage.');
+        const user: User = { id: decoded.sub, identifier: decoded.identifier, roles: decoded.roles };
+        set({ user, accessToken: token, isLoading: false });
+
+        const fcmToken = await fcmService.getFcmToken();
+        if (fcmToken) fcmService.registerTokenWithServer(fcmToken);
       }
     } catch (e: any) {
-      console.error('[AuthStore][hydrate] Hydration failed:', e.message, e);
-      useAuthStore.getState().logout();
+      console.error('Hydration failed', e);
+      await get().logout();
     } finally {
-      console.log('[AuthStore][hydrate] Hydration complete, setting isLoading to false');
       set({ isLoading: false });
     }
   },
