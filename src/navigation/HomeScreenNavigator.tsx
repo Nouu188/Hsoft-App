@@ -3,11 +3,13 @@ import HomeScreen from '../screens/HomeScreen.tsx'
 import NotificationSettingScreen from '../components/specific/notification/NotificationSetting.tsx'
 import NotificationScreen from '@/screens/notification/NotificationScreen.tsx';
 import NoteScreen from '@/screens/utility_screen/note_screen/NoteScreen.tsx';
+import HealthStatisticsScreen from '@/screens/utility_screen/health_statistic_screen/HealthStatisticsScreen.tsx'
 export type HomeStackParamList = {
   Notification:undefined;
   Home:undefined;
   NotificationSetting:undefined;
   NoteScreen:undefined;
+  HealthStatisticsScreen:undefined;
 };
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 const HomeScreenNavigator = () => {
@@ -17,6 +19,7 @@ const HomeScreenNavigator = () => {
         <Stack.Screen name="Notification" component={NotificationScreen} />
         <Stack.Screen name="NotificationSetting" component={NotificationSettingScreen} />
         <Stack.Screen name="NoteScreen" component={NoteScreen} />
+        <Stack.Screen name="HealthStatisticsScreen" component={HealthStatisticsScreen} />
      </Stack.Navigator>
   )
 }

@@ -68,3 +68,4 @@ export type MainTabsNavigationProp<T extends keyof MainTabsParamList> =
     BottomTabScreenProps<MainTabsParamList, T>,
     RootStackScreenProps<keyof RootStackParamList>
   >['navigation'];
+  

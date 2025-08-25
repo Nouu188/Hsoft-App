@@ -50,9 +50,7 @@ const healthServices: UtilityItemProps[] = [
   { id: '1', name: 'Thêm Lịch thuốc', iconName: 'medkit-outline', onPress: () => console.log('Thêm Lịch uống thuốc') },
   { id: '2', name: 'Ghi chú', iconName: 'document-text-outline', onPress: () => navigation.navigate('NoteScreen') },
   { id: '3', name: 'Giấc ngủ', iconName: 'moon-outline', onPress: () => console.log('Theo dõi Giấc ngủ') },
-  { id: '4', name: 'Uống nước', iconName: 'water-outline', onPress: () => console.log('Uống nước') },
-  { id: '5', name: 'Bữa ăn', iconName: 'restaurant-outline', onPress: () => console.log('Thêm Bữa ăn') },
-  { id: '6', name: 'Bài tập Thở', iconName: 'leaf-outline', onPress: () => console.log('Bài tập Thở') },
+  { id: '6', name: 'Thống kê', iconName: 'stats-chart-outline', onPress: () => navigation.navigate('HealthStatisticsScreen') },
   { id: '7', name: 'Đặt lịch khám', iconName: 'heart-outline', onPress: () => console.log('Đo nhịp tim') },
   { id: '8', name: 'Xem thêm', iconName: 'apps-outline', onPress: () => console.log('Xem thêm') },
 ];
