@@ -23,6 +23,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { GoogleLoginInput } from './dto/google-login.input';
 import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
 import { RequestOtpResponse } from './dto/request-otp-response.dto';
+import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 
 @Injectable()
 export class AuthService {
@@ -33,7 +34,7 @@ export class AuthService {
 
         private readonly configService: ConfigService,
 
-        @Inject(GOOGLE_OAUTH2_CLIENT) 
+        @Inject(GOOGLE_OAUTH2_CLIENT)
         private readonly googleClient: OAuth2Client,
 
         private jwtService: JwtService,
@@ -45,7 +46,9 @@ export class AuthService {
 
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 
-        private readonly mailerService: MailerService
+        private readonly mailerService: MailerService,
+
+        private readonly hospitalClient: HospitalApiClientService,
     ) { }
 
     async loginByIdentifier(loginInput: LoginInputByIdentifier): Promise<LoginResponse> {
@@ -71,7 +74,7 @@ export class AuthService {
 
         this.logger.log(`User with identifier "${identifier}" not found. Attempting to fetch from hospital API...`);
 
-        const hospitalPatient = await this.usersService.fetchPatientFromHospital(identifier);
+        const hospitalPatient = await this.hospitalClient.fetchPatientFromHospital(identifier);
         if (!hospitalPatient) {
             throw new UnauthorizedException('Patient information not found in hospital system.');
         }
@@ -82,13 +85,13 @@ export class AuthService {
         }
 
         this.logger.log(`First-time login successful for mabn ${hospitalPatient.mabn}. Creating local user...`);
-        user = await this.usersService.createUserByIdentifier(hospitalPatient);
+        user = await this.usersService.createUserFromHospitalPatient(hospitalPatient);
 
         this.logger.log(`Publishing 'user.first_login' event for user ${user.id}`);
         this.amqpConnection.publish(
             ExchangeName.USER_EVENTS,
             RoutingKey.USER_FIRST_LOGIN,
-            { user_id: user.id },
+            { userId: user.id },
         );
 
         const { password: _password, ...userResult } = user;
@@ -145,26 +148,13 @@ export class AuthService {
             const { email, name, picture, sub: googleId } = payload;
             this.logger.log(`Google token verified for email: ${email}`);
 
-            // 2. Tìm hoặc tạo người dùng trong database (Upsert)
-            let user = await this.usersService.findByEmail(email);
-
-            if (!user) {
-                // Nếu người dùng chưa tồn tại, tạo mới
-                this.logger.log(`User with email ${email} not found. Creating a new user.`);
-                user = await this.usersService.createUserFromGoogle({
-                    email,
-                    hoten: name,
-                    avatarUrl: picture,
-                    googleId,
-                });
-                // TODO: Phát sự kiện 'user.registered' nếu cần
-            } else {
-                // Nếu người dùng đã tồn tại, có thể cập nhật thông tin
-                user = await this.usersService.updateUserFromGoogle(user.id, {
-                    avatarUrl: picture,
-                    googleId,
-                });
-            }
+            const user = await this.usersService.findOrCreateFromGoogle({
+                email,
+                hoten: name,
+                avatarUrl: picture,
+                googleId,
+            });
+            // TODO: Phát sự kiện 'user.registered' nếu cần
 
             // 3. Tạo và trả về token của hệ thống
             const accessToken = this.generateToken(user.id, user.roles);
@@ -271,12 +261,13 @@ export class AuthService {
 
         const accessToken = this.generateToken(newUser.id, newUser.roles);
         const { password: _, ...userResult } = newUser;
+        
         return { user: userResult, accessToken };
     }
 
-    private generateToken(user_id: string, roles: Role[]): string {
+    private generateToken(userId: string, roles: Role[]): string {
         const payload: AuthPayload = {
-            sub: user_id,
+            sub: userId,
             roles,
         };
 

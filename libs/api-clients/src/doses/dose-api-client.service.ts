@@ -20,19 +20,19 @@ export class DoseApiClientService {
   }
 
   async syncDosesFromHospital(
-    user_id: string
+    userId: string
   ): Promise<Boolean> {
-    if(!user_id) {
-      throw new UnauthorizedException("Invalid user_id");
+    if(!userId) {
+      throw new UnauthorizedException("Invalid userId");
     }
 
     const mutation = `
-      mutation($user_id: String!) {
-        syncDosesFromHospital(user_id: $user_id)
+      mutation($userId: String!) {
+        syncDosesFromHospital(userId: $userId)
       }
     `;
 
-    const variables = { user_id: user_id};
+    const variables = { userId: userId};
 
     try {
       const response = await firstValueFrom(
@@ -52,11 +52,11 @@ export class DoseApiClientService {
   }
 
   async fetchAndVerifyDoses(
-    dose_ids: string[],
-    user_id: string,
+    doseIds: string[],
+    userId: string,
     status: DoseStatus,
   ): Promise<Dose[]> {
-    if (!dose_ids || dose_ids.length === 0) {
+    if (!doseIds || doseIds.length === 0) {
       return [];
     }
 
@@ -64,14 +64,14 @@ export class DoseApiClientService {
       query GetDosesByIds($ids: [ID!]!) {
         dosesByIds(ids: $ids) {
           id
-          user_id
+          userId
           status
           medication_name
           dosage_instructions
         }
       }
     `;
-    const variables = { ids: dose_ids };
+    const variables = { ids: doseIds };
 
     try {
       const response = await firstValueFrom(
@@ -85,7 +85,7 @@ export class DoseApiClientService {
       const fetchedDoses: Dose[] = response.data.data.dosesByIds_internal || [];
 
       const verifiedDoses = fetchedDoses.filter(dose => 
-        dose.user_id === user_id && dose.status === status
+        dose.userId === userId && dose.status === status
       );
 
       return verifiedDoses;

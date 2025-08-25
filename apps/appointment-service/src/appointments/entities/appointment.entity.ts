@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
 import { Clinic } from '../../clinics/entities/clinic.entity';
+import { Doctor } from '../../doctors/entities/doctor.entity';
 
 export enum AppointmentType {
   CLINIC = 'CLINIC',
@@ -20,8 +21,9 @@ export class Appointment {
   @Column({ type: 'uuid', name: 'user_id' })
   userId: string;
 
-  @Column({ type: 'varchar', enum: AppointmentType })
+  @Column({ type: 'enum', enum: AppointmentType })
   appointmentType: AppointmentType;
+
 
   @Column({ type: 'uuid', name: 'clinic_id', nullable: true })
   clinicId: string;
@@ -33,13 +35,17 @@ export class Appointment {
   @Column({ type: 'uuid', name: 'doctor_id', nullable: true })
   doctorId: string;
 
+  @ManyToMany(() => Doctor)
+  @JoinColumn({ name: 'doctor_id' })
+  doctor: Doctor;
+
   @Column({ type: 'timestamptz', name: 'appointment_time' })
   appointmentTime: Date;
 
   @Column({ type: 'int', name: 'queue_number' })
   queueNumber: number;
 
-  @Column({ type: 'varchar', enum: AppointmentStatus, default: AppointmentStatus.CONFIRMED })
+  @Column({ type: 'enum', enum: AppointmentStatus, default: AppointmentStatus.CONFIRMED })
   status: AppointmentStatus;
 
   // Thông tin hành chính của bệnh nhân tại thời điểm đặt

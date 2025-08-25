@@ -51,7 +51,7 @@ export class Dose {
   
   @Field(() => ID, { description: 'ID của người dùng sở hữu liều uống này' })
   @Column()
-  user_id: string;
+  userId: string;
 
   @Field({ nullable: true, description: 'Thời điểm người dùng nhấn nút đã uống' })
   @Column({ type: 'timestamptz', nullable: true })

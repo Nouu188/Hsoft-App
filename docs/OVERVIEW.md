@@ -86,7 +86,7 @@ graph TD
     -   Quản lý danh tính người dùng (`User` entity: email, password, mabn, roles).
     -   Xử lý xác thực người dùng (đăng ký, đăng nhập) qua **GraphQL**.
     -   Cung cấp endpoint **REST** (`/auth/token`) để xác thực M2M cho các service khác.
-    -   Quản lý token thông báo đẩy (`fcm_tokens`).
+    -   Quản lý token thông báo đẩy (`fcmTokens`).
     -   Cung cấp API nội bộ để các service khác truy vấn thông tin user.
 
 #### 2.2.2. Scheduling Service
@@ -105,7 +105,7 @@ graph TD
 -   **Trách nhiệm:**
     -   Thực hiện một nhiệm vụ duy nhất: gửi thông báo.
     -   Chứa `NotificationConsumer` lắng nghe các sự kiện từ RabbitMQ.
-    -   Khi nhận được sự kiện, nó sẽ gọi đến `Account Service` (thông qua `@app/api-clients`) để lấy `fcm_tokens` của người dùng.
+    -   Khi nhận được sự kiện, nó sẽ gọi đến `Account Service` (thông qua `@app/api-clients`) để lấy `fcmTokens` của người dùng.
     -   Sử dụng `Firebase Admin SDK` để gửi thông báo đẩy qua FCM.
 
 ## 3. Ngăn xếp Công nghệ (Technology Stack)

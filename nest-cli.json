@@ -92,6 +92,15 @@
         ]
       }
     },
+    "patient-identity-service": {
+      "type": "application",
+      "root": "apps/patient-identity-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/patient-identity-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/patient-identity-service/tsconfig.app.json"
+      }
+    },
     "scheduling-service": {
       "type": "application",
       "root": "apps/scheduling-service",
@@ -100,6 +109,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/scheduling-service/tsconfig.app.json",
         "webpack": true
+      }
+    },
+    "tenant-management-service": {
+      "type": "application",
+      "root": "apps/tenant-management-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/tenant-management-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/tenant-management-service/tsconfig.app.json"
       }
     }
   }

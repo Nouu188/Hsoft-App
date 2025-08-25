@@ -7,7 +7,7 @@ import { QueueName, RoutingKey } from '@app/common/rabbitmq';
 
 interface SyncRequestPayload {
     ngay?: string;
-    user_id?: string;
+    userId?: string;
     sodienthoai?: string;
     mabn?: string;
     socmnd?: string;
@@ -27,8 +27,8 @@ export class SyncConsumer {
         queue: QueueName.SYNC_REQUESTS,
     })
     public async handleSyncRequest(payload: SyncRequestPayload) {
-        const { user_id, sodienthoai, mabn, socmnd , ngay } = payload;
-        if(!sodienthoai && !mabn && !socmnd && !user_id) {
+        const { userId, sodienthoai, mabn, socmnd , ngay } = payload;
+        if(!sodienthoai && !mabn && !socmnd && !userId) {
             throw new Error('Either "mabn" or "sodienthoai" or "socmnd" must be provided.');
         }
 
@@ -42,7 +42,7 @@ export class SyncConsumer {
         try {
             await this.dosesSyncService.syncDosesInFuture(user, ngay);
         } catch (error) {
-            this.logger.error(`Failed to process sync request for user_id ${identifier}`, error.stack);
+            this.logger.error(`Failed to process sync request for userId ${identifier}`, error.stack);
             return new Nack(false);
         }
     }

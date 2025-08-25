@@ -31,11 +31,15 @@ enum AppointmentType {
 input BookByClinicInput {
   appointmentTime: String!
   clinicId: ID!
+  hospitalId: ID!
   notes: String
-  patientDob: String!
-  patientGender: String!
-  patientName: String!
-  patientPhone: String!
+}
+
+input BookByDoctorInput {
+  appointmentTime: String!
+  doctorId: ID!
+  hospitalId: ID!
+  notes: String
 }
 
 type Clinic {
@@ -44,6 +48,11 @@ type Clinic {
 
   """ID nội bộ của phòng khám"""
   id: ID!
+}
+
+enum ConnectionStatus {
+  LINKED
+  NOT_LINKED
 }
 
 """
@@ -66,8 +75,19 @@ input HospitalClinicInput {
   tenkp: String!
 }
 
+type HospitalConnectionStatus {
+  code: String!
+  connectionStatus: ConnectionStatus!
+  id: ID!
+  name: String!
+}
+
 type Mutation {
-  bookAppointmentByClinic(input: BookByClinicInput!): Appointment!
+  """Đặt lịch hẹn theo nhiều phòng khám."""
+  bookAppointmentsByClinics(inputs: [BookByClinicInput!]!): [Appointment!]!
+
+  """Đặt lịch hẹn theo nhiều bác sĩ."""
+  bookAppointmentsByDoctors(inputs: [BookByDoctorInput!]!): [Appointment!]!
 
   """Hủy một lịch hẹn đã đặt."""
   cancelAppointment(id: ID!): Boolean!
@@ -83,32 +103,14 @@ type Query {
   Lấy danh sách tất cả các phòng khám đang hoạt động để người dùng có thể đặt lịch.
   """
   activeClinics: [Clinic!]!
-  myAppointments: [Appointment!]!
-}
 
-"""Các vai trò của user"""
-enum Role {
-  ADMIN
-  USER
+  """Lấy những bệnh viện đã được liên kết với tài khoản"""
+  hospitalsWithConnectionStatus: [HospitalConnectionStatus!]!
+  myAppointments: [Appointment!]!
 }
 
 type UpsertClinicResult {
   created: Int!
   deactivated: Int!
   updated: Int!
-}
-
-type UserResponseDto {
-  apn_tokens: [String!]
-  avatarUrl: String
-  diachi: String
-  email: String
-  fcm_tokens: [String!]
-  hoten: String!
-  id: String!
-  mabn: String
-  namsinh: String
-  roles: [Role!]!
-  socmnd: String
-  sodienthoai: String
 }

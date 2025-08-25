@@ -17,14 +17,14 @@ export class HistoryService {
   ) {}
 
   async create(dto: CreateHistoryDto): Promise<NotificationHistory> {
-    this.logger.log(`Creating notification history for user ${dto.user_id} with type ${dto.type}`);
+    this.logger.log(`Creating notification history for user ${dto.userId} with type ${dto.type}`);
     try {
       const historyEntry = this.historyRepository.create({
-        user_id: dto.user_id,
+        userId: dto.userId,
         title: dto.title,
         body: dto.body,
         type: dto.type,
-        dose_ids: dto.dose_ids,
+        doseIds: dto.doseIds,
         payload: dto.payload,
         status: dto.status,
       });
@@ -33,45 +33,45 @@ export class HistoryService {
       this.logger.log(`Successfully created history entry with ID: ${savedEntry.id}`);
       return savedEntry;
     } catch (error) {
-      this.logger.error(`Failed to create notification history for user ${dto.user_id}`, error.stack);
+      this.logger.error(`Failed to create notification history for user ${dto.userId}`, error.stack);
       throw error; // Ném lại lỗi để lớp gọi có thể xử lý
     }
   }
 
-  async getHistoryForUser(user_id: string, args: GetHistoryArgs): Promise<NotificationHistory[]> {
-    this.logger.debug(`Fetching notification history for user ${user_id} with args: ${JSON.stringify(args)}`);
+  async getHistoryForUser(userId: string, args: GetHistoryArgs): Promise<NotificationHistory[]> {
+    this.logger.debug(`Fetching notification history for user ${userId} with args: ${JSON.stringify(args)}`);
     return this.historyRepository.find({
-      where: { user_id: user_id },
+      where: { userId: userId },
       order: { sentAt: 'DESC' },
       skip: args.offset,
       take: args.limit,
     });
   }
 
-  async countUnread(user_id: string): Promise<number> {
-    this.logger.debug(`Counting unread notifications for user ${user_id}`);
+  async countUnread(userId: string): Promise<number> {
+    this.logger.debug(`Counting unread notifications for user ${userId}`);
     return this.historyRepository.count({
       where: {
-        user_id: user_id,
+        userId: userId,
         status: NotificationStatus.SENT, // Giả sử SENT là chưa đọc
       },
     });
   }
 
-  async markAsRead(user_id: string, notificationIds: string[]): Promise<boolean> {
+  async markAsRead(userId: string, notificationIds: string[]): Promise<boolean> {
     if (notificationIds.length === 0) {
-      this.logger.warn(`markAsRead called with an empty array for user ${user_id}.`);
+      this.logger.warn(`markAsRead called with an empty array for user ${userId}.`);
       return false;
     }
-    this.logger.log(`Marking ${notificationIds.length} notification(s) as read for user ${user_id}.`);
+    this.logger.log(`Marking ${notificationIds.length} notification(s) as read for user ${userId}.`);
     
     const result = await this.historyRepository.update(
-      { id: In(notificationIds), user_id: user_id }, // Sử dụng camelCase
+      { id: In(notificationIds), userId: userId }, // Sử dụng camelCase
       { status: NotificationStatus.READ },
     );
 
     if (result.affected === 0) {
-      this.logger.warn(`No notifications found or matched for user ${user_id} to mark as read.`);
+      this.logger.warn(`No notifications found or matched for user ${userId} to mark as read.`);
     } else {
       this.logger.log(`Successfully updated ${result.affected} notification(s) to READ status.`);
     }
@@ -79,13 +79,13 @@ export class HistoryService {
     return result.affected! > 0;
   }
 
-  async deleteNotification(user_id: string, notificationId: string): Promise<boolean> {
-    this.logger.log(`Attempting to delete notification ${notificationId} for user ${user_id}`);
+  async deleteNotification(userId: string, notificationId: string): Promise<boolean> {
+    this.logger.log(`Attempting to delete notification ${notificationId} for user ${userId}`);
     
-    const result = await this.historyRepository.delete({ id: notificationId, user_id: user_id }); 
+    const result = await this.historyRepository.delete({ id: notificationId, userId: userId }); 
 
     if (result.affected === 0) {
-      this.logger.warn(`Delete failed: Notification with ID ${notificationId} not found for user ${user_id}.`);
+      this.logger.warn(`Delete failed: Notification with ID ${notificationId} not found for user ${userId}.`);
       throw new NotFoundException(`Notification with ID ${notificationId} not found or you do not have permission to delete it.`);
     }
 

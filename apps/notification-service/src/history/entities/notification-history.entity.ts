@@ -42,7 +42,7 @@ export class NotificationHistory {
 
   @Field()
   @Column({ type: 'uuid', name: 'user_id' })
-  user_id: string;
+  userId: string;
 
   @Field()
   @Column()
@@ -54,7 +54,7 @@ export class NotificationHistory {
 
   @Field(() => [String], { nullable: true })
   @Column('simple-array', { name: 'dose_ids', nullable: true })
-  dose_ids: string[];
+  doseIds: string[];
 
   @Field(() => NotificationType)
   @Column({ type: 'varchar', enum: NotificationType })
@@ -64,7 +64,7 @@ export class NotificationHistory {
   @Column({ type: 'varchar', enum: NotificationStatus })
   status: NotificationStatus;
 
-  @Field(() => GraphQLJSONObject, { nullable: true }) // <-- SỬ DỤNG SCALAR JSON
+  @Field(() => GraphQLJSONObject, { nullable: true }) 
   @Column({ type: 'jsonb', nullable: true })
   payload: Record<string, any>;
 

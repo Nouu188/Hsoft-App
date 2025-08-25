@@ -13,15 +13,15 @@ export class NotificationApiClientService {
             return;
         }
 
-        const notificationsToSchedule = new Map<string, { user_id: string, dose_ids: string[], notifyAt: Date }>();
+        const notificationsToSchedule = new Map<string, { userId: string, doseIds: string[], notifyAt: Date }>();
 
         for (const dose of doses) {
             const notifyAtTimestamp = new Date(dose.notify_at).getTime();
-            const key = `${dose.user_id}@${notifyAtTimestamp}`;
+            const key = `${dose.userId}@${notifyAtTimestamp}`;
             if (!notificationsToSchedule.has(key)) {
-                notificationsToSchedule.set(key, { user_id: dose.user_id, dose_ids: [], notifyAt: dose.notify_at });
+                notificationsToSchedule.set(key, { userId: dose.userId, doseIds: [], notifyAt: dose.notify_at });
             }
-            notificationsToSchedule.get(key)!.dose_ids.push(dose.id);
+            notificationsToSchedule.get(key)!.doseIds.push(dose.id);
         }
 
         let publishedCount = 0;
@@ -39,6 +39,6 @@ export class NotificationApiClientService {
             }
         }
         
-        this.logger.log(`Published ${publishedCount} grouped notification events for user ${doses[0]?.user_id}.`);
+        this.logger.log(`Published ${publishedCount} grouped notification events for user ${doses[0]?.userId}.`);
     }
 }

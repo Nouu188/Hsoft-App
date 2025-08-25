@@ -4,11 +4,11 @@ import { Doctor } from './entities/doctor.entity';
 import { DoctorsService } from './doctors.service';
 import { DoctorsResolver } from './doctors.resolver';
 import { ApiClientsModule } from '@app/api-clients';
-import { Clinic } from '../clinics/entities/clinic.entity'; // Import Clinic entity
+import { Clinic } from '../clinics/entities/clinic.entity'; 
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Doctor, Clinic], 'appointmentConnection'), // Thêm Clinic vào đây
+    TypeOrmModule.forFeature([Doctor, Clinic], 'appointmentConnection'), 
     ApiClientsModule,
   ],
   providers: [DoctorsResolver, DoctorsService],

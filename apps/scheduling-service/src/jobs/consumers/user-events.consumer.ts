@@ -19,20 +19,20 @@ export class UserEventsConsumer {
         routingKey: RoutingKey.USER_FIRST_LOGIN,
         queue: QueueName.SCHEDULING_USER_FIRST_LOGIN,
     })
-    public async handleUserFirstLogin(payload: { user_id: string }): Promise<void | Nack> {
-        const { user_id } = payload;
-        this.logger.log(`Received 'user.first_login' event for user: ${user_id}. Starting full dose history sync...`);
+    public async handleUserFirstLogin(payload: { userId: string }): Promise<void | Nack> {
+        const { userId } = payload;
+        this.logger.log(`Received 'user.first_login' event for user: ${userId}. Starting full dose history sync...`);
 
         try {
-            const user = await this.accountApiClient.fetchUserByIdentifier(user_id);
+            const user = await this.accountApiClient.fetchUserByIdentifier(userId);
             if (!user) {
-                throw new Error(`User with ID ${user_id} not found in Account Service.`);
+                throw new Error(`User with ID ${userId} not found in Account Service.`);
             }
             
             await this.dosesSyncService.syncAllDoses(user);
 
         } catch (error) {
-            this.logger.error(`Failed to process 'user.first_login' event for user ${user_id}`, error.stack);
+            this.logger.error(`Failed to process 'user.first_login' event for user ${userId}`, error.stack);
             return new Nack(false);
         }
     }

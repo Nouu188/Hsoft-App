@@ -28,6 +28,8 @@
     "dev:docker:billing": "nest start billing-service --tsc --watch --preserveWatchOutput",
     "dev:docker:appointment": "nest start appointment-service --tsc --watch --preserveWatchOutput",
     "dev:docker:immunization": "nest start immunization-service --tsc --watch --preserveWatchOutput",
+    "dev:docker:tenant-management": "nest start tenant-management-service --tsc --watch --preserveWatchOutput",
+    "dev:docker:patient-identity": "nest start patient-identity-service --tsc --watch --preserveWatchOutput",
     "//--- INDIVIDUAL SERVICES (PROD BUILD) ---//": "",
     "build:account": "nest build account-service",
     "build:scheduling": "nest build scheduling-service",

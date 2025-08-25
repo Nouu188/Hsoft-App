@@ -6,11 +6,13 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   BeforeInsert,
+  OneToMany,
 } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { Role } from '@app/auth/enums/role.enum';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt'
+import { HospitalConnection } from './hospital-connection.entity';
 
 @ObjectType('User')
 @Entity('users')
@@ -62,11 +64,11 @@ export class User {
   // --- Trường Token Thông báo ---
   @Field(() => [String], { nullable: 'itemsAndList', description: 'Danh sách FCM token cho thiết bị Android' })
   @Column({ type: 'text', array: true, nullable: true, name: 'fcm_tokens' })
-  fcm_tokens?: string[];
+  fcmTokens?: string[];
 
   @Field(() => [String], { nullable: 'itemsAndList', description: 'Danh sách APN token cho thiết bị iOS' })
   @Column({ type: 'text', array: true, nullable: true, name: 'apn_tokens' })
-  apn_tokens?: string[];
+  apnTokens?: string[];
 
   // --- Trường Vai trò & Trạng thái ---
   @Field(() => [Role])
@@ -89,6 +91,9 @@ export class User {
   // Dùng cho soft delete
   @DeleteDateColumn({ type: 'timestamptz', name: 'deleted_at', nullable: true })
   deletedAt?: Date;
+
+  @OneToMany(() => HospitalConnection, connection => connection.user)
+  hospitalConnections: HospitalConnection[];
 
   @BeforeInsert()
   async hashPassword() {

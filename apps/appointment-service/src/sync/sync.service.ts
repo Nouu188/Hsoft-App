@@ -1,5 +1,3 @@
-// apps/appointment-service/src/sync/sync.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
@@ -16,9 +14,6 @@ export class SyncService {
     private readonly doctorsService: DoctorsService,
   ) {}
 
-  /**
-   * Cron job chính, chạy hàng ngày để thực hiện tất cả các tác vụ đồng bộ.
-   */
   @Cron(CronExpression.EVERY_DAY_AT_2AM, {
     name: 'dailyFullSync',
     timeZone: 'Asia/Ho_Chi_Minh',
@@ -33,16 +28,11 @@ export class SyncService {
     this.logger.log('--- Daily Full Synchronization Job Finished ---');
   }
 
-  /**
-   * Điều phối quá trình đồng bộ hóa danh sách phòng khám.
-   */
   async syncClinics(): Promise<void> {
     this.logger.log('[Sync] Starting clinics synchronization...');
     try {
-      // 1. Gọi API client để lấy dữ liệu thô từ bệnh viện
       const hospitalClinics = await this.hospitalClient.fetchClinics();
-      
-      // 2. Ủy thác việc xử lý dữ liệu cho service nghiệp vụ
+
       const result = await this.clinicsService.upsertClinics(hospitalClinics);
       
       this.logger.log(
@@ -55,16 +45,11 @@ export class SyncService {
     }
   }
 
-  /**
-   * Điều phối quá trình đồng bộ hóa danh sách bác sĩ.
-   */
   async syncDoctors(): Promise<void> {
     this.logger.log('[Sync] Starting doctors synchronization...');
     try {
-      // 1. Gọi API client để lấy dữ liệu thô
       const hospitalDoctors = await this.hospitalClient.fetchDoctors(); 
-      
-      // 2. Ủy thác việc xử lý cho service nghiệp vụ
+
       const result = await this.doctorsService.upsertDoctors(hospitalDoctors);
 
       this.logger.log(

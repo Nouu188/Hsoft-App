@@ -57,12 +57,38 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=100
 
+  tenant-management-service:
+    build:
+      target: development
+    command: npm run dev:docker:tenant-management
+    ports:
+      - "3005:3005"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+
+  patient-identity-service:
+    build:
+      target: development
+    command: npm run dev:docker:patient-identity
+    ports:
+      - "3006:3006"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+
   # immunization-service:
   #   build:
   #     target: development
   #   command: npm run dev:docker:immunization
   #   ports:
-  #     - "3005:3005"
+  #     - "3007:3007"
   #   volumes:
   #     - .:/usr/src/app
   #     - /usr/src/app/node_modules
@@ -75,7 +101,7 @@ services:
   #     target: development
   #   command: npm run dev:docker:billing
   #   ports:
-  #     - "3006:3006"
+  #     - "3008:3008"
   #   volumes:
   #     - .:/usr/src/app
   #     - /usr/src/app/node_modules

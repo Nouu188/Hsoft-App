@@ -65,6 +65,38 @@ services:
       account-service:
         condition: service_started
 
+  tenant-management-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: tenant-management-service
+    env_file:
+      - ./apps/tenant-management-service/.env.local
+    depends_on:
+      db-tenant-management:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
+  patient-identity-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: patient-identity-service
+    env_file:
+      - ./apps/patient-identity-service/.env.local
+    depends_on:
+      db-patient-identity:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
   # immunization-service:
   #   build:
   #     context: .

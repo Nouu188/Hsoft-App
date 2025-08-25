@@ -7,8 +7,8 @@ import { HistoryService } from '../../history/history.service';
 import { NotificationStatus, NotificationType } from '../../history/entities/notification-history.entity';
 
 interface GroupedNotificationPayload {
-  user_id: string;
-  dose_ids: string[];
+  userId: string;
+  doseIds: string[];
 }
 
 @Injectable()
@@ -23,11 +23,11 @@ export class NotificationService {
   ) {}
 
   async processDoseReminder(payload: GroupedNotificationPayload): Promise<void> {
-    const { user_id, dose_ids } = payload;
+    const { userId, doseIds } = payload;
 
     const [doses, user] = await Promise.all([
-      this.doseApiClient.fetchAndVerifyDoses(dose_ids, user_id, DoseStatus.PENDING),
-      this.accountApiClient.fetchUserByIdentifier(user_id),
+      this.doseApiClient.fetchAndVerifyDoses(doseIds, userId, DoseStatus.PENDING),
+      this.accountApiClient.fetchUserByIdentifier(userId),
     ]);
 
     if (doses.length === 0) {
@@ -35,14 +35,14 @@ export class NotificationService {
       return;
     }
 
-    if (!user || !user.fcm_tokens?.length) {
-      this.logger.warn(`User ${user_id} has no FCM tokens. Saving history as FAILED.`);
+    if (!user || !user.fcmTokens?.length) {
+      this.logger.warn(`User ${userId} has no FCM tokens. Saving history as FAILED.`);
       await this.historyService.create({
-        user_id: user_id,
+        userId: userId,
         title: 'Không thể gửi nhắc thuốc',
         body: 'Người dùng không có thiết bị nào để nhận thông báo.',
         type: NotificationType.DOSE_REMINDER,
-        dose_ids: dose_ids,
+        doseIds: doseIds,
         status: NotificationStatus.FAILED,
       });
       return;
@@ -53,11 +53,11 @@ export class NotificationService {
     const body = `Vui lòng uống các loại thuốc sau:\n${medicationList}`;
     const notificationPayload = {
       type: NotificationType.DOSE_REMINDER,
-      dose_ids: JSON.stringify(doses.map(d => d.id)),
+      doseIds: JSON.stringify(doses.map(d => d.id)),
     };
 
     const sendResult = await this.firebaseService.sendPushNotification(
-      user.fcm_tokens,
+      user.fcmTokens,
       title,
       body,
       notificationPayload,
@@ -66,11 +66,11 @@ export class NotificationService {
     const status = sendResult.successCount > 0 ? NotificationStatus.SENT : NotificationStatus.FAILED;
     
     await this.historyService.create({
-      user_id: user_id,
+      userId: userId,
       title,
       body,
       type: NotificationType.DOSE_REMINDER,
-      dose_ids: dose_ids,
+      doseIds: doseIds,
       status,
       payload: {
         ...notificationPayload,
@@ -79,7 +79,7 @@ export class NotificationService {
     });
 
     if (sendResult.failedTokens.length > 0) {
-      await this.accountApiClient.removeFcmTokens(user_id, sendResult.failedTokens);
+      await this.accountApiClient.removeFcmTokens(userId, sendResult.failedTokens);
     }
   }
 }

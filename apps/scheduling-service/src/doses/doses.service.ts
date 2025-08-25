@@ -17,18 +17,18 @@ export class DosesService {
     return this.doseRepository.findOne({
       where: {
         id: doseId,
-        user_id: userId, 
+        userId: userId, 
       },
     });
   }
 
-  async updateDoses(user_id: string, updates: UpdateDoseInput[]): Promise<Dose[]> {
+  async updateDoses(userId: string, updates: UpdateDoseInput[]): Promise<Dose[]> {
     const logger = new Logger('DosesService');
 
-    logger.debug(`updateDoses called with user_id=${user_id}, updates=${JSON.stringify(updates)}`);
+    logger.debug(`updateDoses called with userId=${userId}, updates=${JSON.stringify(updates)}`);
 
     if (!updates || updates.length === 0) {
-      logger.warn(`No update data provided for user_id=${user_id}`);
+      logger.warn(`No update data provided for userId=${userId}`);
       throw new BadRequestException('No update data provided.');
     }
 
@@ -37,10 +37,10 @@ export class DosesService {
 
     const dosesToUpdate = await this.doseRepository.findBy({
       id: In(doseIds),
-      user_id: user_id,
+      userId: userId,
     });
 
-    logger.debug(`Found ${dosesToUpdate.length} doses in DB for user_id=${user_id}`);
+    logger.debug(`Found ${dosesToUpdate.length} doses in DB for userId=${userId}`);
 
     if (dosesToUpdate.length !== doseIds.length) {
       logger.error(`Mismatch in doses count. Expected ${doseIds.length}, found ${dosesToUpdate.length}. Possibly unauthorized update attempt.`);
@@ -76,11 +76,11 @@ export class DosesService {
   }
 
   async findDosesByDateRange(
-    user_id: string,
+    userId: string,
     startDate: Date,
     endDate: Date,
   ): Promise<Dose[]> {
-    if (!user_id || !startDate || !endDate) {
+    if (!userId || !startDate || !endDate) {
       throw new BadRequestException('userId, startDate, and endDate are required.');
     }
 
@@ -90,7 +90,7 @@ export class DosesService {
 
     const dosesInRange = await this.doseRepository.find({
       where: {
-        user_id,
+        userId,
         due_at: Between(startDate, endDate),
       },
       order: {
@@ -101,14 +101,14 @@ export class DosesService {
     return dosesInRange;
   }
 
-  async updateDoseStatus(user_id: string, dose_id: string, status: DoseStatus): Promise<Dose> {
+  async updateDoseStatus(userId: string, dose_id: string, status: DoseStatus): Promise<Dose> {
     if (status !== DoseStatus.TAKEN && status !== DoseStatus.SKIPPED) {
       throw new BadRequestException('Invalid status. Only TAKEN or SKIPPED are allowed.');
     }
 
     const dose = await this.doseRepository.findOneBy({
       id: dose_id,
-      user_id,
+      userId,
     });
 
     if (!dose) {

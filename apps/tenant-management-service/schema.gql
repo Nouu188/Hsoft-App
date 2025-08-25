@@ -1,0 +1,38 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateHospitalInput {
+  code: String!
+  graphqlEndpoint: String!
+  isActive: Boolean = true
+  name: String!
+}
+
+type Hospital {
+  code: String!
+  graphqlEndpoint: String!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+}
+
+type Mutation {
+  createHospital(createHospitalInput: CreateHospitalInput!): Hospital!
+  removeHospital(id: ID!): Boolean!
+  updateHospital(updateHospitalInput: UpdateHospitalInput!): Hospital!
+}
+
+type Query {
+  activeHospitals: [Hospital!]!
+  hospital(id: ID!): Hospital!
+  hospitals(isActive: Boolean): [Hospital!]!
+}
+
+input UpdateHospitalInput {
+  code: String
+  graphqlEndpoint: String
+  id: ID!
+  isActive: Boolean
+  name: String
+}

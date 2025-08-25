@@ -31,7 +31,7 @@ export class UserResponseDto {
   avatarUrl?: string;
 
   @Field(() => [String], { nullable: true })
-  fcm_tokens?: string[];
+  fcmTokens?: string[];
 
   @Field(() => [String], { nullable: true })
   apn_tokens?: string[];

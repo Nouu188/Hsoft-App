@@ -14,12 +14,12 @@ export class JobsResolver {
 
     @Mutation(() => Boolean, { name: 'test_triggerNotification' })
     async test_triggerNotification(
-        @Args('user_id', { type: () => ID }) user_id: string,
+        @Args('userId', { type: () => ID }) userId: string,
         @Args('dose_id', { type: () => ID }) dose_id: string, 
     ): Promise<boolean> {
-      this.logger.log(`Manually triggering test notification for user: ${user_id} with dose: ${dose_id}`);
+      this.logger.log(`Manually triggering test notification for user: ${userId} with dose: ${dose_id}`);
       
-      const payload = { user_id, dose_ids: [dose_id] }; 
+      const payload = { userId, doseIds: [dose_id] }; 
       
       this.amqpConnection.publish(
           ExchangeName.NOTIFICATION,

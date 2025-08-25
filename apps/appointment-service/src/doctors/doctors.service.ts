@@ -1,5 +1,3 @@
-// apps/appointment-service/src/doctors/doctors.service.ts
-
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -17,29 +15,23 @@ export class DoctorsService {
   constructor(
     @InjectRepository(Doctor)
     private readonly doctorRepository: Repository<Doctor>,
-    @InjectRepository(Clinic) // Inject Clinic repository để tìm clinicId
+    @InjectRepository(Clinic) 
     private readonly clinicRepository: Repository<Clinic>,
     private readonly hospitalClient: HospitalApiClientService,
   ) {}
 
-  /**
-   * Lấy danh sách bác sĩ, có thể lọc theo ID phòng khám.
-   */
   async findAll(clinicId?: string): Promise<Doctor[]> {
     this.logger.debug(`Fetching doctors. Clinic ID: ${clinicId || 'All'}`);
     return this.doctorRepository.find({
       where: { 
         isActive: true,
-        ...(clinicId && { clinicId }), // Thêm điều kiện lọc nếu có
+        ...(clinicId && { clinicId }),
       },
       relations: ['clinic'],
       order: { name: 'ASC' },
     });
   }
 
-  /**
-   * Tìm một bác sĩ bằng ID.
-   */
   async findOneById(id: string): Promise<Doctor> {
     const doctor = await this.doctorRepository.findOne({
       where: { id, isActive: true },
@@ -51,9 +43,6 @@ export class DoctorsService {
     return doctor;
   }
 
-  /**
-   * Lấy lịch làm việc của một bác sĩ trong một ngày cụ thể.
-   */
   async getDoctorAvailability(doctorId: string, date: string): Promise<DoctorAvailability> {
     this.logger.debug(`Fetching availability for doctor ${doctorId} on date ${date}`);
     
@@ -76,9 +65,6 @@ export class DoctorsService {
     return { date, timeSlots };
   }
 
-  /**
-   * Cập nhật hoặc tạo mới (Upsert) danh sách bác sĩ từ dữ liệu của bệnh viện.
-   */
   async upsertDoctors(hospitalDoctors: HospitalDoctorDto[]): Promise<{ created: number, updated: number, deactivated: number }> {
     this.logger.log(`Starting upsert process for ${hospitalDoctors.length} doctors.`);
     if (hospitalDoctors.length === 0) return { created: 0, updated: 0, deactivated: 0 };
@@ -86,7 +72,6 @@ export class DoctorsService {
     const externalMabsList = hospitalDoctors.map(d => d.mabs);
     const externalMakpList = [...new Set(hospitalDoctors.map(d => d.makp))];
 
-    // Lấy dữ liệu cần thiết từ DB trong một vài lần gọi
     const [allDbDoctors, clinics] = await Promise.all([
       this.doctorRepository.find(),
       this.clinicRepository.find({ where: { externalMakp: In(externalMakpList) } }),
@@ -107,7 +92,6 @@ export class DoctorsService {
 
       const existingDoctor = dbDoctorsMap.get(hd.mabs);
       if (existingDoctor) {
-        // Cập nhật nếu có thay đổi
         if (existingDoctor.name !== hd.tenbs || !existingDoctor.isActive) {
           existingDoctor.name = hd.tenbs;
           existingDoctor.clinicId = clinicId;
@@ -115,7 +99,6 @@ export class DoctorsService {
           doctorsToUpdate.push(existingDoctor);
         }
       } else {
-        // Tạo mới
         doctorsToCreate.push({
           externalMabs: hd.mabs,
           name: hd.tenbs,
@@ -129,7 +112,6 @@ export class DoctorsService {
       dbDoctor => dbDoctor.isActive && !externalMabsList.includes(dbDoctor.externalMabs)
     );
 
-    // Thực thi các thao tác CSDL
     const recordsToSave = [...doctorsToCreate, ...doctorsToUpdate];
     if (recordsToSave.length > 0) {
       await this.doctorRepository.save(recordsToSave);

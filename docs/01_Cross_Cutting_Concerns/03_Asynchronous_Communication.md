@@ -113,7 +113,7 @@ Toàn bộ cấu hình được định nghĩa tập trung tại `libs/common/sr
         activate Scheduling Service
 
         note over Scheduling Service: Consumer: UserEventsConsumer.handleUserFirstLogin()
-        Scheduling Service->>Account Service: fetchUserByIdentifier(user_id)
+        Scheduling Service->>Account Service: fetchUserByIdentifier(userId)
         Account Service-->>Scheduling Service: User object
 
         note over Scheduling Service: Service: DosesSyncService.syncAllDoses()
@@ -135,7 +135,7 @@ Toàn bộ cấu hình được định nghĩa tập trung tại `libs/common/sr
 -   **Chi tiết Kỹ thuật:**
     *   **Publisher:** `AuthService` trong `account-service`.
     *   **Consumer:** `UserEventsConsumer` trong `scheduling-service`.
-    *   **Payload:** `{ user_id: string, mabn: string }`.
+    *   **Payload:** `{ userId: string, mabn: string }`.
     *   **Xử lý lỗi:** Nếu quá trình đồng bộ hóa thất bại, consumer sẽ trả về `new Nack(false)`. Message sẽ được chuyển đến Dead Letter Queue (DLQ) để điều tra thủ công.
 
 ## 5. Chiến lược Xử lý Lỗi & Dead Letter Queue (DLQ)

@@ -105,8 +105,8 @@ export class HospitalApiClientService {
         const query = `
             query GetClinics($loai: String!, $makp: String!) {
                 btdkp(loai: $loai, makp: $makp) {
-                makp
-                tenkp
+                    makp
+                    tenkp
                 }
             }
         `;

@@ -17,20 +17,20 @@ input MarkAsReadInput {
 type Mutation {
   deleteNotification(id: ID!): Boolean!
   markNotificationsAsRead(input: MarkAsReadInput!): Boolean!
-  test_triggerNotification(dose_id: ID!, user_id: ID!): Boolean!
+  test_triggerNotification(dose_id: ID!, userId: ID!): Boolean!
 }
 
 type NotificationHistory {
   body: String!
   createdAt: DateTime!
-  dose_ids: [String!]
+  doseIds: [String!]
   id: ID!
   payload: JSONObject
   sentAt: DateTime!
   status: NotificationStatus!
   title: String!
   type: NotificationType!
-  user_id: String!
+  userId: String!
 }
 
 """Trạng thái của một thông báo."""

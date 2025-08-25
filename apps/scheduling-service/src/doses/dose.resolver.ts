@@ -89,13 +89,13 @@ export class DosesResolver {
     @Args('mabn', { nullable: true }) mabn?: string,
     @Args('sodienthoai', { nullable: true }) sodienthoai?: string,
     @Args('socmnd', { nullable: true }) socmnd?: string,
-    @Args('user_id', { nullable: true }) user_id?: string,
+    @Args('userId', { nullable: true }) userId?: string,
   ): Promise<boolean> {
-    if (!mabn && !sodienthoai && !socmnd && !user_id) {
-      throw new Error('Either "mabn" or "sodienthoai" or "socmnd" or "user_id" must be provided.');
+    if (!mabn && !sodienthoai && !socmnd && !userId) {
+      throw new Error('Either "mabn" or "sodienthoai" or "socmnd" or "userId" must be provided.');
     }
 
-    const payload = { user_id, mabn, sodienthoai, socmnd, ngay };
+    const payload = { userId, mabn, sodienthoai, socmnd, ngay };
 
     this.amqpConnection.publish(
       ExchangeName.SYNC,

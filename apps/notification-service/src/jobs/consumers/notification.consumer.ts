@@ -10,8 +10,8 @@ import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-busine
 import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
 
 interface GroupedNotificationPayload {
-    user_id: string;
-    dose_ids: string[];
+    userId: string;
+    doseIds: string[];
 }
 
 @Injectable()
@@ -38,8 +38,8 @@ export class NotificationConsumer {
         queue: QueueName.NOTIFICATION_SCHEDULER,
     })
     public async handleSendGroupedNotification(payload: GroupedNotificationPayload): Promise<void | Nack> {
-        const { user_id, dose_ids } = payload;
-        this.logger.log(`Received dose reminder event for user ${user_id} with ${dose_ids.length} doses.`);
+        const { userId, doseIds } = payload;
+        this.logger.log(`Received dose reminder event for user ${userId} with ${doseIds.length} doses.`);
 
         const labels = {
             exchange: ExchangeName.NOTIFICATION,
@@ -50,7 +50,7 @@ export class NotificationConsumer {
             await this.notificationService.processDoseReminder(payload);
 
         } catch (error) {
-            this.logger.error(`CRITICAL error processing dose reminder for user ${user_id}. Message will be NACKed.`, error.stack);
+            this.logger.error(`CRITICAL error processing dose reminder for user ${userId}. Message will be NACKed.`, error.stack);
 
             return new Nack(false);
         }

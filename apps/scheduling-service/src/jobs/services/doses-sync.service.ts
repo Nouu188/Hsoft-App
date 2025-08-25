@@ -77,7 +77,7 @@ export class DosesSyncService {
                         external_id: externalId,
                         ylenh_id: ylenh.id,
                         ylenh_stt: ylenh.stt,
-                        user_id: user.id,
+                        userId: user.id,
                         due_at: dueAt.toDate(),
                         notify_at: dueAt.clone().subtract(15, 'minutes').toDate(),
                         status: DoseStatus.UPCOMING,
@@ -99,7 +99,7 @@ export class DosesSyncService {
 
         const existingPendingDoses = await this.doseRepository.find({
             where: {
-                user_id: user.id,
+                userId: user.id,
                 status: DoseStatus.PENDING,
             },
         });
@@ -124,8 +124,8 @@ export class DosesSyncService {
             this.logger.log(`Created ${savedDoses.length} new doses for user ${user.id}.`);
 
             const notificationsToSchedule = savedDoses.flatMap(dose => [
-                { id: dose.id, user_id: dose.user_id, notify_at: dose.notify_at },
-                { id: dose.id, user_id: dose.user_id, notify_at: dose.due_at }
+                { id: dose.id, userId: dose.userId, notify_at: dose.notify_at },
+                { id: dose.id, userId: dose.userId, notify_at: dose.due_at }
             ]);
 
             await this.notificationClient.scheduleNotifications(notificationsToSchedule);
@@ -183,7 +183,7 @@ export class DosesSyncService {
                 if (!allDosesToCreate.has(externalId)) {
                     allDosesToCreate.set(externalId, {
                         external_id: externalId,
-                        user_id: user.id,
+                        userId: user.id,
                         due_at: dueAt.toDate(),
                         notify_at: dueAt.clone().subtract(15, 'minutes').toDate(),
                         status: dueAt.isBefore(moment()) ? DoseStatus.MISSED : DoseStatus.UPCOMING,
@@ -210,7 +210,7 @@ export class DosesSyncService {
         }
 
         // Xóa toàn bộ dữ liệu cũ của user để đảm bảo đồng bộ sạch
-        await this.doseRepository.delete({ user_id: user.id });
+        await this.doseRepository.delete({ userId: user.id });
         this.logger.log(`Cleared all previous doses for user ${user.id} before full sync.`);
 
         const dosesToSaveInChunks = Array.from(allDosesToCreate.values());
@@ -226,7 +226,7 @@ export class DosesSyncService {
         const futureDoses = dosesToSaveInChunks.filter(d => d.status === DoseStatus.PENDING);
         await this.notificationClient.scheduleNotifications(futureDoses.map(dose => ({
             id: dose.id!,
-            user_id: dose.user_id!,
+            userId: dose.userId!,
             notify_at: dose.notify_at!,
         })));
 

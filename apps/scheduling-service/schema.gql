@@ -26,7 +26,7 @@ type Dose {
   usage_instructions: String
 
   """ID của người dùng sở hữu liều uống này"""
-  user_id: ID!
+  userId: ID!
 
   """ID của y lệnh từ bệnh viện"""
   ylenh_id: String!
@@ -60,7 +60,7 @@ type Mutation {
     ngay: String
     socmnd: String
     sodienthoai: String
-    user_id: String
+    userId: String
   ): Boolean!
   updateDoses(updates: [UpdateDoseInput!]!): [Dose!]!
 }

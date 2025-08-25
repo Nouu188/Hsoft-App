@@ -15,23 +15,36 @@ export class AuthApiClientService implements OnModuleInit {
     private readonly authServiceUrl: string;
     private readonly clientId: string;
     private readonly clientSecret: string;
+    private readonly isAuthService: boolean;
 
     constructor(
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
     ) {
+        const appName = this.configService.get<string>('NPM_PACKAGE_NAME');
+
+        this.isAuthService = appName === 'account-service';
+
         this.authServiceUrl = this.configService.get<string>('ACCOUNT_SERVICE_URL')!;
         this.clientId = this.configService.get<string>('SERVICE_CLIENT_ID')!;
         this.clientSecret = this.configService.get<string>('SERVICE_CLIENT_SECRET')!;
 
-        if (!this.authServiceUrl || !this.clientId || !this.clientSecret) {
-            throw new Error('M2M Auth client is not configured properly. Please check ACCOUNT_SERVICE_URL, SERVICE_CLIENT_ID, and SERVICE_CLIENT_SECRET environment variables.');
+        if (appName !== 'account-service') {
+            if (!this.authServiceUrl || !this.clientId || !this.clientSecret) {
+                throw new Error(
+                    'M2M Auth client is not configured properly. Please check ACCOUNT_SERVICE_URL, SERVICE_CLIENT_ID, and SERVICE_CLIENT_SECRET environment variables.',
+                );
+            }
         }
     }
 
     async onModuleInit() {
-        this.logger.log('Initializing M2M token with retry mechanism...');
+        if (this.isAuthService) {
+            this.logger.log('Running inside account-service, skipping M2M token initialization.');
+            return;
+        }
 
+        this.logger.log('Initializing M2M token with retry mechanism...');
         await this.getM2MTokenWithRetry(5, 3000);
     }
 
@@ -81,12 +94,12 @@ export class AuthApiClientService implements OnModuleInit {
             );
 
             this.m2mToken = response.data.accessToken;
-            if(!this.m2mToken) {
+            if (!this.m2mToken) {
                 throw new Error("Invalid M2M token.");
             }
             this.tokenExpiry = Date.now() + (3600 * 1000);
             this.logger.log('Successfully fetched a new M2M token.');
-            
+
             return this.m2mToken;
         } catch (error) {
             this.logger.error('Failed to fetch M2M token from Auth Service.');
@@ -94,15 +107,15 @@ export class AuthApiClientService implements OnModuleInit {
             if (error.response) {
                 this.logger.error(`- HTTP Status: ${error.response.status}`);
                 this.logger.error(`- Response Data: ${JSON.stringify(error.response.data)}`);
-            } 
+            }
             else if (error.request) {
                 this.logger.error('- No response received from server. This is likely a network or DNS issue.');
                 this.logger.error(`- Request was made to: ${error.config.url}`);
-            } 
+            }
             else {
                 this.logger.error(`- Error Message: ${error.message}`);
             }
-            
+
             throw new Error('Could not authenticate M2M client.');
         }
     }

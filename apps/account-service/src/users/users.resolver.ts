@@ -19,10 +19,10 @@ export class UsersResolver {
     return user;
   }
 
-  @Query(() => User, { name: 'findAllUser' })
+  @Query(() => User, { name: 'findAllUsers' })
   @UseGuards(M2MJwtGuard)
   findAllUser(): Promise<User[]> {
-    return this.usersService.findAllUser()
+    return this.usersService.findAllUsers()
   }
 
   @Query(() => User, { name: 'findByIdentifier', nullable: true })

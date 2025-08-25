@@ -109,7 +109,7 @@ Edit
 - Headers: `x-request-id`, `traceparent`.
 
 ### Logging
-- Structured JSON logs (timestamp, service, level, msg, request_id, trace_id, user_id, correlation_id).
+- Structured JSON logs (timestamp, service, level, msg, request_id, trace_id, userId, correlation_id).
 
 ### Alerts (Grafana/Alertmanager)
 - Service down.

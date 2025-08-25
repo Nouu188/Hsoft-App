@@ -45,7 +45,7 @@ type Mutation {
 }
 
 type Query {
-  findAllUser: User!
+  findAllUsers: User!
   findByIdentifier(identifier: String!): User
   me: User!
 }
@@ -80,7 +80,7 @@ type ServiceClient {
 
 type User {
   """Danh sách APN token cho thiết bị iOS"""
-  apn_tokens: [String]
+  apnTokens: [String]
 
   """URL ảnh đại diện"""
   avatarUrl: String
@@ -91,7 +91,7 @@ type User {
   email: String
 
   """Danh sách FCM token cho thiết bị Android"""
-  fcm_tokens: [String]
+  fcmTokens: [String]
 
   """ID người dùng từ Google"""
   googleId: String
@@ -123,7 +123,7 @@ type UserResponseDto {
   avatarUrl: String
   diachi: String
   email: String
-  fcm_tokens: [String!]
+  fcmTokens: [String!]
   hoten: String!
   id: String!
   mabn: String

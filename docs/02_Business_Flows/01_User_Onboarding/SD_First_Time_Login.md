@@ -80,10 +80,10 @@ sequenceDiagram
     deactivate Users Service
 
     note over Auth Service: Publishing 'user.first_login' event for async processing
-    Auth Service->>RabbitMQ: PUBLISH 'user.first_login' (payload: { user_id })
+    Auth Service->>RabbitMQ: PUBLISH 'user.first_login' (payload: { userId })
     
     note over Auth Service: Generating JWT tokens for the user session
-    Auth Service->>Auth Service: generateToken(user_id, roles)
+    Auth Service->>Auth Service: generateToken(userId, roles)
     Auth Service-->>Auth Resolver: { user, accessToken }
     deactivate Auth Service
     
@@ -105,5 +105,5 @@ sequenceDiagram
 
 - **GraphQL Mutation:** The entry point is a GraphQL mutation, not a REST endpoint. The `Auth Resolver` handles the incoming request.
 - **Internal Service Communication:** The diagram clearly shows the separation of concerns between `Auth Service` (business logic) and `Users Service` (data access).
-- **Event-Carried State Transfer:** The `user.first_login` event payload should contain essential, stable information (`user_id`, `mabn`) required by downstream consumers. This reduces the need for immediate API callbacks to the `Account Service`, improving system resilience.
+- **Event-Carried State Transfer:** The `user.first_login` event payload should contain essential, stable information (`userId`, `mabn`) required by downstream consumers. This reduces the need for immediate API callbacks to the `Account Service`, improving system resilience.
 - **Security:** The `password` (year of birth) is used for a one-time verification only. The newly created user in `Account DB` should have a properly hashed password, which can be set during a "complete profile" step or generated randomly and sent via a secure channel.

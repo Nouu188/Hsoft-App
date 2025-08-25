@@ -1,10 +1,15 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { NotificationApiClientService } from './notification-api-client.service';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { ConfigModule } from '@nestjs/config';
+import { NotificationApiClientService } from './notification-api-client.service';
 
 @Module({
-  imports: [AppRabbitMQModule, ConfigModule],
+  imports: [
+    HttpModule.register({
+      timeout: 15000,
+    }),
+    ConfigModule,
+  ],
   providers: [NotificationApiClientService],
   exports: [NotificationApiClientService],
 })

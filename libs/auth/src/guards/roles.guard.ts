@@ -1,10 +1,11 @@
-import { CanActivate, ExecutionContext, Logger } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { AuthPayload } from '../dtos/auth.payload';
 import { Role } from '../enums/role.enum';
 
+@Injectable()
 export class RolesGuard implements CanActivate {
   private readonly logger = new Logger(RolesGuard.name);
 
@@ -40,7 +41,7 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    const hasRole = requiredRoles.some((role) => user.roles!.includes(role));
+    const hasRole = requiredRoles.some((role) => user.roles?.includes(role));
 
     if (hasRole) {
       this.logger.log(

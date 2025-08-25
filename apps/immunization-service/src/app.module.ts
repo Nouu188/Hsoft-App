@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ImmunizationServiceController } from './app.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -35,7 +34,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       }),
     }), 
   ],
-  controllers: [ImmunizationServiceController],
   providers: [],
 })
 export class ImmunizationServiceModule {}

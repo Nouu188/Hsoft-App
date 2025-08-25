@@ -8,7 +8,7 @@ export class CreateHistoryDto {
   @Field()
   @IsNotEmpty()
   @IsString()
-  user_id: string;
+  userId: string;
 
   @Field()
   @IsNotEmpty()
@@ -28,7 +28,7 @@ export class CreateHistoryDto {
   @Field(() => [String], { nullable: true })
   @IsOptional()
   @IsArray()
-  dose_ids?: string[];
+  doseIds?: string[];
 
   @Field(() => GraphQLJSONObject, { nullable: true })
   @IsOptional()

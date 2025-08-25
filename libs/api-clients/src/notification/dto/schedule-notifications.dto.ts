@@ -1,5 +1,5 @@
 export interface DoseForScheduling {
   id: string;
-  user_id: string;
+  userId: string;
   notify_at: Date;
 }

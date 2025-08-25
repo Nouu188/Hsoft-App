@@ -17,14 +17,12 @@ import { AuthController } from './controllers/auth.controller';
 import { ServiceClient } from './entities/service-client.entity';
 import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
 import { GoogleModule } from './strategies/google/google.module';
+import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
 
 
 @Module({
   imports: [
-    ConfigModule,
-    forwardRef(() => UsersModule),
     TypeOrmModule.forFeature([ServiceClient], 'authConnection'),
-    AuthLibModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -33,18 +31,17 @@ import { GoogleModule } from './strategies/google/google.module';
         signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN', '1d') },
       }),
     }),
-    AppRabbitMQModule,
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const host = configService.get<string>('REDIS_HOST');
         const port = configService.get<number>('REDIS_PORT');
-
+        
         const logger = new Logger('RedisCache');
-
+        
         logger.log(`[Redis] Configuring Redis cache with host: ${host}, port: ${port}`);
-
+        
         try {
           const cacheConfig = {
             store: redisStore,
@@ -83,7 +80,12 @@ import { GoogleModule } from './strategies/google/google.module';
         },
       }),
     }),
+    forwardRef(() => UsersModule),
+    ConfigModule,
+    AppRabbitMQModule,
+    AuthLibModule,
     GoogleModule,
+    HospitalApiClientModule
   ],
   controllers: [AuthController],
   providers: [
