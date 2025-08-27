@@ -31,7 +31,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ navigation }) => {
     try {
       await requestOtp(email, hoten, password);
       Alert.alert('OTP đã gửi', 'Vui lòng kiểm tra email để nhận mã OTP.');
-      navigation.navigate('OTPScreen', { email, hoten, password });
+      navigation.navigate('OTPScreen', { email, hoten, password, type: 'forgotPassword' });
     } catch (error) {
       console.log('[RegisterForm] Request OTP failed', error);
     }

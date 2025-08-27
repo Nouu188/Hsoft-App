@@ -13,12 +13,28 @@ export interface Stat {
   };
   getValue: (p: HealthStatsProps) => string;
   progress?: (p: HealthStatsProps) => number;
+  // thêm để rõ ràng hơn
+  dataKeys?: (keyof HealthStatsProps)[];
+  
 }
+
 
 export interface HealthStatsProps {
   heartRate: number;
   steps: number;
   stepsGoal: number;
+
+  // thêm các props cho card mở rộng
+  sleep?: number;
+  sleepGoal?: number;
+
+  calories?: number;
+  caloriesGoal?: number;
+
+  water?: number;
+  waterGoal?: number;
+
+  [key: string]: number | undefined;
 }
 
 export interface StatCardProps {

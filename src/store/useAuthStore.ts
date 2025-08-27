@@ -12,6 +12,7 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 import { jwtDecode } from 'jwt-decode';
 import { Alert } from 'react-native';
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface JwtPayload {
   sub: string;
@@ -231,4 +232,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false });
     }
   },
+  
 }));

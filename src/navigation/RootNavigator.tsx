@@ -6,13 +6,14 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator'; 
 import OTPScreen from '@/screens/otp/OTPScreen';
-
+import ForgotPasswordScreen from '@/screens/otp/ForgotPasswordScreen';
 export type RootStackParamList = {
   Splash: undefined;
   Onboarding: undefined;
   AuthFlow: undefined;
   MainApp: undefined;
-  OTPScreen: undefined;
+  OTPScreen: { email: string; hoten?: string; password?: string,type:string };
+  ForgotPasswordScreen:undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -28,6 +29,7 @@ const RootNavigator: React.FC = () => {
       <Stack.Screen name="AuthFlow" component={AuthNavigator} />
       <Stack.Screen name="MainApp" component={TabNavigator} />
       <Stack.Screen name="OTPScreen" component={OTPScreen} />
+      <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
     </Stack.Navigator>
   );
 };

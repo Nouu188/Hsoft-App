@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { COLORS, SIZES } from '../../../../constants/theme'; // Điều chỉnh đường dẫn
+import { COLORS, SIZES } from '../../../../constants/theme';
 
 interface OTPInputProps {
   otp: string[];
-  inputRefs: React.MutableRefObject<(TextInput | null)[]>;
+  inputRefs: React.RefObject<TextInput| null>[];
   handleOtpChange: (text: string, index: number) => void;
   handleKeyPress: (e: any, index: number) => void;
 }
@@ -20,9 +20,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
       {otp.map((digit, index) => (
         <TextInput
           key={index}
-          ref={(ref) => {
-            inputRefs.current[index] = ref;
-          }}
+          ref={inputRefs[index]}
           style={[styles.otpBox, digit ? styles.otpBoxFilled : null]}
           keyboardType="number-pad"
           maxLength={1}

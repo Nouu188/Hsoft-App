@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { SIZES } from '@/constants/theme';
+import { ScrollView, StyleSheet } from 'react-native';
 import { Stat, HealthStatsProps } from './types';
-import StatCard from './components/StatCard';
-import AddStatModal from './components/AddStatModal'; 
+import InitialLayout from './components/InitialLayout';
+import GridLayout from './components/GridLayout';
+import StatPickerModal from './components/StatPickerModal';
+import GoalInputModal from './components/GoalInputModal';
 
+// 2 card gốc
 const initialStats: Stat[] = [
   {
     key: 'heart',
@@ -16,98 +18,88 @@ const initialStats: Stat[] = [
     key: 'steps',
     title: 'Số bước',
     icon: { name: 'walk-outline', bg: '#ECEAFF', color: '#8862E0' },
-    getValue: (props) => `${props.steps.toLocaleString()} / ${props.stepsGoal.toLocaleString()}`,
+    getValue: (props) =>
+      `${props.steps.toLocaleString()} / ${props.stepsGoal.toLocaleString()}`,
     progress: (props) => props.steps / props.stepsGoal,
+  },
+];
+
+// Các card có thể thêm
+const availableStats: Stat[] = [
+  {
+    key: 'sleep',
+    title: 'Giấc ngủ',
+    icon: { name: 'moon-outline', bg: '#DDEBFF', color: '#3679E1' },
+    getValue: (p) => `${p.sleep || 0} / ${p.sleepGoal || 8} giờ`,
+    progress: (p) => (p.sleep && p.sleepGoal ? p.sleep / p.sleepGoal : 0),
+  },
+  {
+    key: 'calories',
+    title: 'Calo',
+    icon: { name: 'flame-outline', bg: '#FFE8D6', color: '#FF7A00' },
+    getValue: (p) => `${p.calories || 0} / ${p.caloriesGoal || 2000} kcal`,
+    progress: (p) =>
+      p.calories && p.caloriesGoal ? p.calories / p.caloriesGoal : 0,
+  },
+  {
+    key: 'water',
+    title: 'Nước uống',
+    icon: { name: 'water-outline', bg: '#E0F7FA', color: '#00ACC1' },
+    getValue: (p) => `${p.water || 0} / ${p.waterGoal || 2000} ml`,
+    progress: (p) => (p.water && p.waterGoal ? p.water / p.waterGoal : 0),
   },
 ];
 
 const HealthStatsView = () => {
   const [healthProps, setHealthProps] = useState<HealthStatsProps>({
-    heartRate: 10,
-    steps: 8540,
+    heartRate: 120,
+    steps: 5540,
     stepsGoal: 10000,
+    // mặc định cho các chỉ số có thể thêm
+    sleep: 2,
+    calories: 800,
+    water: 500,
   });
-
   const [stats, setStats] = useState<Stat[]>(initialStats);
-  
-  const addNewCard = () => {
-    const newCard: Stat = {
-      key: `sleep-${stats.length}`,
-      title: 'Giấc ngủ',
-      icon: { name: 'moon-outline', bg: '#DDEBFF', color: '#3679E1' },
-      getValue: () => `7 giờ 30 phút`,
-      progress: () => 0.9,
-    };
-    setStats([...stats, newCard]);
+  const [showPicker, setShowPicker] = useState(false);
+  const [pendingStat, setPendingStat] = useState<Stat | null>(null);
+  const [goalValue, setGoalValue] = useState<string>('');
+
+  const confirmAddWithGoal = () => {
+    if (!pendingStat) return;
+    const goalKey = (pendingStat.key + 'Goal') as keyof HealthStatsProps;
+    const valueKey = pendingStat.key as keyof HealthStatsProps;
+    setHealthProps((prev) => ({
+      ...prev,
+      [goalKey]: Number(goalValue),
+      [valueKey]: (prev[valueKey] as number) || 0,
+    }));
+    setStats((prev) => [...prev, pendingStat]);
+    setPendingStat(null);
+    setGoalValue('');
   };
 
-  const renderInitialLayout = () => (
-    <View style={styles.initialContainer}>
-      <View style={styles.leftColumn}>
-        <StatCard stat={stats[0]} healthProps={healthProps} large />
-      </View>
+  const handleDelete = (key: string) => {
+    if (initialStats.some((s) => s.key === key)) return;
+    setStats((prev) => prev.filter((s) => s.key !== key));
+  };
 
-      <View style={styles.rightColumn}>
-        <View style={[styles.rightCardWrapper, { marginBottom: SIZES.base }]}>
-          <StatCard stat={stats[1]} healthProps={healthProps} />
-        </View>
-        <View style={styles.rightCardWrapper}>
-          <AddStatModal onPress={addNewCard} />
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderGridLayout = () => (
-    <View style={styles.gridContainer}>
-      {stats.map((stat) => (
-        <View key={stat.key} style={styles.gridCardWrapper}>
-          <StatCard stat={stat} healthProps={healthProps} />
-        </View>
-      ))}
-      <View style={styles.gridCardWrapper}>
-        {/* BƯỚC 2: Sử dụng component AddStatModal */}
-        <AddStatModal onPress={addNewCard} />
-      </View>
-    </View>
-  );
+  const isInitial = stats.length === initialStats.length;
 
   return (
     <ScrollView style={styles.screen}>
-      {stats.length === initialStats.length ? renderInitialLayout() : renderGridLayout()}
+      {isInitial ? (
+        <InitialLayout initialStats={initialStats} healthProps={healthProps} onAdd={() => setShowPicker(true)} />
+      ) : (
+        <GridLayout stats={stats} initialStats={initialStats} healthProps={healthProps} onAdd={() => setShowPicker(true)} onDelete={handleDelete} />
+      )}
+
+      <StatPickerModal visible={showPicker} availableStats={availableStats} onSelect={(s) => { setPendingStat(s); setShowPicker(false); }} onClose={() => setShowPicker(false)} />
+
+      <GoalInputModal visible={!!pendingStat} pendingStat={pendingStat} goalValue={goalValue} setGoalValue={setGoalValue} onConfirm={confirmAddWithGoal} onCancel={() => setPendingStat(null)} />
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#F7F8FC',
-  },
-  initialContainer: {
-    flexDirection: 'row',
-    padding: SIZES.padding,
-    height: 320,
-  },
-  leftColumn: {
-    flex: 0.6,
-    height: '100%',
-  },
-  rightColumn: {
-    flex: 0.4,
-  },
-  rightCardWrapper: {
-    flex: 1,
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  gridCardWrapper: {
-    width: '48%',
-    height: 160,
-  },
-});
-
+const styles = StyleSheet.create({ screen: { flex: 1, backgroundColor: '#F7F8FC' } });
 export default HealthStatsView;
