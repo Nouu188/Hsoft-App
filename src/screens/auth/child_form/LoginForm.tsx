@@ -1,116 +1,100 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, ScrollView,Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import AuthInput from '@/components/specific/auth/AuthInput';
 import { COLORS, SIZES, FONTS, SHADOWS } from '../../../constants/theme';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useHospitalStore } from '@/store/useHospitalsStore';
 
 interface LoginFormProps {
+  identifier: string;
+  password: string;
+  useHospital: boolean;
+  selectedHospitalCode: string;
   isLoading: boolean;
-  onLogin: (identifier: string, password: string, useHospital: boolean) => void; // gửi luôn useHospital
+  setUseHospital: (value: boolean) => void;
+  setSelectedHospitalCode: (code: string) => void;
+  onLogin: (identifier: string, password: string) => void;
   onForgotPasswordPress: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({
+  identifier,
+  password,
+  useHospital,
+  selectedHospitalCode,
   isLoading,
+  setUseHospital,
+  setSelectedHospitalCode,
   onLogin,
   onForgotPasswordPress,
 }) => {
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [useHospital, setUseHospital] = useState(true); // <- state nội bộ
-  const [hospitalSelected, setHospitalSelected] = useState('');
+  const [localIdentifier, setLocalIdentifier] = useState(identifier);
+  const [localPassword, setLocalPassword] = useState(password);
+  const { hospitals, fetchHospitals, isLoading: isHospitalsLoading } = useHospitalStore();
 
-  const isGoogleLoading = useAuthStore(state => state.isGoogleLoading);
-  const loginWithGoogle = useAuthStore(state => state.loginWithGoogle);
-
-  const handleLogin = () => {
-    if (!identifier.trim() || !password.trim()) {
-    Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ tài khoản và mật khẩu.');
-    return;
-  }
-    onLogin(identifier, password, useHospital);
-  };
-  const hospitals = [
-  "Bệnh viện Bạch Mai",
-  "Bệnh viện Chợ Rẫy",
-  "Bệnh viện Đa khoa Hòa Bình",
-  "Bệnh viện Đa khoa Trung ương Huế",
-  "Bệnh viện Đại học Y Dược TP.HCM",
-  "Bệnh viện Hữu Nghị Việt Đức",
-  "Bệnh viện K",
-  "Bệnh viện Nhi Trung ương",
-  "Bệnh viện Nhiệt đới Trung ương",
-  "Bệnh viện Phụ Sản Hà Nội",
-  "Bệnh viện Phụ Sản TP.HCM",
-  "Bệnh viện Tai Mũi Họng Trung ương",
-  "Bệnh viện Thống Nhất",
-  "Bệnh viện Trưng Vương",
-  "Bệnh viện Việt Nam – Cu Ba"
-];
+  useEffect(() => { if (useHospital) fetchHospitals(); }, [useHospital]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.loginHint}>
-        {useHospital ? 'Bạn có thể đăng nhập bằng SĐT hoặc CCCD' : 'Đăng nhập bằng email'}
-      </Text>
-
-      <AuthInput icon="person-outline" placeholder="Tài khoản" value={identifier} onChangeText={setIdentifier} />
-      <AuthInput icon="lock-closed-outline" placeholder="Mật khẩu" value={password} onChangeText={setPassword} isPassword />
-
-      {useHospital=== false && (
+    <View style={{ flex: 1, paddingHorizontal: SIZES.padding, justifyContent: 'center' }}>
+      <AuthInput
+        icon="person-outline"
+        placeholder={useHospital ? 'Số điện thoại / CCCD' : 'Email'}
+        value={localIdentifier}
+        onChangeText={setLocalIdentifier}
+      />
+      <AuthInput
+        icon="lock-closed-outline"
+        placeholder="Mật khẩu"
+        value={localPassword}
+        onChangeText={setLocalPassword}
+        isPassword
+      />
+      {useHospital && (
         <AuthInput
           icon="medkit-outline"
           placeholder="Chọn bệnh viện"
-          value={hospitalSelected}
-          onChangeText={setHospitalSelected}
+          value={selectedHospitalCode}
           isListPressed
-          listItems={hospitals}
-          onSelectItem={setHospitalSelected}
+          listItems={hospitals.map(h => ({ label: h.name, value: h.externalCode }))}
+          isLoading={isHospitalsLoading}
+          onChangeText={setSelectedHospitalCode}
+          onSelectItem={setSelectedHospitalCode}
         />
       )}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+        <TouchableOpacity onPress={() => setUseHospital(!useHospital)}>
+          <Text style={{ textDecorationLine: 'underline', ...FONTS.body4, color: COLORS.introduction, fontWeight: '500' }}>
+            {useHospital ? 'Đăng nhập bằng email?' : 'Bạn có tài khoản bệnh viện?'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity
+        style={{ backgroundColor: COLORS.introduction, borderRadius: SIZES.radius * 5, alignItems: 'center', justifyContent: 'center', height: 60, marginBottom: 5 }}
+        onPress={() => onLogin(localIdentifier, localPassword)}
+        disabled={isLoading || isHospitalsLoading}
+      >
+        {isLoading ? <ActivityIndicator color={COLORS.white} /> : <Text style={{ ...FONTS.h3, color: COLORS.white, fontWeight: 'bold' }}>Đăng nhập</Text>}
+      </TouchableOpacity>
 
-      <View style={styles.footerRow}>
-        <TouchableOpacity onPress={() => setUseHospital(prev => !prev)}>
-          <Text style={styles.toggleText}>
-            {useHospital ? 'Bạn đã có tài khoản bệnh viện?' : 'Đăng nhập bằng email?'}
+      <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+        <TouchableOpacity onPress={onForgotPasswordPress}>
+          <Text style={{ ...FONTS.body4, color: COLORS.introduction, fontWeight: '500', textDecorationLine: 'underline' }}>
+            Quên mật khẩu?
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onForgotPasswordPress}>
-          <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
-        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading || isGoogleLoading}>
-        {isLoading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.loginButtonText}>Đăng nhập</Text>}
-      </TouchableOpacity>
-
-      <View style={styles.orContainer}>
-        <View style={styles.line} />
-        <Text style={styles.orText}>Hoặc</Text>
-        <View style={styles.line} />
-      </View>
-
-      <TouchableOpacity style={styles.googleButton} onPress={loginWithGoogle} disabled={isLoading || isGoogleLoading}>
-        {isGoogleLoading ? (
-          <ActivityIndicator color={COLORS.primary} />
-        ) : (
-          <>
-            <Ionicons name="logo-google" size={24} color={COLORS.danger} style={{ marginRight: 10 }} />
-            <Text style={styles.googleButtonText}>Đăng nhập với Google</Text>
-          </>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: Dimensions.get('window').width,
+    flex: 1,
     paddingHorizontal: SIZES.padding,
-    paddingBottom: 50,
+    justifyContent: 'center',
+    backgroundColor: COLORS.background,
   },
   loginHint: {
     fontSize: 14,

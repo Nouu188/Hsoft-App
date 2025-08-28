@@ -1,69 +1,76 @@
 import React, { useState, useMemo } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text, FlatList, ActivityIndicator } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES, FONTS, SHADOWS } from '../../../constants/theme';
 import type { AuthInputProps } from './types';
+interface DropdownItem {
+  label: string;
+  value: string;
+}
 
-// Component input đa năng, hỗ trợ:
-// - Hiển thị icon bên trái
-// - Hiển thị lỗi
-// - Hỗ trợ password show/hide
-// - Hỗ trợ dropdown list chọn item
 const AuthInput: React.FC<AuthInputProps> = ({
-  icon,             // icon hiển thị bên trái
-  placeholder,      // text placeholder
-  value,            // giá trị input
-  onChangeText,     // hàm gọi khi text thay đổi
-  isPassword = false,   // true nếu là password input
-  isListPressed = false, // true nếu muốn hiển thị dropdown list
-  error,            // message lỗi
-  listItems = [],   // danh sách dropdown
-  onSelectItem,     // hàm gọi khi chọn item dropdown
+  icon,
+  placeholder,
+  value,
+  isPassword = false,
+  isListPressed = false,
+  error,
+  listItems = [],
+  isLoading = false,
+  onChangeText,
+  onSelectItem,
 }) => {
-  const [isFocused, setIsFocused] = useState(false); // trạng thái focus input
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false); // trạng thái hiển thị password
-  const [isListPressedVisible, setListPressedVisible] = useState(false); // trạng thái hiển thị dropdown
+  const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
 
-  // Lọc danh sách dropdown theo giá trị input
-  const filteredList = useMemo(() => {
-    if (!value) return listItems;
-    return listItems.filter(item =>
-      item.toLowerCase().includes(value.toLowerCase())
-    );
+  const displayLabel = useMemo(() => {
+    const found = listItems.find(item => item.value === value);
+    return found ? found.label : value || '';
   }, [value, listItems]);
 
-  // Chọn item từ dropdown
-  const handleSelectItem = (item: string) => {
-    onSelectItem && onSelectItem(item); // gọi callback
-    setListPressedVisible(false);       // ẩn dropdown sau khi chọn
-  };
+  const filteredList = useMemo(() => {
+    if (!displayLabel) return listItems;
+    return listItems.filter(
+      item =>
+        item.label.toLowerCase().includes(displayLabel.toLowerCase()) ||
+        item.value.toLowerCase().includes(displayLabel.toLowerCase())
+    );
+  }, [displayLabel, listItems]);
 
+  const handleSelectItem = (item: DropdownItem) => {
+    onSelectItem && onSelectItem(item.value); // trả về value thực
+    setDropdownVisible(false);
+  };
   return (
     <View style={{ marginBottom: SIZES.padding }}>
-      <View style={[
-          styles.inputContainer, 
-          isFocused && styles.inputContainerFocused, 
-          error && styles.inputContainerError
+      <View
+        style={[
+          styles.inputContainer,
+          isFocused && styles.inputContainerFocused,
+          error && styles.inputContainerError,
         ]}
       >
-        <Ionicons
-          name={icon as any}
-          size={22}
-          color={isFocused ? COLORS.primary : COLORS.textLight}
-          style={styles.icon}
-        />
+        {icon && (
+          <Ionicons
+            name={icon as any}
+            size={22}
+            color={isFocused ? COLORS.primary : COLORS.textLight}
+            style={styles.icon}
+          />
+        )}
 
         <TextInput
           style={styles.input}
           placeholder={placeholder}
           placeholderTextColor={COLORS.textLight}
-          value={value}
-          onChangeText={text => {
-            onChangeText(text);
-            if (!isListPressedVisible && isListPressed) setListPressedVisible(true);
+          value={displayLabel}
+          secureTextEntry={isPassword && !isPasswordVisible}
+          onChangeText={text => onChangeText && onChangeText(text)}
+          onFocus={() => {
+            setIsFocused(true);
+            if (isListPressed) setDropdownVisible(true);
           }}
-          secureTextEntry={isPassword && !isPasswordVisible} 
-          onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           autoCapitalize="none"
         />
@@ -78,28 +85,35 @@ const AuthInput: React.FC<AuthInputProps> = ({
           </TouchableOpacity>
         )}
 
-        {isListPressed && (
-          <TouchableOpacity onPress={() => setListPressedVisible(!isListPressedVisible)}>
+        {isListPressed && !isLoading && (
+          <TouchableOpacity onPress={() => setDropdownVisible(prev => !prev)}>
             <Ionicons
-              name={isListPressedVisible ? 'chevron-up-outline' : 'chevron-down-outline'}
+              name={isDropdownVisible ? 'chevron-up-outline' : 'chevron-down-outline'}
               size={22}
               color={COLORS.textLight}
             />
           </TouchableOpacity>
         )}
+
+        {isLoading && (
+          <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 5 }} />
+        )}
       </View>
 
-      {isListPressedVisible && filteredList.length > 0 && (
-        <View style={styles.dropdownContainer}>
-          {filteredList.map((item, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={styles.dropdownItem} 
-              onPress={() => handleSelectItem(item)}
-            >
-              <Text style={styles.dropdownText}>{item}</Text>
-            </TouchableOpacity>
-          ))}
+      {isDropdownVisible && !isLoading && filteredList.length > 0 && (
+        <View style={[styles.dropdownContainer, { position: 'absolute', zIndex: 999 }]}>
+          <FlatList
+            data={filteredList}
+            keyExtractor={item => item.value}
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectItem(item)}>
+                <Text style={styles.dropdownText}>{item.label}</Text>
+              </TouchableOpacity>
+            )}
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+            style={{ maxHeight: 150 }}
+          />
         </View>
       )}
 
@@ -125,11 +139,12 @@ const styles = StyleSheet.create({
   icon: { marginRight: SIZES.base * 1.5 },
   input: { flex: 1, ...FONTS.body3, color: COLORS.textDark, height: 55 },
   dropdownContainer: {
+    flex: 1,
+    flexDirection: 'row',
     backgroundColor: COLORS.primaryLight,
-    marginTop: 5,
+    marginTop: 60,
     ...SHADOWS.light,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderRadius: SIZES.radius,
     overflow: 'hidden',
   },
   dropdownItem: {

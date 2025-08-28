@@ -1,8 +1,10 @@
 // src/store/useBookingStore.ts
 
+import { Clinic } from '@/types/dtos/clinic/clinic.dto';
+import { Doctor } from '@/types/dtos/doctor/doctor.dto';
+import { Hospital } from '@/types/dtos/tenant/hospital.dto';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware'; // Import devtools để debug
-import { Clinic, Doctor, Hospital } from '@/types'; // Import các type đã định nghĩa
 
 // Định nghĩa kiểu cho loại hình đặt lịch
 export type BookingType = 'CLINIC' | 'DOCTOR';
@@ -19,20 +21,16 @@ interface BookingStateData {
 
 interface BookingState {
   data: BookingStateData;
-  // Actions
   setHospital: (hospital: Hospital | null) => void;
   setBookingType: (type: BookingType | null) => void;
   setClinic: (clinic: Clinic | null) => void;
   setDoctor: (doctor: Doctor | null) => void;
   setAppointmentTime: (time: Date | null) => void;
   setNotes: (notes: string) => void;
-  
-  // Getters (hàm tiện ích)
   isStepValid: (step: number) => boolean;
   resetBooking: () => void;
 }
 
-// Giá trị ban đầu của state
 const initialState: BookingStateData = {
   hospital: null,
   bookingType: null,

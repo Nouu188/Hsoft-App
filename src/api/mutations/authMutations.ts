@@ -1,24 +1,31 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client';
 
-export const LOGIN_BY_IDENTIFIER_MUTATION = gql`
-    mutation LOGIN($identifier: String!, $password: String!) {
-        loginByIdentifier(loginInput: {
-            identifier: $identifier,
-            password: $password
-        }) {
-            accessToken    
-            user {
-                id
-                hoten
-                sodienthoai
-                socmnd
-                email
-                avatarUrl
-                roles
-            } 
-        }
+export const LOGIN_BY_PHONE_NUMBER_MUTATION = gql`
+  mutation LoginByPhoneNumber(
+    $phoneNumber: String!
+    $password: String!
+    $externalHospitalCode: String!
+  ) {
+    loginByPhoneNumber(
+      loginInput: {
+        phoneNumber: $phoneNumber
+        password: $password
+        externalHospitalCode: $externalHospitalCode
+      }
+    ) {
+      accessToken
+      user {
+        id
+        phoneNumber
+        email
+        avatarUrl
+        roles
+        isEmailVerified
+      }
     }
+  }
 `;
+
 
 export const LOGIN_BY_EMAIL_MUTATION = gql`
     mutation LOGIN($email: String!, $password: String!) {

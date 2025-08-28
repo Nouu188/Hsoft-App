@@ -23,85 +23,97 @@ export const buildLoginPayload = (account: string, password: string) => {
 
 const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { isLoginView, formAnimatedStyle, switchToLogin, switchToRegister } = useAuthForm();
-
   const login = useAuthStore((state) => state.login);
   const isLoading = useAuthStore((state) => state.isLoading);
 
-  // -----------------------------
-  // State quản lý chế độ bệnh viện/email
-  const [useHospital, setUseHospital] = useState(false);
-  // -----------------------------
+  // State quản lý chế độ bệnh viện/email và bệnh viện chọn
+  const [useHospital, setUseHospital] = useState(true);
+  const [selectedHospitalCode, setSelectedHospitalCode] = useState('');
 
-  const handleLogin = async (account: string, password: string) => {
-    const credentials = buildLoginPayload(account, password);
+  const handleLogin = async (identifier: string, password: string) => {
+    if (!identifier.trim() || !password.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ tài khoản và mật khẩu.');
+      return;
+    }
+    if (useHospital && !selectedHospitalCode) {
+      Alert.alert('Lỗi', 'Vui lòng chọn bệnh viện.');
+      return;
+    }
+
+    const payload = {
+      email: useHospital ? undefined : identifier,
+      phoneNumber: useHospital ? identifier : undefined,
+      externalHospitalCode: useHospital ? selectedHospitalCode : undefined,
+      password,
+    };
+
+    console.log(payload)
 
     try {
-      await login(credentials);
+      await login(payload);
     } catch (e: any) {
-      Alert.alert('Đăng nhập thất bại', e.message || 'Đã có lỗi xảy ra.');
+      Alert.alert('Đăng nhập thất bại', e.message || 'Có lỗi xảy ra.');
     }
   };
 
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgotPasswordScreen');
-  };
+  const handleForgotPassword = () => navigation.navigate('ForgotPasswordScreen');
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Ionicons name="medkit" size={60} color={COLORS.introduction} />
-            <Text style={styles.title}>MedPlus</Text>
-            <Text style={styles.subtitle}>Your daily health partner</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Ionicons name="medkit" size={60} color={COLORS.introduction} />
+          <Text style={styles.title}>MedPlus</Text>
+          <Text style={styles.subtitle}>Your daily health partner</Text>
+        </View>
+
+        {/* Toggle */}
+        <View style={{ paddingHorizontal: SIZES.padding * 0.8 }}>
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity style={styles.toggleButton} onPress={switchToLogin}>
+              <Text style={[styles.toggleText, isLoginView ? styles.toggleTextActive : styles.toggleTextInactive]}>Đăng nhập</Text>
+              {isLoginView && <Animated.View style={styles.activeIndicator} />}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.toggleButton} onPress={switchToRegister}>
+              <Text style={[styles.toggleText, !isLoginView ? styles.toggleTextActive : styles.toggleTextInactive]}>Đăng ký</Text>
+              {!isLoginView && <Animated.View style={styles.activeIndicator} />}
+            </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Toggle Login/Register */}
-          <View style={styles.formWrapper}>
-            <View style={styles.toggleContainer}>
-              <TouchableOpacity style={styles.toggleButton} onPress={switchToLogin}>
-                <Text style={[styles.toggleText, isLoginView ? styles.toggleTextActive : styles.toggleTextInactive]}>
-                  Đăng nhập
-                </Text>
-                {isLoginView && <Animated.View style={styles.activeIndicator} layout={LinearTransition.duration(300)} />}
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.toggleButton} onPress={switchToRegister}>
-                <Text style={[styles.toggleText, !isLoginView ? styles.toggleTextActive : styles.toggleTextInactive]}>
-                  Đăng ký
-                </Text>
-                {!isLoginView && <Animated.View style={styles.activeIndicator} layout={LinearTransition.duration(300)} />}
-              </TouchableOpacity>
-            </View>
-
-            {/* Form Animated */}
-            <View style={{ overflow: 'hidden' }}>
-              <Animated.View style={[styles.animatedForm, formAnimatedStyle]}>
-                {/* LoginForm nhận thêm useHospital */}
-                <LoginForm
-                  isLoading={isLoading}
-                  onLogin={handleLogin}
-                  onForgotPasswordPress={handleForgotPassword}
-                />
-                <RegisterForm navigation={navigation} />
-              </Animated.View>
-            </View>
-          </View>
-        </ScrollView>
+        {/* Form */}
+        <View style={{ }}>
+          <Animated.View style={[{ flexDirection: 'row', width: width * 2 }, formAnimatedStyle]}>
+            <LoginForm
+              identifier=""
+              password=""
+              useHospital={useHospital}
+              selectedHospitalCode={selectedHospitalCode}
+              setUseHospital={setUseHospital}
+              setSelectedHospitalCode={setSelectedHospitalCode}
+              onLogin={handleLogin}
+              onForgotPasswordPress={handleForgotPassword}
+              isLoading={isLoading}
+            />
+            <RegisterForm navigation={navigation} />
+          </Animated.View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, justifyContent: 'center', backgroundColor: '#F8FAFC' },
   scrollContainer: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: SIZES.padding },
   header: { alignItems: 'center', marginBottom: SIZES.padding * 2 },
   title: { ...FONTS.h1, marginTop: SIZES.padding, color: COLORS.introduction },
   subtitle: { ...FONTS.body3, color: COLORS.textLight, marginTop: SIZES.base },
   formWrapper: {},
-  toggleContainer: { flexDirection: 'row', backgroundColor: COLORS.primaryLight, borderRadius: SIZES.radius * 2, marginBottom: SIZES.padding * 1.5 },
+  toggleContainer: { flexDirection: 'row', backgroundColor: COLORS.primaryLight, borderRadius: SIZES.radius * 2 },
   toggleButton: { flex: 1, alignItems: 'center', paddingVertical: SIZES.padding * 0.75 },
   toggleText: { ...FONTS.h4, color: COLORS.textLight, fontWeight: '500' },
   toggleTextActive: { color: COLORS.introduction, fontWeight: 'bold' },

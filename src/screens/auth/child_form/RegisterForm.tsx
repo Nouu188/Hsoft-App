@@ -39,18 +39,19 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ navigation }) => {
 
   return (
     <View style={styles.formPage}>
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ flex: 1, marginRight: 5 }}>
-          <AuthInput icon="person-add-outline" placeholder="Họ" value={lastName} onChangeText={setLastName} />
+      <View style={{ marginTop: SIZES.padding }}>
+        <View style={{ flexDirection: "row" }}>
+          <View style={{ flex: 1, marginRight: 5 }}>
+            <AuthInput icon="person-add-outline" placeholder="Họ" value={lastName} onChangeText={setLastName} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AuthInput icon="person-add-outline" placeholder="Tên" value={firstName} onChangeText={setFirstName} />
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <AuthInput icon="person-add-outline" placeholder="Tên" value={firstName} onChangeText={setFirstName} />
-        </View>
+        <AuthInput icon="mail-outline" placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
+        <AuthInput icon="lock-closed-outline" placeholder="Mật khẩu mới" value={password} onChangeText={setPassword} isPassword />
+        <AuthInput icon="lock-closed-outline" placeholder="Xác nhận mật khẩu mới" value={confirmPassword} onChangeText={setConfirmPassword} isPassword />
       </View>
-      <AuthInput icon="mail-outline" placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
-      <AuthInput icon="lock-closed-outline" placeholder="Mật khẩu mới" value={password} onChangeText={setPassword} isPassword />
-      <AuthInput icon="lock-closed-outline" placeholder="Xác nhận mật khẩu mới" value={confirmPassword} onChangeText={setConfirmPassword} isPassword />
-      
       <TouchableOpacity style={styles.submitButton} disabled={isLoading} onPress={handleRegister}>
         {isLoading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.submitButtonText}>Tạo tài khoản mới</Text>}
       </TouchableOpacity>
@@ -59,8 +60,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  formPage: { width: Dimensions.get('window').width, paddingHorizontal: SIZES.padding, paddingBottom: 20 },
-  submitButton: { backgroundColor: COLORS.introduction, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: SIZES.base * 6.25, justifyContent: 'center', marginTop: SIZES.padding },
+  formPage: { width: Dimensions.get('window').width, paddingHorizontal: SIZES.padding },
+  submitButton: { backgroundColor: COLORS.introduction, borderRadius: SIZES.radius * 5, alignItems: 'center', ...SHADOWS.medium, height: 60, justifyContent: 'center' },
   submitButtonText: { ...FONTS.h3, color: COLORS.white, fontWeight: 'bold' },
 });
 

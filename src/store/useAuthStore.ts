@@ -2,37 +2,18 @@ import { accountClient } from '@/api/apoloClient';
 import {
   EMAIL_REGISTER_MUTATION,
   LOGIN_BY_EMAIL_MUTATION,
-  LOGIN_BY_IDENTIFIER_MUTATION,
+  LOGIN_BY_PHONE_NUMBER_MUTATION,
   LOGIN_WITH_GOOGLE_MUTATION,
   REQUEST_EMAIL_VERIFICATION_MUTATION,
 } from '@/api/mutations/authMutations';
 import { fcmService } from '@/services/fcmService';
+import { JwtPayload } from '@/types/dtos/auth/jwt.payload';
+import { LoginInput } from '@/types/dtos/auth/login.input';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { jwtDecode } from 'jwt-decode';
 import { Alert } from 'react-native';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-interface JwtPayload {
-  sub: string;
-  identifier: string;
-  roles: string[];
-  iat: number;
-  exp: number;
-}
-
-interface User {
-  id: string;
-  identifier: string;
-  roles: string[];
-}
-
-interface LoginInput {
-  email?: string;
-  identifier?: string;
-  password: string;
-}
 
 interface AuthState {
   user: User | null;
@@ -59,25 +40,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   isGoogleLoading: false,
 
-  // ==========================
-  // LOGIN EMAIL / IDENTIFIER
-  // ==========================
   login: async (credentials: LoginInput) => {
     set({ isLoading: true, error: null });
+    const logPrefix = '[AuthStore][login]';
+
     try {
       let data;
       if (credentials.email) {
+        console.log(`${logPrefix} Logging in with email: ${credentials.email}`);
+        console.log(`${logPrefix} Payload (without password):`, {
+          email: credentials.email,
+        });
+
         const res = await accountClient.mutate({
           mutation: LOGIN_BY_EMAIL_MUTATION,
           variables: { email: credentials.email, password: credentials.password },
         });
+
+        console.log(`${logPrefix} GraphQL response:`, res.data);
         data = res.data.loginByEmail;
       } else {
+        console.log(`${logPrefix} Logging in with phone: ${credentials.phoneNumber}`);
+        console.log(`${logPrefix} External hospital code:`, credentials.externalHospitalCode);
+
+        if (!credentials.externalHospitalCode) {
+          throw new Error('External hospital code is required when logging in with phone number.');
+        }
+
         const res = await accountClient.mutate({
-          mutation: LOGIN_BY_IDENTIFIER_MUTATION,
-          variables: { identifier: credentials.identifier, password: credentials.password },
+          mutation: LOGIN_BY_PHONE_NUMBER_MUTATION,
+          variables: {
+            phoneNumber: credentials.phoneNumber,
+            password: credentials.password,
+            externalHospitalCode: credentials.externalHospitalCode,
+          },
         });
-        data = res.data.loginByIdentifier;
+
+        console.log(`${logPrefix} GraphQL response:`, res.data);
+        data = res.data.loginByPhoneNumber;
+      }
+
+      if (!data) {
+        throw new Error('No data returned from GraphQL mutation.');
       }
 
       const { accessToken, user } = data;
@@ -85,20 +89,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await AsyncStorage.setItem('accessToken', accessToken);
       set({ accessToken, user, isLoading: false });
 
+      console.log(`${logPrefix} Login successful. UserId: ${user.id}`);
+
       // Đăng ký token FCM
       const fcmToken = await fcmService.getFcmToken();
-      if (fcmToken) fcmService.registerTokenWithServer(fcmToken);
+      if (fcmToken) {
+        console.log(`${logPrefix} Registering FCM token with server.`);
+        fcmService.registerTokenWithServer(fcmToken);
+      }
+
     } catch (e: any) {
+      console.error(`${logPrefix} Login failed:`, e.message, e.stack);
       set({ error: e.message, isLoading: false });
       throw e;
     }
   },
 
-  // ==========================
-  // LOGIN GOOGLE
-  // ==========================
   loginWithGoogle: async () => {
-    set({ isGoogleLoading: true, error: null }); // Thêm state riêng
+    set({ isGoogleLoading: true, error: null });
     try {
       GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: false });
       await GoogleSignin.hasPlayServices();
@@ -132,10 +140,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-
-  // ==========================
-  // LOGOUT
-  // ==========================
   logout: async () => {
     try {
       await AsyncStorage.removeItem('accessToken');
@@ -146,9 +150,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  // ==========================
-  // OTP
-  // ==========================
   requestOtp: async (email: string, hoten: string, password: string) => {
     try {
       const { data } = await accountClient.mutate({
@@ -178,7 +179,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const accessToken = data?.verifyEmailAndRegister?.accessToken;
       if (!accessToken) throw new Error('Xác thực OTP thất bại.');
 
-      // Giải mã JWT để lấy thông tin user
       const decoded: JwtPayload = jwtDecode(accessToken);
       const user: User = {
         id: decoded.sub,
@@ -186,16 +186,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         roles: decoded.roles,
       };
 
-      return { accessToken, user }; // <-- trả về object đúng
+      return { accessToken, user };
     } catch (error: any) {
       Alert.alert('Lỗi', error.message || 'Xác thực OTP thất bại.');
       throw error;
     }
   },
 
-  // ==========================
-  // SET AUTH DATA MANUALLY
-  // ==========================
   setAuthData: async (user, token) => {
     try {
       await AsyncStorage.setItem('accessToken', token);
@@ -205,9 +202,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  // ==========================
-  // HYDRATE ON APP START
-  // ==========================
   hydrate: async () => {
     set({ isLoading: true });
     try {
@@ -232,5 +226,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  
 }));

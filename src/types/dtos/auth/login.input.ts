@@ -1,5 +1,6 @@
-interface LoginInput {
-    email?: string,
-    identifier?: string,
-    password: string,
+export interface LoginInput {
+  email?: string;
+  phoneNumber?: string;
+  externalHospitalCode?: string;
+  password: string;
 }
