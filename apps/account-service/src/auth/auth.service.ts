@@ -1,4 +1,4 @@
-import { HospitalApiClientService, normalizeHospitalPatient } from '@app/api-clients/hospital/hospital-api.service';
+import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
 import { RoutingKey } from '@app/common/rabbitmq';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges';
@@ -26,6 +26,7 @@ import { RequestOtpResponse } from './dto/request-otp-response.dto';
 import { VerifyEmailInput } from './dto/verify-email.input';
 import { ServiceClient } from './entities/service-client.entity';
 import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
+import { normalizeHospitalPatient } from 'libs/normalizers/src/lib/normalize-hospital-patient';
 
 @Injectable()
 export class AuthService {
