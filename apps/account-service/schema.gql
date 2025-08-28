@@ -61,7 +61,6 @@ type Hospital {
   graphqlEndpoint: String!
   id: ID!
   identities: [Identity!]
-  isActive: Boolean!
   name: String!
   updatedAt: DateTime!
 }
@@ -215,6 +214,9 @@ type User {
 }
 
 type UserPayload {
+  """URL ảnh đại diện"""
+  avatarUrl: String
+
   """Creation date"""
   createdAt: DateTime!
 

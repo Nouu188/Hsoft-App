@@ -26,8 +26,7 @@ export class HospitalsService {
 
   async findAll(isActive?: boolean): Promise<Hospital[]> {
     this.logger.debug(`Fetching all hospitals. Filter active: ${isActive}`);
-    const where = typeof isActive === 'boolean' ? { isActive } : {};
-    return this.hospitalRepository.find({ where, order: { name: 'ASC' } });
+    return this.hospitalRepository.find({ order: { name: 'ASC' } });
   }
 
   async findOne(id: string): Promise<Hospital> {

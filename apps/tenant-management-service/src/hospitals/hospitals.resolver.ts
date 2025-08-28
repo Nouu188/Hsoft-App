@@ -8,12 +8,13 @@ import {
 } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CreateHospitalInput } from './dto/create-hospital.input';
-import { HospitalObjectType } from './dto/hospital.object-type';
 import { UpdateHospitalInput } from './dto/update-hospital.input';
 import { HospitalsService } from './hospitals.service';
 import { HospitalUrlResponse } from './dto/hospital-url-response.object-type';
+import { HospitalPayload } from './dto/hospital.payload';
+import { Hospital } from './entities/hospital.entity';
 
-@Resolver(() => HospitalObjectType)
+@Resolver()
 export class HospitalsResolver {
   private readonly logger = new Logger(HospitalsResolver.name);
 
@@ -23,9 +24,7 @@ export class HospitalsResolver {
   // QUERIES
   // ============================================================
 
-  @Query(() => [HospitalObjectType], { name: 'hospitals' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Query(() => [HospitalPayload], { name: 'hospitals' })
   async findAll(
     @Args('isActive', { type: () => Boolean, nullable: true }) isActive?: boolean,
   ) {
@@ -37,7 +36,7 @@ export class HospitalsResolver {
     }
   }
 
-  @Query(() => [HospitalObjectType], { name: 'activeHospitals' })
+  @Query(() => [Hospital], { name: 'activeHospitals' })
   @UseGuards(JwtAuthGuard)
   async findAllActive() {
     try {
@@ -48,7 +47,7 @@ export class HospitalsResolver {
     }
   }
 
-  @Query(() => HospitalObjectType, { name: 'hospital' })
+  @Query(() => Hospital, { name: 'hospital' })
   @UseGuards(JwtAuthGuard)
   async findOne(@Args('id', { type: () => ID }) id: string) {
     try {
@@ -84,7 +83,7 @@ export class HospitalsResolver {
   // MUTATIONS
   // ============================================================
 
-  @Mutation(() => HospitalObjectType)
+  @Mutation(() => HospitalPayload)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   async createHospital(
@@ -101,7 +100,7 @@ export class HospitalsResolver {
     }
   }
 
-  @Mutation(() => HospitalObjectType)
+  @Mutation(() => Hospital)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   async updateHospital(

@@ -94,7 +94,6 @@ type Hospital {
   graphqlEndpoint: String!
   id: ID!
   identities: [Identity!]
-  isActive: Boolean!
   name: String!
   updatedAt: DateTime!
 }

@@ -28,7 +28,7 @@ export class AuthResolver {
   }
 
   @Mutation(() => LoginResponse, { name: "loginByPhoneNumber" })
-  async loginByIdentifer(@Args('loginInput') loginInput: LoginInputByPhoneNumber): Promise<LoginResponse> {
+  async loginByPhoneNumber(@Args('loginInput') loginInput: LoginInputByPhoneNumber): Promise<LoginResponse> {
     return this.authService.loginByPhoneNumber(loginInput);
   }
 

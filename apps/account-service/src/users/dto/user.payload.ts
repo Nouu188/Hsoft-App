@@ -26,6 +26,9 @@ export class UserPayload {
   @Field({ description: 'Flag indicating whether email is verified' })
   isEmailVerified: boolean;
 
+  @Field({ nullable: true, description: 'URL ảnh đại diện' })
+  avatarUrl?: string;
+
   @Field(() => IdentityPayload, { nullable: true, description: 'User personal information' })
   identity?: IdentityPayload;
 

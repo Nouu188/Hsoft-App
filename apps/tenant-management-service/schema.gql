@@ -80,7 +80,6 @@ type Hospital {
   graphqlEndpoint: String!
   id: ID!
   identities: [Identity!]
-  isActive: Boolean!
   name: String!
   updatedAt: DateTime!
 }
@@ -90,11 +89,15 @@ input HospitalClinicInput {
   tenkp: String!
 }
 
-type HospitalObjectType {
-  externalCode: String!
+type HospitalPayload {
+  """Mã ngoài hệ thống (nếu có)"""
+  externalCode: String
+
+  """GraphQL endpoint của bệnh viện"""
   graphqlEndpoint: String!
   id: ID!
-  isActive: Boolean!
+
+  """Tên bệnh viện"""
   name: String!
 }
 
@@ -134,9 +137,9 @@ type Identity {
 }
 
 type Mutation {
-  createHospital(createHospitalInput: CreateHospitalInput!): HospitalObjectType!
+  createHospital(createHospitalInput: CreateHospitalInput!): HospitalPayload!
   removeHospital(id: ID!): Boolean!
-  updateHospital(updateHospitalInput: UpdateHospitalInput!): HospitalObjectType!
+  updateHospital(updateHospitalInput: UpdateHospitalInput!): Hospital!
 
   """
   Đồng bộ danh sách phòng khám từ dữ liệu bệnh viện (tạo mới, cập nhật, vô hiệu hóa).
@@ -149,7 +152,7 @@ type Query {
   Lấy danh sách tất cả các phòng khám đang hoạt động để người dùng có thể đặt lịch.
   """
   activeClinics: [ClinicObjectType!]!
-  activeHospitals: [HospitalObjectType!]!
+  activeHospitals: [Hospital!]!
 
   """Lấy thông tin chi tiết một phòng khám theo ID."""
   clinicById(clinicId: String!): ClinicObjectType!
@@ -157,9 +160,9 @@ type Query {
 
   """Lấy bác sĩ theo ID"""
   doctors(doctorId: ID!): DoctorObjectType!
-  hospital(id: ID!): HospitalObjectType!
+  hospital(id: ID!): Hospital!
   hospitalUrlByCode(externalHospitalCode: String!): HospitalUrlResponse!
-  hospitals(isActive: Boolean): [HospitalObjectType!]!
+  hospitals(isActive: Boolean): [HospitalPayload!]!
   identitiesByIds(ids: [ID!]!): [Identity!]!
   identity(id: ID!): Identity
   identityByUserId(userId: ID!): Identity!

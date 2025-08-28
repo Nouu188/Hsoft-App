@@ -22,10 +22,6 @@ export class Hospital {
   @Column({ name: 'graphql_endpoint', unique: true })
   graphqlEndpoint: string;
 
-  @Field()
-  @Column({ default: true, name: 'is_active' })
-  isActive: boolean;
-
   @Field(() => [Clinic], { nullable: true })
   @OneToMany(() => Clinic, clinic => clinic.hospital)
   clinics: Clinic[];
