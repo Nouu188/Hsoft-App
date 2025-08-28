@@ -1,25 +1,44 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Clinic } from '../../clinics/entities/clinic.entity';
+import { Identity } from '../../identities/entities/identity.entity';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 
+@ObjectType('Hospital')
 @Entity('hospitals')
 export class Hospital {
+  @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ comment: 'Tên hiển thị của bệnh viện, ví dụ: "Bệnh viện Chợ Rẫy"' })
+  @Field()
+  @Column()
   name: string;
 
-  @Column({ unique: true, comment: 'Mã bệnh viện (mabv), dùng để định danh và liên kết' })
-  code: string;
+  @Field({ nullable: true })
+  @Column({ name: 'external_code', unique: true, nullable: true })
+  externalCode: string;
 
-  @Column({ name: 'graphql_endpoint', comment: 'URL GraphQL API của bệnh viện' })
+  @Field()
+  @Column({ name: 'graphql_endpoint', unique: true })
   graphqlEndpoint: string;
-  
-  @Column({ default: true, name: 'is_active', comment: 'Cờ cho biết bệnh viện có đang hoạt động và hiển thị trên app hay không' })
+
+  @Field()
+  @Column({ default: true, name: 'is_active' })
   isActive: boolean;
 
+  @Field(() => [Clinic], { nullable: true })
+  @OneToMany(() => Clinic, clinic => clinic.hospital)
+  clinics: Clinic[];
+
+  @Field(() => [Identity], { nullable: true })
+  @ManyToMany(() => Identity, identity => identity.hospitals)
+  identities?: Identity[];
+
+  @Field()
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 
+  @Field()
   @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   updatedAt: Date;
 }

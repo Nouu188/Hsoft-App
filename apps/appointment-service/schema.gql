@@ -5,11 +5,11 @@
 type Appointment {
   appointmentTime: DateTime!
   appointmentType: AppointmentType!
-  clinic: Clinic
-  doctor: Doctor
+  birthYear: Float!
+  clinic: ClinicObjectType
+  doctor: DoctorObjectType
   id: ID!
   notes: String
-  patientDob: String!
   patientGender: String!
   patientName: String!
   patientPhone: String!
@@ -28,31 +28,24 @@ enum AppointmentType {
   DOCTOR
 }
 
-input BookByClinicInput {
-  appointmentTime: String!
-  clinicId: ID!
-  hospitalId: ID!
-  notes: String
-}
-
-input BookByDoctorInput {
-  appointmentTime: String!
-  doctorId: ID!
-  hospitalId: ID!
-  notes: String
-}
-
 type Clinic {
+  createdAt: DateTime!
+  doctors: [Doctor!]
+  externalCode: String!
+  hospital: Hospital!
+  hospitalId: String!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type ClinicObjectType {
   """Mã khoa phòng từ hệ thống bệnh viện"""
-  externalMakp: String!
+  externalCode: String!
 
   """ID nội bộ của phòng khám"""
   id: ID!
-}
-
-enum ConnectionStatus {
-  LINKED
-  NOT_LINKED
 }
 
 """
@@ -60,57 +53,124 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type DeviceToken {
+  token: String!
+  type: String!
+}
+
 type Doctor {
+  avatarUrl: String
+  bio: String
+  clinic: Clinic!
+  clinicId: String!
+  createdAt: DateTime!
+  externalCode: String!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type DoctorObjectType {
   avatarUrl: String
   bio: String
 
   """Phòng khám nơi bác sĩ làm việc"""
-  clinic: [Clinic!]!
+  clinic: [ClinicObjectType!]!
   id: ID!
   name: String!
 }
 
-input HospitalClinicInput {
-  makp: String!
-  tenkp: String!
+enum GenderPayload {
+  FEMALE
+  MALE
+  OTHER
 }
 
-type HospitalConnectionStatus {
-  code: String!
-  connectionStatus: ConnectionStatus!
+type Hospital {
+  clinics: [Clinic!]
+  createdAt: DateTime!
+  externalCode: String
+  graphqlEndpoint: String!
   id: ID!
+  identities: [Identity!]
+  isActive: Boolean!
   name: String!
+  updatedAt: DateTime!
+}
+
+type Identity {
+  address: String
+  avatarUrl: String
+
+  """Năm sinh"""
+  birthYear: Float
+  createdAt: DateTime!
+
+  """Mã bệnh nhân chính"""
+  externalPatientCode: String
+
+  """Họ và tên đầy đủ"""
+  fullName: String!
+  gender: GenderPayload
+
+  """Số thẻ BHYT"""
+  healthInsuranceNumber: String
+  hospitals: [Hospital!]
+  id: ID!
+
+  """Số CMND/CCCD"""
+  nationalId: String
+
+  """Số điện thoại"""
+  phoneNumber: String
+  updatedAt: DateTime!
+
+  """ID của user liên kết"""
+  userId: String!
+}
+
+type IdentityPayload {
+  """Địa chỉ liên hệ"""
+  address: String
+
+  """Năm sinh"""
+  birthYear: Float
+
+  """Ngày tạo bản ghi"""
+  createdAt: DateTime!
+
+  """Mã bệnh nhân chính"""
+  externalPatientCode: String
+
+  """Họ và tên đầy đủ"""
+  fullName: String!
+
+  """Giới tính"""
+  gender: GenderPayload
+
+  """Số thẻ BHYT"""
+  healthInsuranceNumber: String
+
+  """Danh sách bệnh viện liên kết"""
+  hospitals: [Hospital!]
+  id: ID!
+
+  """Số CMND/CCCD"""
+  nationalId: String
+
+  """Số điện thoại"""
+  phoneNumber: String
+
+  """Ngày cập nhật bản ghi"""
+  updatedAt: DateTime!
 }
 
 type Mutation {
-  """Đặt lịch hẹn theo nhiều phòng khám."""
-  bookAppointmentsByClinics(inputs: [BookByClinicInput!]!): [Appointment!]!
-
-  """Đặt lịch hẹn theo nhiều bác sĩ."""
-  bookAppointmentsByDoctors(inputs: [BookByDoctorInput!]!): [Appointment!]!
-
   """Hủy một lịch hẹn đã đặt."""
   cancelAppointment(id: ID!): Boolean!
-
-  """
-  Đồng bộ danh sách phòng khám từ dữ liệu bệnh viện (tạo mới, cập nhật, vô hiệu hóa).
-  """
-  upsertClinics(hospitalClinics: [HospitalClinicInput!]!): UpsertClinicResult!
 }
 
 type Query {
-  """
-  Lấy danh sách tất cả các phòng khám đang hoạt động để người dùng có thể đặt lịch.
-  """
-  activeClinics: [Clinic!]!
-
-  """Lấy những bệnh viện đã được liên kết với tài khoản"""
-  hospitalsWithConnectionStatus: [HospitalConnectionStatus!]!
   myAppointments: [Appointment!]!
-}
-
-type UpsertClinicResult {
-  created: Int!
-  deactivated: Int!
-  updated: Int!
 }

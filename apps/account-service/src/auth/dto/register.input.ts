@@ -9,11 +9,6 @@ export class RegisterByEmailInput {
 
   @Field()
   @IsString()
-  @IsNotEmpty()
-  hoten: string;
-
-  @Field()
-  @IsString()
   @MinLength(6, { message: 'Mật khẩu phải có ít nhất 6 ký tự' })
   password: string;
 }

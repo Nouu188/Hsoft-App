@@ -1,11 +1,8 @@
-// apps/appointment-service/src/appointments/dto/appointment.object-type.ts
-
 import { Field, ObjectType, ID, registerEnumType, Int } from '@nestjs/graphql';
 import { AppointmentStatus, AppointmentType } from '../entities/appointment.entity';
-import { ClinicObjectType } from '../../clinics/dto/clinic.object-type';
-import { DoctorObjectType } from '../../doctors/dto/doctor.object-type'; // <-- Import Doctor
+import { DoctorObjectType } from '../../../../tenant-management-service/src/doctors/dto/doctor.object-type'; // <-- Import Doctor
+import { ClinicObjectType } from 'apps/tenant-management-service/src/clinics/dto/clinic.object-type';
 
-// Đăng ký cả hai enum
 registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
 registerEnumType(AppointmentType, { name: 'AppointmentType' });
 
@@ -37,7 +34,7 @@ export class AppointmentObjectType {
   patientGender: string;
 
   @Field()
-  patientDob: string;
+  birthYear: number;
 
   @Field({ nullable: true })
   notes?: string;

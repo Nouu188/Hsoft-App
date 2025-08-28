@@ -1,41 +1,37 @@
-import { Role } from '@app/auth';
-import { ObjectType, Field } from '@nestjs/graphql';
+import { Role } from '@app/auth/enums/role.enum';
+import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+import { DeviceToken } from '../entities/user.entity';
+import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
 
 @ObjectType()
 export class UserPayload {
-  @Field()
+  @Field(() => ID, { description: 'Unique user ID' })
   id: string;
 
-  @Field()
-  hoten: string;
+  @Field({ nullable: true, description: 'Phone number (unique)' })
+  phoneNumber?: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: 'Địa chỉ email (duy nhất)' })
   email?: string;
 
-  @Field({ nullable: true })
-  mabn?: string;
+  @Field({ nullable: true, description: 'Google account ID' })
+  googleId?: string;
 
-  @Field({ nullable: true })
-  sodienthoai?: string;
+  @Field(() => [DeviceToken], { nullable: true, description: 'List of device tokens (FCM/APN)' })
+  deviceTokens?: DeviceToken[];
 
-  @Field({ nullable: true })
-  socmnd?: string;
-
-  @Field({ nullable: true })
-  diachi?: string;
-
-  @Field({ nullable: true })
-  namsinh?: string;
-
-  @Field({ nullable: true })
-  avatarUrl?: string;
-
-  @Field(() => [String], { nullable: true })
-  fcmTokens?: string[];
-
-  @Field(() => [String], { nullable: true })
-  apn_tokens?: string[];
-
-  @Field(() => [Role])   
+  @Field(() => [Role], { description: 'User roles' })
   roles: Role[];
+
+  @Field({ description: 'Flag indicating whether email is verified' })
+  isEmailVerified: boolean;
+
+  @Field(() => IdentityPayload, { nullable: true, description: 'User personal information' })
+  identity?: IdentityPayload;
+
+  @Field({ description: 'Creation date' })
+  createdAt: Date;
+
+  @Field({ description: 'Last update date' })
+  updatedAt: Date;
 }

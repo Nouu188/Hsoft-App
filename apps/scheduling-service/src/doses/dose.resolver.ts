@@ -1,13 +1,14 @@
 import { Resolver, Query, Args, ID, Mutation } from '@nestjs/graphql';
 import { Dose } from './entities/dose.entity';
 import { DosesService } from './doses.service';
-import { Logger, UseGuards } from '@nestjs/common';
+import { BadRequestException, InternalServerErrorException, Logger, UseGuards } from '@nestjs/common';
 import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { CurrentUser, JwtAuthGuard } from '@app/auth';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { UpdateDoseInput } from './dto/update-dose.input';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges';
 import { RoutingKey } from '@app/common/rabbitmq';
+import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
 
 @Resolver(() => Dose)
 export class DosesResolver {
@@ -16,6 +17,7 @@ export class DosesResolver {
   constructor(
     private readonly dosesService: DosesService,
     private readonly amqpConnection: AmqpConnection,
+    private readonly tenantApiClient: TenantApiClientService,
   ) { }
 
   @Query(() => Dose, { name: 'doseById', nullable: true })
@@ -82,28 +84,45 @@ export class DosesResolver {
 
   @Mutation(() => Boolean, {
     name: 'syncDosesFromHospital',
-    description: 'Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân'
+    description: 'Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân dựa trên số điện thoại',
   })
   async syncDosesFromHospital(
-    @Args('ngay', { description: "Ngày bệnh nhân đi khám", nullable: true }) ngay?: string,
-    @Args('mabn', { nullable: true }) mabn?: string,
-    @Args('sodienthoai', { nullable: true }) sodienthoai?: string,
-    @Args('socmnd', { nullable: true }) socmnd?: string,
-    @Args('userId', { nullable: true }) userId?: string,
+    @Args('phoneNumber', { description: 'Số điện thoại của bệnh nhân' }) phoneNumber: string,
+    @Args('externalHospitalCode', { description: 'Mã bệnh viện/GraphQL endpoint' }) externalHospitalCode: string,
   ): Promise<boolean> {
-    if (!mabn && !sodienthoai && !socmnd && !userId) {
-      throw new Error('Either "mabn" or "sodienthoai" or "socmnd" or "userId" must be provided.');
+    if (!phoneNumber) {
+      this.logger.error(`[DosesSyncResolver] phoneNumber is required`);
+      throw new BadRequestException('phoneNumber is required.');
     }
 
-    const payload = { userId, mabn, sodienthoai, socmnd, ngay };
+    if (!externalHospitalCode) {
+      this.logger.error(`[DosesSyncResolver] externalHospitalCode is required`);
+      throw new BadRequestException('externalHospitalCode is required.');
+    }
 
-    this.amqpConnection.publish(
-      ExchangeName.SYNC,
-      RoutingKey.SYNC_REQUEST,
-      payload,
-    );
+    try {
+      const hospitalUrl = await this.tenantApiClient.getHospitalUrlByCode(externalHospitalCode);
+      if (!hospitalUrl) {
+        this.logger.error(`[DosesSyncResolver] Cannot fetch hospital URL for code: ${externalHospitalCode}`);
+        throw new BadRequestException(`Cannot fetch hospital URL for code: ${externalHospitalCode}`);
+      }
 
-    this.logger.log('Sync request has been successfully published to the queue.');
-    return true;
+      const payload = {
+        identity: { phoneNumber },
+        hospitalUrl,
+      };
+
+      this.amqpConnection.publish(
+        ExchangeName.SYNC,
+        RoutingKey.SYNC_REQUEST,
+        payload,
+      );
+
+      this.logger.log(`[DosesSyncResolver] Sync request published for phoneNumber: ${phoneNumber}, hospitalCode: ${externalHospitalCode}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`[DosesSyncResolver] Failed to publish sync request for phoneNumber: ${phoneNumber}`, error.stack);
+      throw new InternalServerErrorException('Failed to publish sync request.');
+    }
   }
 }

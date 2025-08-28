@@ -1,11 +1,9 @@
-// apps/scheduling-service/src/jobs/services/dose-status-transition.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Dose, DoseStatus } from '../../doses/entities/dose.entity';
-import { LessThan, MoreThan, Repository } from 'typeorm';
 import * as moment from 'moment-timezone';
+import { LessThan, Repository } from 'typeorm';
+import { Dose, DoseStatus } from '../../doses/entities/dose.entity';
 
 @Injectable()
 export class DoseStatusTransitionService {
@@ -14,7 +12,7 @@ export class DoseStatusTransitionService {
   constructor(
     @InjectRepository(Dose)
     private readonly doseRepository: Repository<Dose>,
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_5_MINUTES) // Chạy mỗi 5 phút
   async handleCron() {

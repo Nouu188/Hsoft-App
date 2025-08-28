@@ -1,6 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
-import { Clinic } from '../../clinics/entities/clinic.entity';
-import { Doctor } from '../../doctors/entities/doctor.entity';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum AppointmentType {
   CLINIC = 'CLINIC',
@@ -24,20 +22,11 @@ export class Appointment {
   @Column({ type: 'enum', enum: AppointmentType })
   appointmentType: AppointmentType;
 
-
   @Column({ type: 'uuid', name: 'clinic_id', nullable: true })
   clinicId: string;
 
-  @ManyToOne(() => Clinic)
-  @JoinColumn({ name: 'clinic_id' })
-  clinic: Clinic;
-
   @Column({ type: 'uuid', name: 'doctor_id', nullable: true })
   doctorId: string;
-
-  @ManyToMany(() => Doctor)
-  @JoinColumn({ name: 'doctor_id' })
-  doctor: Doctor;
 
   @Column({ type: 'timestamptz', name: 'appointment_time' })
   appointmentTime: Date;
@@ -58,11 +47,11 @@ export class Appointment {
   @Column({ name: 'patient_gender' })
   patientGender: string;
 
-  @Column({ type: 'date', name: 'patient_dob' })
-  patientDob: string;
+  @Column({ type: 'int', name: 'year_of_birth' })
+  birthYear: number;
 
   @Column({ type: 'text', nullable: true })
-  notes: string;
+  notes?: string;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;

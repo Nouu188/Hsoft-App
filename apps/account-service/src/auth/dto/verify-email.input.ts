@@ -9,6 +9,6 @@ export class VerifyEmailInput {
 
   @Field()
   @IsString()
-  @Length(6, 6, { message: 'OTP phải có 6 chữ số' })
+  @Length(4, 4, { message: 'OTP phải có 4 chữ số' })
   otp: string;
 }

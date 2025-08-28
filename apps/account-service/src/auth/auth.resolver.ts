@@ -6,7 +6,7 @@ import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { JwtAuthGuard } from '../../../../libs/auth/src/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { CreateServiceClientInput } from './dto/create-service-client.input';
-import { LoginInputByEmail, LoginInputByIdentifier } from './dto/login.input';
+import { LoginInputByEmail, LoginInputByPhoneNumber } from './dto/login.input';
 import { LoginResponse } from './dto/login.response';
 import { RegisterByEmailInput } from './dto/register.input';
 import { VerifyEmailInput } from './dto/verify-email.input';
@@ -27,9 +27,9 @@ export class AuthResolver {
     return this.authService.createServiceClient(input);
   }
 
-  @Mutation(() => LoginResponse, { name: "loginByIdentifier" })
-  async loginByIdentifer(@Args('loginInput') loginInput: LoginInputByIdentifier): Promise<LoginResponse> {
-    return this.authService.loginByIdentifier(loginInput);
+  @Mutation(() => LoginResponse, { name: "loginByPhoneNumber" })
+  async loginByIdentifer(@Args('loginInput') loginInput: LoginInputByPhoneNumber): Promise<LoginResponse> {
+    return this.authService.loginByPhoneNumber(loginInput);
   }
 
   @Mutation(() => LoginResponse, { name: "loginByEmail" })

@@ -1,29 +1,31 @@
+import { HospitalApiClientService, normalizeHospitalPatient } from '@app/api-clients/hospital/hospital-api.service';
+import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
 import { RoutingKey } from '@app/common/rabbitmq';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateIdentityInput } from 'apps/tenant-management-service/src/identities/dtos/create-identity-input.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { Repository } from 'typeorm';
 import { AuthPayload } from '../../../../libs/auth/src/dtos/auth.payload';
 import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { UsersService } from '../users/users.service';
 import { CreateServiceClientInput } from './dto/create-service-client.input';
-import { LoginInputByEmail, LoginInputByIdentifier } from './dto/login.input';
+import { GoogleLoginInput } from './dto/google-login.input';
+import { LoginInputByEmail, LoginInputByPhoneNumber } from './dto/login.input';
 import { LoginResponse } from './dto/login.response';
 import { RegisterByEmailInput } from './dto/register.input';
+import { RequestOtpResponse } from './dto/request-otp-response.dto';
 import { VerifyEmailInput } from './dto/verify-email.input';
 import { ServiceClient } from './entities/service-client.entity';
-import { ConfigService } from '@nestjs/config';
-import { OAuth2Client } from 'google-auth-library';
-import { GoogleLoginInput } from './dto/google-login.input';
 import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
-import { RequestOtpResponse } from './dto/request-otp-response.dto';
-import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 
 @Injectable()
 export class AuthService {
@@ -34,70 +36,91 @@ export class AuthService {
 
         private readonly configService: ConfigService,
 
-        @Inject(GOOGLE_OAUTH2_CLIENT)
-        private readonly googleClient: OAuth2Client,
+        @Inject(GOOGLE_OAUTH2_CLIENT) private readonly googleClient: OAuth2Client,
 
         private jwtService: JwtService,
 
         private readonly amqpConnection: AmqpConnection,
 
-        @InjectRepository(ServiceClient, 'authConnection')
-        private serviceClientRepository: Repository<ServiceClient>,
+        @InjectRepository(ServiceClient, 'authConnection') private serviceClientRepository: Repository<ServiceClient>,
 
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 
         private readonly mailerService: MailerService,
-
+        private readonly tenantApiClient: TenantApiClientService,
         private readonly hospitalClient: HospitalApiClientService,
     ) { }
 
-    async loginByIdentifier(loginInput: LoginInputByIdentifier): Promise<LoginResponse> {
-        const { identifier, password } = loginInput;
-        if (!identifier && !password) {
+    async loginByPhoneNumber(loginInput: LoginInputByPhoneNumber): Promise<LoginResponse> {
+        const { phoneNumber, password, externalHospitalCode } = loginInput;
+        if (!phoneNumber && !password) {
             throw new ConflictException("Invalid input");
         }
 
-        let user = await this.usersService.findByIdentifier(identifier);
+        let user = await this.usersService.findByPhoneNumber(phoneNumber);
         if (user) {
+            if (!user.password) {
+                throw new UnauthorizedException('Password not set for this user.');
+            }
+
             const isPasswordMatching = await bcrypt.compare(password!, user.password);
             if (isPasswordMatching) {
-                this.logger.log(`User ${user.sodienthoai} logged in from internal DB.`);
+                this.logger.log(`User ${user.phoneNumber} logged in from internal DB.`);
 
                 const accessToken = this.generateToken(user.id, user.roles);
-                const { password: _password, ...userResult } = user;
 
-                return { accessToken, user: userResult };
+                return { user, accessToken };
             }
 
             throw new UnauthorizedException("Invalid credentials");
         }
 
-        this.logger.log(`User with identifier "${identifier}" not found. Attempting to fetch from hospital API...`);
+        this.logger.log(`User with phoneNumber "${phoneNumber}" not found. Attempting to fetch from hospital API...`);
 
-        const hospitalPatient = await this.hospitalClient.fetchPatientFromHospital(identifier);
-        if (!hospitalPatient) {
+        const hospitalUrl = await this.tenantApiClient.getHospitalUrlByCode(externalHospitalCode);
+
+        const patientData = await this.hospitalClient.fetchPatientFromHospital(phoneNumber, hospitalUrl);
+        if (!patientData) {
             throw new UnauthorizedException('Patient information not found in hospital system.');
         }
 
-        const yearOfBirth = hospitalPatient.namsinh;
-        if (loginInput.password !== yearOfBirth) {
+        const identity: CreateIdentityInput = normalizeHospitalPatient(patientData);
+
+        const birthYear = identity.birthYear;
+        if (!birthYear) {
+            throw new UnauthorizedException('Birth year not set for this user.');
+        }
+
+        if (loginInput.password !== birthYear.toString()) {
             throw new UnauthorizedException('Invalid credentials.');
         }
 
-        this.logger.log(`First-time login successful for mabn ${hospitalPatient.mabn}. Creating local user...`);
-        user = await this.usersService.createUserFromHospitalPatient(hospitalPatient);
+        this.logger.log(`First-time login successful for phone ${identity.phoneNumber}. Creating local user...`);
+        const userPayload = await this.usersService.createUserFromHospital(identity);
 
-        this.logger.log(`Publishing 'user.first_login' event for user ${user.id}`);
+        this.logger.log(`Publishing 'user.first_login' event for user ${identity.phoneNumber}`);
         this.amqpConnection.publish(
             ExchangeName.USER_EVENTS,
-            RoutingKey.USER_FIRST_LOGIN,
-            { userId: user.id },
+            RoutingKey.USER_FIRST_LOGIN_IDENTITY,
+            { 
+                identity: identity,
+                userId: userPayload.id,
+                externalHospitalCode: externalHospitalCode,
+            },
         );
 
-        const { password: _password, ...userResult } = user;
-        const accessToken = this.generateToken(userResult.id, userResult.roles);
+        this.amqpConnection.publish(
+            ExchangeName.USER_EVENTS,
+            RoutingKey.USER_FIRST_LOGIN_SCHEDULING,
+            {
+                identity: identity,
+                hospitalUrl: hospitalUrl
+            },
+        );
 
-        return { accessToken, user: userResult }
+        const accessToken = this.generateToken(userPayload.id, userPayload.roles);
+
+        return { accessToken, user: userPayload }
     }
 
     async loginByEmail(loginInput: LoginInputByEmail): Promise<LoginResponse> {
@@ -113,6 +136,10 @@ export class AuthService {
         if (!user) {
             this.logger.warn(`Login failed: User with email ${email} not found`);
             throw new UnauthorizedException('Invalid email or password');
+        }
+
+        if (!user.password) {
+            throw new UnauthorizedException('Password not set for this user.');
         }
 
         const isPasswordValid = await bcrypt.compare(password as string, user.password);
@@ -150,7 +177,7 @@ export class AuthService {
 
             const user = await this.usersService.findOrCreateFromGoogle({
                 email,
-                hoten: name,
+                fullName: name,
                 avatarUrl: picture,
                 googleId,
             });
@@ -158,10 +185,9 @@ export class AuthService {
 
             // 3. Tạo và trả về token của hệ thống
             const accessToken = this.generateToken(user.id, user.roles);
-            const { password, ...userResult } = user;
 
             this.logger.log(`Successfully authenticated user ${user.id} via Google.`);
-            return { user: userResult, accessToken };
+            return { user, accessToken };
 
         } catch (error) {
             this.logger.error('Failed to authenticate with Google.', error.stack);
@@ -173,7 +199,7 @@ export class AuthService {
     }
 
     async requestEmailVerification(registerInput: RegisterByEmailInput): Promise<RequestOtpResponse> {
-        const { email, hoten } = registerInput;
+        const { email } = registerInput;
         this.logger.log(`[OTP] Received verification request for email: ${email}`);
 
         // Kiểm tra email đã tồn tại chưa
@@ -212,7 +238,7 @@ export class AuthService {
                 to: email,
                 subject: `[MedPlusApp] Mã xác thực của bạn là ${otp}`,
                 template: './verification',
-                context: { name: hoten, otp },
+                context: { otp },
             });
             this.logger.log(`[OTP] Sent verification OTP to ${email} successfully`);
             return { success: true, message: 'OTP đã được gửi thành công.' };
@@ -251,7 +277,6 @@ export class AuthService {
 
         const newUser = await this.usersService.createUserByEmail({
             email: registerInput.email,
-            hoten: registerInput.hoten,
             password: registerInput.password,
         });
 
@@ -260,9 +285,8 @@ export class AuthService {
         await this.cacheManager.del(retryKey);
 
         const accessToken = this.generateToken(newUser.id, newUser.roles);
-        const { password: _, ...userResult } = newUser;
-        
-        return { user: userResult, accessToken };
+
+        return { user: newUser, accessToken };
     }
 
     private generateToken(userId: string, roles: Role[]): string {

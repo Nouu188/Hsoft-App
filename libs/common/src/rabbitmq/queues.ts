@@ -2,6 +2,8 @@ export const QueueName = {
   // Queues for Scheduling Service
   SCHEDULING_USER_FIRST_LOGIN: 'scheduling.user_first_login.queue',
 
+  IDENTITY_USER_FIRST_LOGIN: 'identity.user_first_login.queue',
+
   // Queues for a hypothetical Scheduling Service for sync
   SYNC_REQUESTS: 'sync.requests.queue',
 

@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { UserPayload } from 'apps/account-service/src/users/dto/user.payload';
+import { DeviceToken } from 'apps/account-service/src/users/entities/user.entity';
 import { firstValueFrom } from 'rxjs';
-import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { AuthApiClientService } from '../auth/auth-api-client.service';
-import { HospitalConnection } from 'apps/account-service/src/users/entities/hospital-connection.entity';
 
 @Injectable()
 export class AccountApiClientService {
@@ -23,7 +23,7 @@ export class AccountApiClientService {
     }
   }
 
-  async fetchAllUser(): Promise<User[]> {
+  async fetchAllUser(): Promise<UserPayload[]> {
     const token = await this.authApiClient.getM2MToken();
 
     const operationName = 'GetAllUser';
@@ -75,20 +75,23 @@ export class AccountApiClientService {
     }
   }
 
-  async fetchUserByIdentifier(identifier: string): Promise<User | null> {
+  async fetchUserByPhoneNumber(phoneNumber: string): Promise<UserPayload | null> {
     const token = await this.authApiClient.getM2MToken();
 
-    const operationName = 'GetUserByIdentifier';
+    const operationName = 'GetUserByPhoneNumber';
     const query = `
-            query GetUserByIdentifier($identifier: String!) {
-                findByIdentifier(identifier: $identifier) {
-                    id
-                    mabn
-                    sodienthoai
-                }
+        query GetUserByPhoneNumber($phoneNumber: String!) {
+            findByPhoneNumber(phoneNumber: $phoneNumber) {
+                id
+                phoneNumber
+                roles
+                isEmailVerified
+                createdAt
+                updatedAt
             }
+        }
       `;
-    const variables = { identifier };
+    const variables = { phoneNumber };
 
     const payload = {
       operationName,
@@ -118,9 +121,9 @@ export class AccountApiClientService {
         return null;
       }
 
-      return response.data.data.findByIdentifier;
+      return response.data.data.findByPhoneNumber;
     } catch (error) {
-      this.logger.error(`Failed to fetch user ${identifier} from Account Service`);
+      this.logger.error(`Failed to fetch user ${phoneNumber} from Account Service`);
       if (error.response) {
         this.logger.error(`- Status: ${error.response.status}`);
         this.logger.error(`- Data: ${JSON.stringify(error.response.data)}`);
@@ -131,7 +134,70 @@ export class AccountApiClientService {
     }
   }
 
-  async removeFcmTokens(userId: string, tokensToRemove: string[]): Promise<void> {
+  async fetchUserById(userId: string): Promise<UserPayload | null> {
+    if (!userId) {
+      this.logger.error('[AccountApiClient] userId is required');
+      throw new Error('userId is required');
+    }
+
+    const token = await this.authApiClient.getM2MToken();
+
+    const operationName = 'GetUserById';
+    const query = `
+    query GetUserById($userId: String!) {
+      findById(userId: $userId) {
+        id
+        sodienthoai
+        email
+        name
+      }
+    }
+  `;
+    const variables = { userId };
+
+    const payload = {
+      operationName,
+      query,
+      variables,
+    };
+
+    this.logger.debug(`[API CALL] Sending request to Account Service with payload:`, JSON.stringify(payload));
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          this.accountServiceUrl,
+          payload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            timeout: 10000,
+          }
+        )
+      );
+
+      if (response.data.errors) {
+        this.logger.error('[AccountApiClient] GraphQL errors from Account Service:', response.data.errors);
+        return null;
+      }
+
+      return response.data.data.findById;
+    } catch (error) {
+      this.logger.error(`[AccountApiClient] Failed to fetch user by userId: ${userId}`);
+      if (error.response) {
+        this.logger.error(`- Status: ${error.response.status}`);
+        this.logger.error(`- Data: ${JSON.stringify(error.response.data)}`);
+      } else {
+        this.logger.error(`- Message: ${error.message}`);
+      }
+      throw new Error('Failed to communicate with Account Service');
+    }
+  }
+
+
+  async removeFcmTokens(userId: string, tokensToRemove: DeviceToken[]): Promise<void> {
     if (!tokensToRemove || tokensToRemove.length === 0) {
       return;
     }
@@ -180,75 +246,6 @@ export class AccountApiClientService {
     } catch (error) {
       // Log lỗi chi tiết nhưng không ném lại để không gây Nack cho message gốc
       this.logger.error(`Failed to send token removal request for user ${userId}. This is a non-critical error.`, error.response?.data || error.message);
-    }
-  }
-
-  async getMyConnections(userId: string): Promise<HospitalConnection[]> {
-    this.logger.debug(`[API_CALL] Fetching hospital connections for user: ${userId}`);
-    const m2mToken = await this.authApiClient.getM2MToken();
-
-    const query = `
-      query GetUserConnections($userId: ID!) {
-        user(id: $userId) {
-          hospitalConnections {
-            id
-            hospitalId
-            patientCodeAtHospital
-          }
-        }
-      }
-    `;
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(this.accountServiceUrl, {
-          query,
-          variables: { userId }
-        }, {
-          headers: { Authorization: `Bearer ${m2mToken}` }
-        })
-      );
-      return response.data.data.user?.hospitalConnections || [];
-    } catch (error) {
-      this.logger.error(`[API_CALL] Failed to fetch connections for user ${userId}`, error);
-      throw new Error('Could not communicate with Account Service to get connections.');
-    }
-  }
-  
-  async ensureHospitalLink(userId: string, hospitalId: string): Promise<HospitalConnection> {
-    this.logger.debug(`[API_CALL] Ensuring hospital link for user ${userId} and hospital ${hospitalId}`);
-    const m2mToken = await this.authApiClient.getM2MToken();
-
-    // Mutation này sẽ tìm kiếm liên kết, nếu không có sẽ gọi service `linkToHospital`
-    const mutation = `
-      mutation EnsureLink($userId: ID!, $hospitalId: ID!) {
-        ensureHospitalLink(userId: $userId, hospitalId: $hospitalId) {
-          id
-          hospitalId
-          patientCodeAtHospital
-        }
-      }
-    `;
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(this.accountServiceUrl, {
-          query: mutation,
-          variables: { userId, hospitalId }
-        }, {
-          headers: { Authorization: `Bearer ${m2mToken}` }
-        })
-      );
-
-      if (response.data.errors) {
-        // Ném lại lỗi từ GraphQL để service gọi có thể xử lý
-        throw new Error(response.data.errors[0].message);
-      }
-
-      return response.data.data.ensureHospitalLink;
-    } catch (error) {
-      this.logger.error(`[API_CALL] Failed to ensure hospital link for user ${userId}`, error);
-      throw new Error('Could not communicate with Account Service to ensure link.');
     }
   }
 }

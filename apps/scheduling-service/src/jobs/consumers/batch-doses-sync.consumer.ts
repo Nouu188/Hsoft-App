@@ -29,7 +29,7 @@ export class BatchSyncConsumer {
 
         const syncPromises = userIds.map(async (userId) => {
             try {
-                const user = await this.accountApiClient.fetchUserByIdentifier(userId);
+                const user = await this.accountApiClient.fetchUserById(userId);
                 if (user) {
                     await this.dosesSyncService.syncDosesInFuture(user);
                 }

@@ -1,11 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { DeviceToken } from 'apps/account-service/src/users/entities/user.entity';
 import * as admin from 'firebase-admin';
 import { BatchResponse } from 'firebase-admin/lib/messaging/messaging-api';
 
 export interface SendNotificationResult {
   successCount: number;
   failureCount: number;
-  failedTokens: string[];
+  failedTokens: DeviceToken[];
 }
 
 @Injectable()
@@ -13,54 +14,62 @@ export class FirebaseService {
   private readonly logger = new Logger(FirebaseService.name);
 
   constructor(
-    @Inject('FIREBASE_ADMIN') private readonly firebaseAdmin: admin.app.App
+    @Inject('FIREBASE_ADMIN') private readonly firebaseAdmin: admin.app.App,
   ) {}
 
   async sendPushNotification(
-    tokens: string[], 
-    title: string, 
-    body: string, 
-    data?: { [key: string]: string }
+    tokens: DeviceToken[],
+    title: string,
+    body: string,
+    data?: Record<string, string>,
   ): Promise<SendNotificationResult> {
-    if (!tokens || tokens.length === 0) {
+    if (!tokens?.length) {
       this.logger.warn('No FCM tokens provided. Skipping sending.');
       return { successCount: 0, failureCount: 0, failedTokens: [] };
     }
 
-    // Firebase giới hạn 500 token mỗi lần gọi, chúng ta sẽ cắt mảng nếu cần.
-    const tokensToSend = tokens.length > 500 ? tokens.slice(0, 500) : tokens;
+    // Firebase giới hạn 500 token mỗi lần
+    const tokensToSend = tokens.slice(0, 500);
     if (tokens.length > 500) {
-        this.logger.warn(`Token count (${tokens.length}) exceeds 500. Only the first 500 will be used.`);
+      this.logger.warn(
+        `Token count (${tokens.length}) exceeds 500. Only the first 500 will be used.`,
+      );
     }
 
     const message = {
-      tokens: tokensToSend,
+      tokens: tokensToSend.map((t) => t.token),
       notification: { title, body },
-      data: data || {},
+      data: data ?? {},
       android: { notification: { sound: 'default' } },
       apns: { payload: { aps: { sound: 'default' } } },
     };
 
     try {
-      const response: BatchResponse = await this.firebaseAdmin.messaging().sendEachForMulticast(message);
-      
-      const failedTokens: string[] = [];
-      if (response.failureCount > 0) {
-        response.responses.forEach((resp, idx) => {
-          if (!resp.success) {
-            const failedToken = tokensToSend[idx];
-            const errorCode = resp.error!.code;
-            this.logger.error(`Failed to send to token [${failedToken}] with error: ${errorCode} - ${resp.error!.message}`);
-            
-            // Chỉ thêm vào danh sách xóa nếu lỗi là do token không hợp lệ
-            if (this.isUnregisteredTokenError(errorCode)) {
-              failedTokens.push(failedToken);
-            }
+      const response: BatchResponse =
+        await this.firebaseAdmin.messaging().sendEachForMulticast(message);
+
+      const failedTokens: DeviceToken[] = [];
+
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const failedToken = tokensToSend[idx];
+          const errorCode = resp.error?.code;
+          const errorMsg = resp.error?.message;
+
+          this.logger.error(
+            `Failed to send to token=${failedToken.token} type=${failedToken.type} | Error: ${errorCode} - ${errorMsg}`,
+          );
+
+          if (errorCode && this.isUnregisteredTokenError(errorCode)) {
+            failedTokens.push(failedToken);
           }
-        });
-      }
-      
-      this.logger.log(`FCM response: ${response.successCount} success, ${response.failureCount} failure.`);
+        }
+      });
+
+      this.logger.log(
+        `FCM response: ${response.successCount} success, ${response.failureCount} failure.`,
+      );
+
       return {
         successCount: response.successCount,
         failureCount: response.failureCount,
@@ -68,7 +77,7 @@ export class FirebaseService {
       };
     } catch (error) {
       this.logger.error('Critical error during FCM sendEachForMulticast:', error);
-      // Nếu toàn bộ request thất bại, coi như tất cả token đều thất bại
+
       return {
         successCount: 0,
         failureCount: tokensToSend.length,

@@ -1,6 +1,6 @@
 import { Field, ObjectType, ID } from '@nestjs/graphql';
 
-@ObjectType('Hospital')
+@ObjectType('HospitalObjectType')
 export class HospitalObjectType {
   @Field(() => ID)
   id: string;
@@ -9,7 +9,7 @@ export class HospitalObjectType {
   name: string;
 
   @Field()
-  code: string;
+  externalCode: string;
 
   @Field()
   graphqlEndpoint: string;

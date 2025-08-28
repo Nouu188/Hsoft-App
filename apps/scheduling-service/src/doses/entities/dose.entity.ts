@@ -14,7 +14,7 @@ export enum DoseStatus {
 export interface MealRelation {
   type: 'BEFORE' | 'AFTER' | 'WITH';
   minutes?: number;
-}
+} 
 
 registerEnumType(DoseStatus, { name: 'DoseStatus' });
 

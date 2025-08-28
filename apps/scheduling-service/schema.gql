@@ -5,6 +5,11 @@
 """DateTime custom scalar type"""
 scalar DateTime
 
+type DeviceToken {
+  token: String!
+  type: String!
+}
+
 type Dose {
   """Hướng dẫn liều dùng từ y lệnh"""
   dosage_instructions: String
@@ -52,15 +57,13 @@ input MealRelationInput {
 }
 
 type Mutation {
-  """Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân"""
+  """Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân dựa trên số điện thoại"""
   syncDosesFromHospital(
-    mabn: String
+    """Mã bệnh viện/GraphQL endpoint"""
+    externalHospitalCode: String!
 
-    """Ngày bệnh nhân đi khám"""
-    ngay: String
-    socmnd: String
-    sodienthoai: String
-    userId: String
+    """Số điện thoại của bệnh nhân"""
+    phoneNumber: String!
   ): Boolean!
   updateDoses(updates: [UpdateDoseInput!]!): [Dose!]!
 }

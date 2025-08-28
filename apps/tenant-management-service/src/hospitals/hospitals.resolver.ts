@@ -1,56 +1,134 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
-import { JwtAuthGuard, RolesGuard, Roles, Role } from '@app/auth'; // Import từ libs
-import { HospitalsService } from './hospitals.service';
-import { HospitalObjectType } from './dto/hospital.object-type';
+import { JwtAuthGuard, Role, Roles, RolesGuard } from '@app/auth';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CreateHospitalInput } from './dto/create-hospital.input';
+import { HospitalObjectType } from './dto/hospital.object-type';
 import { UpdateHospitalInput } from './dto/update-hospital.input';
+import { HospitalsService } from './hospitals.service';
+import { HospitalUrlResponse } from './dto/hospital-url-response.object-type';
 
 @Resolver(() => HospitalObjectType)
 export class HospitalsResolver {
-  constructor(private readonly hospitalsService: HospitalsService) {}
+  private readonly logger = new Logger(HospitalsResolver.name);
 
-// -- QUERY
+  constructor(private readonly hospitalsService: HospitalsService) { }
+
+  // ============================================================
+  // QUERIES
+  // ============================================================
 
   @Query(() => [HospitalObjectType], { name: 'hospitals' })
-  @UseGuards(JwtAuthGuard, RolesGuard) 
-  @Roles(Role.ADMIN) 
-  findAll(@Args('isActive', { type: () => Boolean, nullable: true }) isActive?: boolean) {
-    return this.hospitalsService.findAll(isActive);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async findAll(
+    @Args('isActive', { type: () => Boolean, nullable: true }) isActive?: boolean,
+  ) {
+    try {
+      return await this.hospitalsService.findAll(isActive);
+    } catch (error) {
+      this.logger.error(`Failed to fetch hospitals`, error.stack);
+      throw new InternalServerErrorException('Could not fetch hospitals');
+    }
   }
-  
+
   @Query(() => [HospitalObjectType], { name: 'activeHospitals' })
   @UseGuards(JwtAuthGuard)
-  findAllActive() {
-    return this.hospitalsService.findAll(true);
+  async findAllActive() {
+    try {
+      return await this.hospitalsService.findAll(true);
+    } catch (error) {
+      this.logger.error(`Failed to fetch active hospitals`, error.stack);
+      throw new InternalServerErrorException('Could not fetch active hospitals');
+    }
   }
 
   @Query(() => HospitalObjectType, { name: 'hospital' })
   @UseGuards(JwtAuthGuard)
-  findOne(@Args('id', { type: () => ID }) id: string) {
-    return this.hospitalsService.findOne(id);
+  async findOne(@Args('id', { type: () => ID }) id: string) {
+    try {
+      return await this.hospitalsService.findOne(id);
+    } catch (error) {
+      this.logger.error(`Failed to fetch hospital id=${id}`, error.stack);
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Could not fetch hospital');
+    }
   }
 
-// -- MUTATION
+  @Query(() => HospitalUrlResponse, { name: 'hospitalUrlByCode' })
+  @UseGuards(JwtAuthGuard)
+  async getHospitalUrlByCode(
+    @Args('externalHospitalCode', { type: () => String }) externalHospitalCode: string,
+  ): Promise<HospitalUrlResponse> {
+    try {
+      const url = await this.hospitalsService.getHospitalUrlByCode(externalHospitalCode);
+      return { graphqlEndpoint: url };
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch hospital URL for code=${externalHospitalCode}`,
+        error.stack,
+      );
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Could not fetch hospital URL');
+    }
+  }
+
+  // ============================================================
+  // MUTATIONS
+  // ============================================================
 
   @Mutation(() => HospitalObjectType)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  createHospital(@Args('createHospitalInput') createHospitalInput: CreateHospitalInput) {
-    return this.hospitalsService.create(createHospitalInput);
+  async createHospital(
+    @Args('createHospitalInput') createHospitalInput: CreateHospitalInput,
+  ) {
+    try {
+      return await this.hospitalsService.create(createHospitalInput);
+    } catch (error) {
+      this.logger.error(
+        `Failed to create hospital: ${createHospitalInput.name}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Could not create hospital');
+    }
   }
 
   @Mutation(() => HospitalObjectType)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  updateHospital(@Args('updateHospitalInput') updateHospitalInput: UpdateHospitalInput) {
-    return this.hospitalsService.update(updateHospitalInput);
+  async updateHospital(
+    @Args('updateHospitalInput') updateHospitalInput: UpdateHospitalInput,
+  ) {
+    try {
+      return await this.hospitalsService.update(updateHospitalInput);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update hospital id=${updateHospitalInput.id}`,
+        error.stack,
+      );
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Could not update hospital');
+    }
   }
 
   @Mutation(() => Boolean)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  removeHospital(@Args('id', { type: () => ID }) id: string) {
-    return this.hospitalsService.remove(id);
+  async removeHospital(@Args('id', { type: () => ID }) id: string) {
+    try {
+      return await this.hospitalsService.remove(id);
+    } catch (error) {
+      this.logger.error(`Failed to remove hospital id=${id}`, error.stack);
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Could not remove hospital');
+    }
   }
 }

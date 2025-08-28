@@ -7,6 +7,12 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { Hospital } from './hospitals/entities/hospital.entity';
 import { AppRabbitMQModule } from '@app/common/rabbitmq';
+import { Clinic } from './clinics/entities/clinic.entity';
+import { Doctor } from './doctors/entities/doctor.entity';
+import { Identity } from './identities/entities/identity.entity';
+import { IdentitiesModule } from './identities/identities.module';
+import { DoctorsModule } from './doctors/doctors.module';
+import { ClinicsModule } from './clinics/clinics.module';
 
 @Module({
   imports: [
@@ -18,9 +24,10 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: './apps/scheduling-service/.env.local',
+      envFilePath: './apps/tenant-management-service/.env.local',
     }),
     TypeOrmModule.forRootAsync({
+      name: 'tenantConnection',
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -30,12 +37,15 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq';
         username: configService.get<string>('TENANT_MANAGEMENT_DB_USER'),
         password: configService.get<string>('TENANT_MANAGEMENT_DB_PASS'),
         database: configService.get<string>('TENANT_MANAGEMENT_DB_NAME'),
-        entities: [ Hospital ],
+        entities: [ Hospital, Clinic, Doctor, Identity ],
         synchronize: true,
       }),
     }),
     AppRabbitMQModule,
     HospitalsModule,
+    IdentitiesModule,
+    DoctorsModule,
+    ClinicsModule,
   ],
 })
 export class TenantManagementServiceModule {}

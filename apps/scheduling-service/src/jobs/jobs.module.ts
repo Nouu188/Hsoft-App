@@ -8,9 +8,9 @@ import { SyncConsumer } from './consumers/doses-sync.consumer';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { BatchCreationConsumer } from './consumers/batch-doses-creation.consumer';
 import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
-import { UserEventsConsumer } from './consumers/user-events.consumer';
 import { DoseStatusTransitionService } from './services/dose-status-transition.service';
 import { ConfigModule } from '@nestjs/config';
+import { DosesSyncAllConsumer } from './consumers/doses-sync-all.consumer';
 
 @Module({
   imports: [
@@ -24,8 +24,8 @@ import { ConfigModule } from '@nestjs/config';
     DosesSyncService,
     DoseStatusTransitionService, 
     SyncConsumer,
+    DosesSyncAllConsumer,
     BatchCreationConsumer,
-    UserEventsConsumer,
     BatchSyncConsumer,
   ],
 })

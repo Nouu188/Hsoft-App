@@ -1,14 +1,11 @@
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { Appointment } from './appointments/entities/appointment.entity';
-import { Clinic } from './clinics/entities/clinic.entity';
-import { ClinicsModule } from './clinics/clinics.module';
-import { Doctor } from './doctors/entities/doctor.entity';
 
 @Module({
   imports: [
@@ -34,12 +31,11 @@ import { Doctor } from './doctors/entities/doctor.entity';
         username: configService.get<string>('APPOINTMENT_DB_USER'),
         password: configService.get<string>('APPOINTMENT_DB_PASS'),
         database: configService.get<string>('APPOINTMENT_DB_NAME'),
-        entities: [ Appointment, Clinic, Doctor ], 
+        entities: [ Appointment ], 
         synchronize: true,
       }),
     }), 
     AppointmentsModule,
-    ClinicsModule
   ],
   providers: [
     

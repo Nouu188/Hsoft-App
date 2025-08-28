@@ -7,7 +7,7 @@ import { Counter } from 'prom-client';
 import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
 import { MeasureDuration } from '@app/common/metrics/decorators/measure-duration.decorator';
 import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
-import { HospitalPatient } from '@app/api-clients/hospital/dto/hospitalPatient.dto';
+import { HospitalPatient } from '@app/common/types/hospitalPatient.interface';
 
 interface GroupedNotificationPayload {
     userId: string;
@@ -22,16 +22,6 @@ export class NotificationConsumer {
         private readonly notificationService: NotificationService,
     ) { }
 
-    @MeasureDuration(MetricName.NOTIFICATIONS_SCHEDULED_TOTAL, {
-        [MetricLabel.REGISTRATION_SOURCE]: "handleSendGroupedNotification",
-        [MetricLabel.TABLE_NAME]: "doses",
-    })
-    @TrackBusinessMetric(MetricName.NOTIFICATIONS_SCHEDULED_TOTAL, {
-        labels: (args: [HospitalPatient], error?: any) => ({
-            [MetricLabel.REGISTRATION_SOURCE]: 'handleSendGroupedNotification',
-            [MetricLabel.STATUS]: error ? 'error' : 'success',
-        }),
-    })
     @RabbitSubscribe({
         exchange: ExchangeName.NOTIFICATION,
         routingKey: RoutingKey.NOTIFICATION_SCHEDULE,

@@ -107,23 +107,6 @@ services:
       timeout: 5s
       retries: 5
 
-  db-patient-identity:
-    image: postgres:17
-    container_name: med-db-patient-identity
-    environment:
-      POSTGRES_USER: patient_identity_user
-      POSTGRES_PASSWORD: 1
-      POSTGRES_DB: patient_identity_db
-    ports:
-      - "5440:5432"
-    volumes:
-      - postgres_patient_identity_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U patient_identity_user -d patient_identity_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 volumes:
   postgres_account_data:
   postgres_schedules_data:

@@ -1,14 +1,18 @@
-import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
-import { Role } from '@app/auth';
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { isUUID } from 'class-validator';
-import * as crypto from "node:crypto";
-import { FindOptionsWhere, Repository } from 'typeorm';
-import { CreateUserByEmailInput } from './dto/create-user-input.dto';
+import { Role } from '@app/auth/enums/role.enum';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger
+} from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
+import * as crypto from 'node:crypto';
+import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { CreateUserInput } from './dto/create-user-input.dto';
+import { UserPayload } from './dto/user.payload';
 import { User } from './entities/user.entity';
-import { HospitalConnection } from './entities/hospital-connection.entity';
-import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
+import { CreateIdentityInput } from 'apps/tenant-management-service/src/identities/dtos/create-identity-input.dto';
 
 @Injectable()
 export class UsersService {
@@ -16,213 +20,199 @@ export class UsersService {
 
   constructor(
     @InjectRepository(User, 'accountConnection') private readonly usersRepository: Repository<User>,
-    @InjectRepository(HospitalConnection, 'accountConnection') private readonly hospitalConnectionRepository: Repository<HospitalConnection>,
-    private readonly tenantApiClient: TenantApiClientService,
-    private readonly hospitalClient: HospitalApiClientService,
+    @InjectDataSource('accountConnection') private readonly dataSource: DataSource,
   ) { }
 
   // ===================================================================
-  // PHƯƠNG THỨC TÌM KIẾM (READ)
+  // READ METHODS
   // ===================================================================
 
   async findOne(criteria: FindOptionsWhere<User>): Promise<User | null> {
     return this.usersRepository.findOneBy(criteria);
   }
-  
+
   async findAllUsers(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
-  async findByIdentifier(identifier: string): Promise<User | null> {
-    this.logger.debug(`Finding user by identifier: ${identifier}`);
-    if (isUUID(identifier)) {
-      return this.findOne({ id: identifier });
-    }
+  async findByPhoneNumber(phoneNumber: string): Promise<User | null> {
+    this.logger.debug(`Finding user by phoneNumber: ${phoneNumber}`);
+
     return this.usersRepository.findOne({
-      where: [{ email: identifier }, { sodienthoai: identifier }, { mabn: identifier }],
+      where: { phoneNumber: phoneNumber },
+    });
+  }
+
+  async findById(userId: string): Promise<User | null> {
+    this.logger.debug(`Finding user by userId: ${userId}`);
+
+    return this.usersRepository.findOne({
+      where: { id: userId },
     });
   }
 
   async findByEmail(email: string): Promise<User | null> {
     this.logger.debug(`Finding user by email: ${email}`);
-    return this.findOne({ email });
+
+    return this.usersRepository.findOne({
+      where: { email },
+    });
   }
 
   // ===================================================================
-  // PHƯƠNG THỨC TẠO VÀ CẬP NHẬT (WRITE)
+  // CREATE / UPDATE METHODS
   // ===================================================================
 
-  async createUserByEmail(input: CreateUserByEmailInput): Promise<User> {
-    this.logger.log(`Attempting to create user by email: ${input.email}`);
-    const existingUser = await this.findByEmail(input.email);
-    if (existingUser) {
-      throw new ConflictException('Email đã được sử dụng.');
-    }
+  async createUserByEmail(input: CreateUserInput): Promise<UserPayload> {
+    const { email, password, googleId, phoneNumber } = input;
 
-    const newUser = this.usersRepository.create({
-      email: input.email,
-      hoten: input.hoten,
-      password: input.password,
-      roles: [Role.USER],
-      isEmailVerified: false,
+    return this.dataSource.transaction(async (manager) => {
+      if (!email) throw new BadRequestException('Email là bắt buộc để tạo user bằng email.');
+
+      const existing = await manager.findOne(User, { where: { email } });
+      if (existing) throw new ConflictException('Email đã được sử dụng.');
+
+      const newUser = manager.create(User, {
+        email,
+        password,
+        googleId,
+        phoneNumber,
+        roles: [Role.USER],
+        isEmailVerified: !!googleId,
+      });
+
+      const saved = await manager.save(User, newUser);
+      this.logger.log(`Created user ${saved.id} via email.`);
+      return this.mapToPayload(saved);
     });
-
-    const savedUser = await this.usersRepository.save(newUser);
-    this.logger.log(`Successfully created user ${savedUser.id} via email.`);
-    return savedUser;
   }
 
-  async createUserFromHospitalPatient(hospitalPatient: any): Promise<User> {
-    this.logger.log(`Attempting to create user from hospital patient data for mabn: ${hospitalPatient.mabn}`);
-
-    const newUser = this.usersRepository.create({
-      mabn: hospitalPatient.mabn,
-      hoten: hospitalPatient.hoten,
-      namsinh: hospitalPatient.namsinh,
-      sodienthoai: hospitalPatient.sodienthoai,
-      password: hospitalPatient.namsinh,
-      roles: [Role.USER],
-      isEmailVerified: true, // Coi như đã xác thực qua hệ thống BV
-    });
-
-    const savedUser = await this.usersRepository.save(newUser);
-    this.logger.log(`Successfully created user ${savedUser.id} from hospital data.`);
-    return savedUser;
-  }
-
-  async findOrCreateFromGoogle(details: { email: string; hoten?: string; avatarUrl?: string; googleId: string }): Promise<User> {
-    this.logger.log(`Finding or creating user for Google email: ${details.email}`);
-    const existingUser = await this.findByEmail(details.email);
-
-    if (existingUser) {
-      existingUser.googleId = details.googleId;
-      existingUser.avatarUrl = details.avatarUrl || existingUser.avatarUrl;
-      existingUser.isEmailVerified = true;
-      await this.usersRepository.save(existingUser);
-      this.logger.log(`Found and updated existing user ${existingUser.id} with Google info.`);
-      return existingUser;
-    }
-
-    const randomPassword = crypto.randomBytes(16).toString('hex');
-
-    const newUser = this.usersRepository.create({
-      email: details.email,
-      hoten: details.hoten || 'Người dùng Google',
-      avatarUrl: details.avatarUrl,
-      googleId: details.googleId,
-      password: randomPassword,
-      isEmailVerified: true,
-      roles: [Role.USER],
-    });
-
-    const savedUser = await this.usersRepository.save(newUser);
-    this.logger.log(`Created new user ${savedUser.id} from Google sign-in.`);
-    return savedUser;
-  }
-
-  // ===================================================================
-  // QUẢN LÝ TOKEN VÀ LIÊN KẾT
-  // ===================================================================
-
-  async addFcmToken(userId: string, token: string): Promise<boolean> {
-    const user = await this.findOne({ id: userId });
-    if (!user) {
-      this.logger.warn(`[addFcmToken] User not found: ${userId}`);
-      return false;
-    }
-
-    const tokens = user.fcmTokens || [];
-    if (!tokens.includes(token)) {
-      await this.usersRepository.update(userId, { fcmTokens: [...tokens, token] });
-      this.logger.log(`Added FCM token for user ${userId}`);
-    }
-    return true;
-  }
-
-  async removeFcmTokens(userId: string, tokensToRemove: string[]): Promise<boolean> {
-    const user = await this.findOne({ id: userId });
-    if (!user || !user.fcmTokens) return false;
-
-    const newTokens = user.fcmTokens.filter(t => !tokensToRemove.includes(t));
-    if (newTokens.length < user.fcmTokens.length) {
-      await this.usersRepository.update(userId, { fcmTokens: newTokens });
-      this.logger.log(`Removed ${user.fcmTokens.length - newTokens.length} FCM tokens for user ${userId}`);
-    }
-    return true;
-  }
-
-  async linkToHospital(userId: string, hospitalId: string): Promise<HospitalConnection> {
-    this.logger.log(`User ${userId} attempting to link to hospital ${hospitalId}.`);
-
-    // 1. Kiểm tra xem liên kết đã tồn tại hay chưa để tránh xử lý thừa
-    const existingConnection = await this.hospitalConnectionRepository.findOneBy({ userId, hospitalId });
-    if (existingConnection) {
-      this.logger.warn(`User ${userId} is already linked to hospital ${hospitalId}. Returning existing connection.`);
-      return existingConnection;
-    }
-
-    // 2. Lấy thông tin chi tiết của người dùng và bệnh viện song song để tối ưu
-    const [user, hospital] = await Promise.all([
-      this.usersRepository.findOneBy({ id: userId }),
-      this.tenantApiClient.getHospitalById(hospitalId),
-    ]);
-
-    if (!user) {
-      // Lỗi này không nên xảy ra nếu request đã qua JwtAuthGuard
-      throw new NotFoundException(`User with ID ${userId} not found.`);
-    }
-    if (!hospital) {
-      throw new BadRequestException(`Bệnh viện với ID ${hospitalId} không hợp lệ hoặc không tồn tại.`);
-    }
-
-    // 3. Xác định thông tin định danh để tìm kiếm trên hệ thống bệnh viện
-    // Ưu tiên CMND/CCCD, nếu không có thì dùng SĐT
-    const identifier = user.socmnd || user.sodienthoai;
-    if (!identifier) {
-      throw new BadRequestException('Vui lòng cập nhật số CMND/CCCD hoặc SĐT trong hồ sơ để thực hiện liên kết.');
-    }
-    
-    this.logger.debug(`Using identifier '${identifier}' to find patient at hospital ${hospital.name}`);
-
-    // 4. Gọi API của bệnh viện đó để xác thực và lấy mã bệnh nhân (mabn)
-    const patientInfo = await this.hospitalClient.fetchPatientFromHospital(
-      // hospital.graphqlEndpoint,
-      identifier,
-    );
-
-    if (!patientInfo || !patientInfo.mabn) {
-      this.logger.warn(`Patient identifier '${identifier}' not found at hospital ${hospital.name} (ID: ${hospitalId})`);
-      throw new NotFoundException('Không tìm thấy thông tin của bạn tại bệnh viện này. Vui lòng kiểm tra lại CMND/CCCD/SĐT đã đăng ký.');
-    }
-
-    // 5. Tạo và lưu liên kết mới
-    const newConnection = this.hospitalConnectionRepository.create({
-      userId,
-      hospitalId,
-      patientCodeAtHospital: patientInfo.mabn,
-    });
-
-    try {
-      const savedConnection = await this.hospitalConnectionRepository.save(newConnection);
-      this.logger.log(`Successfully linked user ${userId} to hospital ${hospitalId} with mabn ${patientInfo.mabn}`);
-      
-      // (Tùy chọn) Nếu user chưa có mabn, cập nhật mabn chính cho user
-      if (!user.mabn) {
-        user.mabn = patientInfo.mabn;
-        await this.usersRepository.save(user);
-        this.logger.log(`Updated primary 'mabn' for user ${userId}.`);
+  async createUserFromHospital(identity: CreateIdentityInput): Promise<UserPayload> {
+    return this.dataSource.transaction(async (manager) => {
+      let user = await manager.findOne(User, { where: { phoneNumber: identity.phoneNumber } });
+      if (user) {
+        this.logger.log(`User ${user.id} already exists in account-service`);
+        return this.mapToPayload(user);
       }
 
-      return savedConnection;
-    } catch (error) {
-      // Bắt lỗi unique constraint (trường hợp race condition)
-      if (error.code === '23505') { // Mã lỗi unique violation của PostgreSQL
-        this.logger.warn(`Race condition detected: User ${userId} link to hospital ${hospitalId} was created by another process.`);
-        // Trả về liên kết đã tồn tại
-        return this.hospitalConnectionRepository.findOneByOrFail({ userId, hospitalId });
+      if (!identity.birthYear) {
+        throw new BadRequestException('Cannot create user: birthYear not available');
       }
-      this.logger.error(`Failed to save hospital connection for user ${userId}`, error.stack);
-      throw new InternalServerErrorException('Không thể tạo liên kết bệnh viện do lỗi hệ thống.');
-    }
+
+      const password = identity.birthYear.toString();
+      const newUser = manager.create(User, {
+        phoneNumber: identity.phoneNumber,
+        password,
+        roles: [Role.USER],
+        isEmailVerified: true,
+      });
+
+      const saved = await manager.save(User, newUser);
+      this.logger.log(`Created user ${saved.id} from hospital account`);
+
+      return this.mapToPayload(saved);
+    });
+  }
+
+  async findOrCreateFromGoogle(details: {
+    email: string;
+    fullName?: string;
+    avatarUrl?: string;
+    googleId: string;
+  }): Promise<UserPayload> {
+    return this.dataSource.transaction(async (manager) => {
+      const { email, fullName, avatarUrl, googleId } = details;
+
+      if (!email) throw new BadRequestException('Email là bắt buộc cho Google login.');
+
+      let user = await manager.findOne(User, { where: { email } });
+      if (user) {
+        user.googleId = googleId;
+        user.avatarUrl = avatarUrl || user.avatarUrl;
+        user.isEmailVerified = true;
+        await manager.save(User, user);
+        this.logger.log(`Updated user ${user.id} with Google info.`);
+        return this.mapToPayload(user);
+      }
+
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+
+      user = manager.create(User, {
+        email,
+        fullName: fullName || 'Google User',
+        avatarUrl,
+        googleId,
+        password: randomPassword,
+        roles: [Role.USER],
+        isEmailVerified: true,
+      });
+
+      const saved = await manager.save(User, user);
+      this.logger.log(`Created new user ${saved.id} via Google login.`);
+      return this.mapToPayload(saved);
+    });
+  }
+
+  // ===================================================================
+  // DEVICE TOKEN MANAGEMENT
+  // ===================================================================
+
+  async addDeviceToken(
+    userId: string,
+    token: string,
+    type: 'FCM' | 'APN',
+  ): Promise<boolean> {
+    return this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, { where: { id: userId } });
+      if (!user) {
+        this.logger.warn(`[addDeviceToken] User not found: ${userId}`);
+        return false;
+      }
+
+      const tokens = user.deviceTokens || [];
+      if (!tokens.some((t) => t.token === token)) {
+        tokens.push({ token, type });
+        await manager.update(User, userId, { deviceTokens: tokens });
+        this.logger.log(`Added ${type} device token for user ${userId}`);
+      }
+      return true;
+    });
+  }
+
+  async removeDeviceTokens(
+    userId: string,
+    tokensToRemove: string[],
+  ): Promise<boolean> {
+    return this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOne(User, { where: { id: userId } });
+      if (!user || !user.deviceTokens) return false;
+
+      const newTokens = user.deviceTokens.filter(
+        (t) => !tokensToRemove.includes(t.token),
+      );
+
+      if (newTokens.length < user.deviceTokens.length) {
+        await manager.update(User, userId, { deviceTokens: newTokens });
+        this.logger.log(
+          `Removed ${user.deviceTokens.length - newTokens.length} device tokens for user ${userId}`,
+        );
+      }
+
+      return true;
+    });
+  }
+
+  private mapToPayload(user: User): UserPayload {
+    return {
+      id: user.id,
+      email: user.email,
+      googleId: user.googleId,
+      phoneNumber: user.phoneNumber,
+      roles: user.roles,
+      isEmailVerified: user.isEmailVerified,
+      deviceTokens: user.deviceTokens || [],
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }

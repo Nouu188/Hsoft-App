@@ -4,46 +4,64 @@ import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges';
 import { QueueName, RoutingKey } from '@app/common/rabbitmq';
+import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
 
 interface SyncRequestPayload {
-    ngay?: string;
-    userId?: string;
-    sodienthoai?: string;
-    mabn?: string;
-    socmnd?: string;
+  phoneNumber: string;
+  hospitalUrl?: string;
 }
+
 @Injectable()
 export class SyncConsumer {
-    private readonly logger = new Logger(SyncConsumer.name);
+  private readonly logger = new Logger(SyncConsumer.name);
 
-    constructor(
-        private readonly dosesSyncService: DosesSyncService,
-        private readonly accountApiClient: AccountApiClientService,
-    ) {}
+  constructor(
+    private readonly dosesSyncService: DosesSyncService,
+    private readonly accountApiClient: AccountApiClientService,
+  ) {}
 
-    @RabbitSubscribe({
-        exchange: ExchangeName.SYNC,
-        routingKey: RoutingKey.SYNC_REQUEST,
-        queue: QueueName.SYNC_REQUESTS,
-    })
-    public async handleSyncRequest(payload: SyncRequestPayload) {
-        const { userId, sodienthoai, mabn, socmnd , ngay } = payload;
-        if(!sodienthoai && !mabn && !socmnd && !userId) {
-            throw new Error('Either "mabn" or "sodienthoai" or "socmnd" must be provided.');
-        }
+  @RabbitSubscribe({
+    exchange: ExchangeName.SYNC,
+    routingKey: RoutingKey.SYNC_REQUEST,
+    queue: QueueName.SYNC_REQUESTS,
+  })
+  public async handleSyncRequest(payload: SyncRequestPayload): Promise<void | Nack> {
+    const { phoneNumber, hospitalUrl } = payload;
 
-        const identifier = sodienthoai || mabn || socmnd;
-        
-        const user = await this.accountApiClient.fetchUserByIdentifier(identifier!);
-        if(!user) {
-            return new UnauthorizedException("User not found");
-        }
-        
-        try {
-            await this.dosesSyncService.syncDosesInFuture(user, ngay);
-        } catch (error) {
-            this.logger.error(`Failed to process sync request for userId ${identifier}`, error.stack);
-            return new Nack(false);
-        }
+    // Validate payload
+    if (!phoneNumber) {
+      this.logger.error(`[SyncConsumer] Payload missing 'identity' or 'phoneNumber': ${JSON.stringify(payload)}`);
+      return new Nack(false);
     }
+
+    if (!hospitalUrl) {
+      this.logger.error(`[SyncConsumer] Payload missing 'hospitalUrl': ${JSON.stringify(payload)}`);
+      return new Nack(false);
+    }
+
+    // Fetch user from account service
+    let user;
+    try {
+      user = await this.accountApiClient.fetchUserByPhoneNumber(phoneNumber);
+      if (!user) {
+        this.logger.warn(`[SyncConsumer] User with phoneNumber ${phoneNumber} not found`);
+        throw new UnauthorizedException('User not found');
+      }
+    } catch (error) {
+      this.logger.error(`[SyncConsumer] Failed to fetch user for phoneNumber ${phoneNumber}`, error.stack);
+      return new Nack(false);
+    }
+
+    // Perform sync
+    try {
+      this.logger.log(`[SyncConsumer] Starting dose sync for user ${user.id} (${phoneNumber})`);
+      
+      await this.dosesSyncService.syncDosesInFuture(user, hospitalUrl);
+
+      this.logger.log(`[SyncConsumer] Completed dose sync for user ${user.id}`);
+    } catch (error) {
+      this.logger.error(`[SyncConsumer] Failed to process sync request for user ${user.id}`, error.stack);
+      return new Nack(false);
+    }
+  }
 }

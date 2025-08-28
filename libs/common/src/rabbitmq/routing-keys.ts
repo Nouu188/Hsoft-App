@@ -1,6 +1,7 @@
 export const RoutingKey = {
   // User Events
-  USER_FIRST_LOGIN: 'user.first_login',
+  USER_FIRST_LOGIN_SCHEDULING: 'user.first_login.scheduling',
+  USER_FIRST_LOGIN_IDENTITY: 'user.first_login.identity',
   USER_PROFILE_UPDATED: 'user.profile_updated',
 
   // Sync Events

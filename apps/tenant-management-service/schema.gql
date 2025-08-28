@@ -2,6 +2,26 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Clinic {
+  createdAt: DateTime!
+  doctors: [Doctor!]
+  externalCode: String!
+  hospital: Hospital!
+  hospitalId: String!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type ClinicObjectType {
+  """Mã khoa phòng từ hệ thống bệnh viện"""
+  externalCode: String!
+
+  """ID nội bộ của phòng khám"""
+  id: ID!
+}
+
 input CreateHospitalInput {
   code: String!
   graphqlEndpoint: String!
@@ -9,24 +29,146 @@ input CreateHospitalInput {
   name: String!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Doctor {
+  avatarUrl: String
+  bio: String
+  clinic: Clinic!
+  clinicId: String!
+  createdAt: DateTime!
+  externalCode: String!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type DoctorAvailability {
+  date: String!
+  timeSlots: [TimeSlot!]!
+}
+
+input DoctorAvailabilityInput {
+  date: String!
+  doctorId: ID!
+}
+
+type DoctorObjectType {
+  avatarUrl: String
+  bio: String
+
+  """Phòng khám nơi bác sĩ làm việc"""
+  clinic: [ClinicObjectType!]!
+  id: ID!
+  name: String!
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  OTHER
+}
+
 type Hospital {
-  code: String!
+  clinics: [Clinic!]
+  createdAt: DateTime!
+  externalCode: String
+  graphqlEndpoint: String!
+  id: ID!
+  identities: [Identity!]
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
+input HospitalClinicInput {
+  makp: String!
+  tenkp: String!
+}
+
+type HospitalObjectType {
+  externalCode: String!
   graphqlEndpoint: String!
   id: ID!
   isActive: Boolean!
   name: String!
 }
 
+type HospitalUrlResponse {
+  graphqlEndpoint: String!
+}
+
+type Identity {
+  address: String
+  avatarUrl: String
+
+  """Năm sinh"""
+  birthYear: Float
+  createdAt: DateTime!
+
+  """Mã bệnh nhân chính"""
+  externalPatientCode: String
+
+  """Họ và tên đầy đủ"""
+  fullName: String!
+  gender: Gender
+
+  """Số thẻ BHYT"""
+  healthInsuranceNumber: String
+  hospitals: [Hospital!]
+  id: ID!
+
+  """Số CMND/CCCD"""
+  nationalId: String
+
+  """Số điện thoại"""
+  phoneNumber: String
+  updatedAt: DateTime!
+
+  """ID của user liên kết"""
+  userId: String!
+}
+
 type Mutation {
-  createHospital(createHospitalInput: CreateHospitalInput!): Hospital!
+  createHospital(createHospitalInput: CreateHospitalInput!): HospitalObjectType!
   removeHospital(id: ID!): Boolean!
-  updateHospital(updateHospitalInput: UpdateHospitalInput!): Hospital!
+  updateHospital(updateHospitalInput: UpdateHospitalInput!): HospitalObjectType!
+
+  """
+  Đồng bộ danh sách phòng khám từ dữ liệu bệnh viện (tạo mới, cập nhật, vô hiệu hóa).
+  """
+  upsertClinics(hospitalClinics: [HospitalClinicInput!]!): UpsertClinicResult!
 }
 
 type Query {
-  activeHospitals: [Hospital!]!
-  hospital(id: ID!): Hospital!
-  hospitals(isActive: Boolean): [Hospital!]!
+  """
+  Lấy danh sách tất cả các phòng khám đang hoạt động để người dùng có thể đặt lịch.
+  """
+  activeClinics: [ClinicObjectType!]!
+  activeHospitals: [HospitalObjectType!]!
+
+  """Lấy thông tin chi tiết một phòng khám theo ID."""
+  clinicById(clinicId: String!): ClinicObjectType!
+  doctorAvailability(input: DoctorAvailabilityInput!): DoctorAvailability!
+
+  """Lấy bác sĩ theo ID"""
+  doctors(doctorId: ID!): DoctorObjectType!
+  hospital(id: ID!): HospitalObjectType!
+  hospitalUrlByCode(externalHospitalCode: String!): HospitalUrlResponse!
+  hospitals(isActive: Boolean): [HospitalObjectType!]!
+  identitiesByIds(ids: [ID!]!): [Identity!]!
+  identity(id: ID!): Identity
+  identityByUserId(userId: ID!): Identity!
+}
+
+type TimeSlot {
+  endTime: DateTime!
+  isAvailable: Boolean!
+  startTime: DateTime!
 }
 
 input UpdateHospitalInput {
@@ -35,4 +177,10 @@ input UpdateHospitalInput {
   id: ID!
   isActive: Boolean
   name: String
+}
+
+type UpsertClinicResult {
+  created: Int!
+  deactivated: Int!
+  updated: Int!
 }

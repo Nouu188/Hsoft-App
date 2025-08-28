@@ -2,14 +2,18 @@ import { InputType, Field } from '@nestjs/graphql';
 import { IsString, MinLength } from 'class-validator';
 
 @InputType()
-export class LoginInputByIdentifier {
+export class LoginInputByPhoneNumber {
   @Field()
   @IsString()
-  identifier: string; 
+  phoneNumber: string; 
 
   @Field()
   @IsString()  
-  password?: string;
+  password: string;
+
+  @Field()
+  @IsString()
+  externalHospitalCode: string; 
 }
 
 @InputType()
