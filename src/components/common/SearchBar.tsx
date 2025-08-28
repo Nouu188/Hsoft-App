@@ -2,13 +2,7 @@ import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
-
-interface SearchBarProps {
-  searchQuery: string;
-  onSearchChange: (text: string) => void;
-  onFilterPress: () => void;
-  activeFilterCount: number;
-}
+import type { SearchBarProps } from './types';
 
 const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, onSearchChange, onFilterPress, activeFilterCount }) => {
   return (

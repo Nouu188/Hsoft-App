@@ -2,7 +2,9 @@ import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+// Component hiển thị 1 hàng các nút nhanh (Quick Actions)
 const QuickActions = () => {
+  // Danh sách các hành động nhanh: tên và icon
   const actions = [
     { name: 'Meds', icon: 'medkit-outline' },
     { name: 'Tracked', icon: 'pulse-outline' },

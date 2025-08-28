@@ -1,43 +1,45 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { COLORS } from '@/constants/theme';
+import type { PaginationProps } from '../types';
 
-interface PaginationProps {
-    dataLength: number;
-    activeIndex: number;
-}
-
+// Component Pagination: hiển thị các chấm (dot) để biểu thị vị trí trang/slide hiện tại
 const Pagination: React.FC<PaginationProps> = React.memo(({ dataLength, activeIndex }) => {
+    // Tạo mảng với độ dài bằng số lượng trang/slides (dataLength)
     const dots = Array.from({ length: dataLength });
+
     return (
         <View style={styles.paginationContainer}>
             {dots.map((_, index) => (
                 <View
-                    key={index}
+                    key={index} 
                     style={[
                         styles.paginationDot,
-                        { opacity: index === activeIndex ? 1 : 0.3 },
+                        { opacity: index === activeIndex ? 1 : 0.3 }, 
                     ]}
                 />
             ))}
         </View>
     );
 });
+
+// StyleSheet cho component
 const styles = StyleSheet.create({
     paginationContainer: {
-        position: 'absolute',
-        bottom: 15,
+        position: 'absolute',    // Cố định vị trí (thường đặt dưới cùng slider)
+        bottom: 15,              // Cách mép dưới 15px
         left: 0,
         right: 0,
-        flexDirection: 'row',
-        justifyContent: 'center',
+        flexDirection: 'row',    // Sắp xếp các dot theo hàng ngang
+        justifyContent: 'center' // Canh giữa
     },
     paginationDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginHorizontal: 4,
-        backgroundColor: COLORS.primary,
+        width: 8,                // Chiều rộng dot
+        height: 8,               // Chiều cao dot
+        borderRadius: 4,         // Bo tròn (tạo hình tròn)
+        marginHorizontal: 4,     // Khoảng cách ngang giữa các dot
+        backgroundColor: COLORS.primary, // Màu dot (theo theme)
     },
 });
+
 export default Pagination;

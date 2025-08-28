@@ -19,3 +19,9 @@ export interface UtilityGridProps {
   services: UtilityItemProps[];
   numColumns?: number;
 }
+
+// Props cho GridItem (mỗi ô trong lưới)
+export interface GridItemProps {
+  item: UtilityItemProps; // Thông tin chi tiết của item
+  itemSize: number;       // Kích thước chiều rộng của mỗi ô
+}

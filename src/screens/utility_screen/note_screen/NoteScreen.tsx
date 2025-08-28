@@ -1,5 +1,4 @@
-// src/screens/Note/NoteScreen.tsx
-import React, { useState, useMemo } from 'react'; // <-- BƯỚC 1: Import useMemo
+import React, { useState, useMemo } from 'react'; 
 import {
   SafeAreaView,
   View,
@@ -10,15 +9,13 @@ import {
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SHADOWS, SIZES } from '@/constants/theme';
 import Animated from 'react-native-reanimated';
-
 import CreateNoteScreen from './CreateNoteScreen';
 import Header from '@/components/specific/home/note/NoteHeader';
 import SearchBar from '@/components/specific/home/note/NoteSearchBar';
 import NoteList from '@/components/specific/home/note/NoteList';
 import EmptyState from '@/components/specific/home/note/NoteEmptyState';
-import { Note } from '@/components/specific/home/note/NoteItem';
-
 import { useMorphingAnimation } from '@/hooks/useMorphingAnimation';
+import { Note } from '@/components/specific/home/note/types';
 
 const FAB_CONFIG = {
   size: 60,

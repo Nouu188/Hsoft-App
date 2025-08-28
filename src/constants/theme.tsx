@@ -32,7 +32,7 @@ export const COLORS = {
   border: '#D8DEE9',     // Màu viền
 
   placeholderColor:'#b3b0b0ff', //màu của placeholder
-  introduction:'#4ca9beff',//màu cho giao diện đăng nhập
+  introduction:'#4ca9beff',//màu cho giao diện đăng nhập(đậm hơn so với màu nền app)
   // Màu trong suốt
   transparent: 'transparent',
 };

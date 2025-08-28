@@ -43,7 +43,6 @@ const ViewMoreCard: React.FC<ViewMoreCardProps> = ({ onPress, scrollX, index }) 
             <Text style={styles.title}>Xem tất cả</Text>
             <Text style={styles.subtitle}>Lịch hẹn của bạn</Text>
 
-            {/* Thêm arrow indicator */}
             <View style={styles.arrowContainer}>
               <Ionicons name="arrow-forward" size={20} color={COLORS.primary} />
             </View>

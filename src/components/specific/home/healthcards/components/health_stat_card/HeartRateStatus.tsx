@@ -13,10 +13,7 @@ const HeartRateStatus: React.FC<Props> = ({ text, advice, color, large = false }
   return (
     // THAY ĐỔI 1: Thêm View container để nhóm text lại
     <View style={styles.container}> 
-      {/* Trạng thái (vd: "Rất chậm") sẽ luôn hiển thị */}
       <Text style={[styles.status, { color }]}>{text}</Text>
-      
-      {/* THAY ĐỔI 2: Lời khuyên chỉ hiển thị khi `large` là true VÀ `advice` tồn tại */}
       {large && advice && (
         <Text style={styles.advice}>{advice}</Text>
       )}

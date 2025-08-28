@@ -2,8 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SIZES, COLORS } from '@/constants/theme';
 import { NextScheduleViewProps } from './types';
-
-// Import các component UI con
 import ScheduleItem from './components/ScheduleItem';
 import NoScheduleItem from './components/NoScheduleItem';
 

@@ -7,21 +7,16 @@ import {
   Modal,
   Pressable,
   SafeAreaView,
-  StyleProp,
-  TextStyle,
 } from 'react-native';
+import { IconProps } from './types'; // import type
 
-interface IconProps {
-  name: string;
-  style?: StyleProp<TextStyle>;
-}
-
+// Component Icon đơn giản
 const Icon: React.FC<IconProps> = ({ name, style }) => (
   <Text style={style}>{name}</Text>
 );
 
-
-const NotificationSetting = () => {
+// Component chính hiển thị popup cài đặt thông báo
+const NotificationSetting: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
@@ -31,13 +26,13 @@ const NotificationSetting = () => {
           animationType="slide"
           transparent={true}
           visible={modalVisible}
-          onRequestClose={() => {
-            setModalVisible(!modalVisible);
-          }}>
+          onRequestClose={() => setModalVisible(!modalVisible)}
+        >
           {/* Lớp phủ mờ */}
           <Pressable
             style={styles.modalOverlay}
-            onPress={() => setModalVisible(false)}>
+            onPress={() => setModalVisible(false)}
+          >
             {/* Nội dung popup */}
             <View style={styles.modalView}>
               <TouchableOpacity style={styles.modalOption}>
@@ -50,7 +45,8 @@ const NotificationSetting = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalOption}
-                onPress={() => setModalVisible(false)}>
+                onPress={() => setModalVisible(false)}
+              >
                 <Icon name="X" style={styles.modalIcon} />
                 <Text style={styles.modalOptionText}>Huỷ</Text>
               </TouchableOpacity>
@@ -73,18 +69,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  openButton: {
-    backgroundColor: '#d42a8c',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  openButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  // --- BẮT ĐẦU PHẦN STYLE CHO POPUP ---
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -95,12 +79,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 16,
-    paddingBottom: 30, // Thêm padding dưới cho an toàn
+    paddingBottom: 30,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
@@ -118,11 +99,10 @@ const styles = StyleSheet.create({
   },
   modalIcon: {
     fontSize: 20,
-    width: 24, // Dành không gian cố định cho icon
+    width: 24,
     textAlign: 'center',
     color: '#333',
   },
-  // --- KẾT THÚC PHẦN STYLE CHO POPUP ---
 });
 
 export default NotificationSetting;

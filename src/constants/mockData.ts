@@ -1,5 +1,4 @@
-// src/constants/mockData.ts
-
+//data bác sĩ cho screen lịch hẹn khám
 export interface AppointmentCardData {
   id: string;
   doctorName: string;

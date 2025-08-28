@@ -1,23 +1,15 @@
-import {Dimensions, StyleSheet, View} from 'react-native';
+// src/components/carousel/ParallaxCarouselPagination.tsx
 import React from 'react';
-import Animated, {
-  Extrapolation,
-  SharedValue,
-  interpolate,
-  interpolateColor,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
-import { AppointmentCardData } from '@/constants/mockData';
+import { View, StyleSheet } from 'react-native';
+import Animated, { Extrapolation, interpolate, interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
+import type { PaginationDotProps, ParallaxCarouselPaginationProps } from '../../types';
+import { Dimensions } from 'react-native';
+
 const OFFSET = 45;
 const ITEM_WIDTH = Dimensions.get('window').width - OFFSET * 2;
 
-const PaginationDot = ({
-  index,
-  scrollX,
-}: {
-  index: number;
-  scrollX: SharedValue<number>;
-}) => {
+// Component từng dot
+const PaginationDot: React.FC<PaginationDotProps> = ({ index, scrollX }) => {
   const animatedDotStyle = useAnimatedStyle(() => {
     const widthAnimation = interpolate(
       scrollX.value,
@@ -32,39 +24,31 @@ const PaginationDot = ({
       [0.5, 1, 0.5],
       Extrapolation.CLAMP,
     );
+
     return {
       width: widthAnimation,
       opacity: opacityAnimation,
     };
   });
 
-  const animatedColor = useAnimatedStyle(() => {
-    const backgroundColor = interpolateColor(
+  const animatedColor = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
       scrollX.value,
       [0, ITEM_WIDTH, 2 * ITEM_WIDTH],
       ['#9095A7', '#9095A7', '#9095A7'],
-    );
+    ),
+  }));
 
-    return {
-      backgroundColor: backgroundColor,
-    };
-  });
-
-  return (
-    <Animated.View style={[styles.dots, animatedDotStyle, animatedColor]} />
-  );
+  return <Animated.View style={[styles.dot, animatedDotStyle, animatedColor]} />;
 };
 
-type TProps = {
-  data: AppointmentCardData[]; // <-- Sử dụng kiểu dữ liệu của bạn
-  scrollX: SharedValue<number>;
-};
-const ParallaxCarouselPagination = ({data, scrollX}: TProps) => {
+// Component toàn bộ pagination
+const ParallaxCarouselPagination: React.FC<ParallaxCarouselPaginationProps> = ({ data, scrollX }) => {
   return (
     <View style={styles.paginationContainer}>
-      {data.map((_: any, index: number) => {
-        return <PaginationDot index={index} scrollX={scrollX} key={index} />;
-      })}
+      {data.map((_, index) => (
+        <PaginationDot key={index} index={index} scrollX={scrollX} />
+      ))}
     </View>
   );
 };
@@ -75,8 +59,9 @@ const styles = StyleSheet.create({
   paginationContainer: {
     flexDirection: 'row',
     paddingVertical: 10,
+    justifyContent: 'center',
   },
-  dots: {
+  dot: {
     height: 10,
     marginHorizontal: 8,
     borderRadius: 5,

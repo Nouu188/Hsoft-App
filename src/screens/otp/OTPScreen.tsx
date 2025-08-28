@@ -6,7 +6,7 @@ import OTPResendButton from '../../components/specific/auth/otp/OTPResendButton'
 import { useOTP } from './useOTP';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '../../constants/theme';
-import { RootStackParamList } from '@/navigation/RootNavigator';
+import { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OTPScreen'>;
 

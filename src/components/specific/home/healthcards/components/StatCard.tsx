@@ -1,25 +1,40 @@
-import { COLORS, FONTS, SHADOWS, SIZES } from '@/constants/theme';
-import Ionicons from '@react-native-vector-icons/ionicons';
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { StatCardProps } from '../types';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import { COLORS, FONTS, SHADOWS, SIZES } from '@/constants/theme';
 import { getHeartRateStatus } from './health_stat_card/getHeartRateStatus';
 import HeartRateDisplay from './health_stat_card/HeartRateDisplay';
 import HeartRateStatus from './health_stat_card/HeartRateStatus';
+import { StatCardComponentProps } from '../types';
 
-type Props = StatCardProps & {
-  onDelete?: (key: string) => void;
-};
-
-const StatCard: React.FC<Props> = React.memo(
+/**
+ * StatCard
+ * 
+ * Component hiển thị 1 "thẻ thống kê sức khoẻ".
+ * Có thể mở rộng/thu gọn nội dung khi bấm vào.
+ * 
+ * Props (StatCardComponentProps):
+ * - stat: Stat → thông tin của chỉ số sức khoẻ (icon, title, getValue, progress).
+ * - healthProps: HealthStatsProps → dữ liệu sức khoẻ hiện tại.
+ * - large?: boolean → có hiển thị card ở dạng lớn không.
+ * - onDelete?: (key: string) => void → callback khi bấm nút xoá (nếu có).
+ */
+const StatCard: React.FC<StatCardComponentProps> = React.memo(
   ({ stat, healthProps, large = false, onDelete }) => {
+    // State để quản lý card đang mở rộng hay thu gọn
     const [expanded, setExpanded] = useState(true);
 
+    // Tính toán giá trị progress (ví dụ % hoàn thành mục tiêu)
     const progressValue = stat.progress ? stat.progress(healthProps) : 0;
+
+    // Lấy giá trị hiển thị chính (ví dụ: số bước, nhịp tim, calo)
     const displayValue = stat.getValue(healthProps);
+
+    // Nếu là "nhịp tim" thì lấy trạng thái (màu, lời khuyên, text)
     const heartStatus =
       stat.key === 'heart' ? getHeartRateStatus(healthProps.heartRate) : null;
 
+    // Toggle mở rộng/thu gọn khi bấm vào card
     const toggleExpand = () => setExpanded(!expanded);
 
     return (
@@ -28,11 +43,11 @@ const StatCard: React.FC<Props> = React.memo(
         onPress={toggleExpand}
         style={[styles.card, large && styles.largeCard]}
       >
-        {/* Header */}
         <View style={styles.cardHeader}>
           <View style={[styles.iconWrapper, { backgroundColor: stat.icon.bg }]}>
             <Ionicons name={stat.icon.name} size={18} color={stat.icon.color} />
           </View>
+          
           <Text style={styles.cardTitle}>{stat.title}</Text>
 
           {onDelete && (
@@ -45,7 +60,6 @@ const StatCard: React.FC<Props> = React.memo(
           )}
         </View>
 
-        {/* Body */}
         <View style={styles.cardBody}>
           {stat.key === 'heart' && heartStatus ? (
             expanded ? (
@@ -74,7 +88,6 @@ const StatCard: React.FC<Props> = React.memo(
           )}
         </View>
 
-        {/* Progress bar (chỉ hiển thị khi stat có progress và đang expanded) */}
         {stat.progress && expanded && (
           <View style={styles.progressBar}>
             <View
@@ -104,7 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   largeCard: {
-    width: '95%',
+    width: '95%', // card lớn rộng hơn 1 chút
   },
   cardHeader: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
+import { ProfileStackParamList } from "../../../navigation/types";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,7 +16,7 @@ const ProfileHeader = () => {
         <Ionicons name="menu-outline" size={28} color={COLORS.textDark} />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>My Profile</Text>
-      {/* Thêm sự kiện onPress để điều hướng */}
+      
       <TouchableOpacity 
         style={styles.headerButton} 
         onPress={() => navigation.navigate('Settings')}

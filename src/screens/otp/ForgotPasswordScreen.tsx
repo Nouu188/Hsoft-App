@@ -15,13 +15,8 @@ import {
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { COLORS, SHADOWS, SIZES } from '@/constants/theme';
-import { RootStackParamList } from '@/navigation/RootNavigator';
-
-type AuthStackParamList = {
-  Login: undefined;
-  ForgotPassword: undefined;
-  Register: undefined;
-};
+import { RootStackParamList } from '../../navigation/types';
+import type {AuthStackParamList} from '../../navigation/types'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ForgotPasswordScreen'>;
 

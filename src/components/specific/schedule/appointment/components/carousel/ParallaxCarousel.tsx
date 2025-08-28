@@ -148,7 +148,6 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
 
   return (
     <View style={styles.container}>
-      {/* Navigation Buttons with animated styles */}
       <Animated.View style={[styles.navButton, styles.prevButton, prevButtonStyle]}>
         <TouchableOpacity
           onPress={handlePrev}
@@ -169,7 +168,6 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Optimized Carousel */}
       <AnimatedFlatList
         ref={flatListRef}
         horizontal
@@ -201,7 +199,6 @@ const ParallaxCarousel: React.FC<ParallaxCarouselProps> = ({ data, onViewAllPres
         }}
       />
 
-      {/* Pagination and View All */}
       <View style={styles.paginationWrapper}>
         <View style={[styles.viewAllButton, styles.invisibleButton]}>
           <Text style={styles.viewAllText}>Xem tất cả</Text>

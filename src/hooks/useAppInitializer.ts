@@ -1,5 +1,4 @@
 /**
- * @file src/hooks/useAppInitializer.ts
  * @description Custom Hook để quản lý logic khởi tạo và điều hướng ban đầu của ứng dụng.
  * Hook này chịu trách nhiệm:
  * 1. Hiển thị Splash Screen trong một khoảng thời gian tối thiểu để cải thiện trải nghiệm người dùng.
@@ -10,7 +9,7 @@
 import { useEffect, useState, RefObject } from 'react';
 import { NavigationContainerRef, CommonActions } from '@react-navigation/native';
 import { useAuthStore } from '../store/useAuthStore';
-import { RootStackParamList } from '../navigation/RootNavigator';
+import { RootStackParamList } from '../navigation/types';
 import { storageService } from '../services/storage';
 
 // Đặt thời gian chờ tối thiểu cho Splash Screen (tính bằng mili giây).

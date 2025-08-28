@@ -4,13 +4,7 @@ import NotificationSettingScreen from '../components/specific/notification/Notif
 import NotificationScreen from '@/screens/notification/NotificationScreen.tsx';
 import NoteScreen from '@/screens/utility_screen/note_screen/NoteScreen.tsx';
 import HealthStatisticsScreen from '@/screens/utility_screen/health_statistic_screen/HealthStatisticsScreen.tsx'
-export type HomeStackParamList = {
-  Notification:undefined;
-  Home:undefined;
-  NotificationSetting:undefined;
-  NoteScreen:undefined;
-  HealthStatisticsScreen:undefined;
-};
+import type {HomeStackParamList} from './types.ts'
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 const HomeScreenNavigator = () => {
   return (

@@ -2,15 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme'; // Giả sử bạn có file theme constants
-
-// Định nghĩa các props mà component sẽ nhận vào
-interface NextScheduleItemProps {
-  iconName: React.ComponentProps<typeof Ionicons>['name'];
-  iconBgColor: string;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-}
+import type {NextScheduleItemProps} from '../types'
 
 /**
  * Component hiển thị thông báo cho một lịch trình sắp tới.
@@ -30,17 +22,13 @@ const NextScheduleItem: React.FC<NextScheduleItemProps> = ({
   return (
     
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
-      {/* Phần Icon */}
       <View style={[styles.iconWrapper, { backgroundColor: iconBgColor }]}>
         <Ionicons name={iconName} size={24} color={COLORS.primary} />
       </View>
-
-      {/* Phần Nội dung Text */}
       <View style={styles.textContainer}>
         <Text style={styles.titleText} numberOfLines={1}>{title}</Text>
         <Text style={styles.subtitleText} numberOfLines={1}>{subtitle}</Text>
       </View>
-       {/* Mũi tên điều hướng */}
       <View>
         <Ionicons name="chevron-forward-outline" size={24} color={COLORS.primary} />
       </View>

@@ -1,20 +1,12 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator'; 
 import OTPScreen from '@/screens/otp/OTPScreen';
 import ForgotPasswordScreen from '@/screens/otp/ForgotPasswordScreen';
-export type RootStackParamList = {
-  Splash: undefined;
-  Onboarding: undefined;
-  AuthFlow: undefined;
-  MainApp: undefined;
-  OTPScreen: { email: string; hoten?: string; password?: string,type:string };
-  ForgotPasswordScreen:undefined;
-};
+import type { RootStackParamList } from './types'
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

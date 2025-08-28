@@ -2,12 +2,7 @@ import { COLORS, FONTS, SHADOWS, SIZES } from "@/constants/theme";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { StyleSheet, Text } from "react-native";
 import { TouchableOpacity, View } from "react-native";
-
-interface SettingsMenuItemProps {
-    icon: string;
-    text: string;
-    onPress?: () => void;
-}
+import {SettingsMenuItemProps} from '../types'
 
 const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({ icon, text, onPress }) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>

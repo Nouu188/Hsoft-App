@@ -1,4 +1,4 @@
-// src/hooks/useMorphingAnimation.ts
+import { COLORS } from '@/constants/theme';
 import { useState, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
 import Animated, {
@@ -74,7 +74,7 @@ export const useMorphingAnimation = (config: FabConfig): MorphingHookResult => {
       width,
       height,
       borderRadius,
-      backgroundColor: '#FFFFFF', // Giả sử màu trắng
+      backgroundColor:COLORS.white, // Giả sử màu trắng
       transform: [{ translateX }, { translateY }],
       elevation: interpolate(animationProgress.value, [0, 1], [5, 0]),
     };

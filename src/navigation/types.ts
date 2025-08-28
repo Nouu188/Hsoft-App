@@ -1,5 +1,3 @@
-// src/navigation/types.ts
-
 import type { NativeStackScreenProps, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
@@ -8,6 +6,12 @@ import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigat
 
 // Stack chính bao bọc các Tab
 export type RootStackParamList = {
+  Splash: undefined;
+  Onboarding: undefined;
+  AuthFlow: undefined;
+  MainApp: undefined;
+  OTPScreen: { email: string; hoten?: string; password?: string,type:string };
+  ForgotPasswordScreen:undefined;
   Auth: undefined; // Màn hình đăng nhập/đăng ký
   MainTabs: NavigatorScreenParams<MainTabsParamList>; // Lồng Tab Navigator vào
   // Thêm các màn hình modal toàn cục ở đây nếu có
@@ -42,9 +46,28 @@ export type PaymentStackParamList = {
   PaymentList: undefined;
   PaymentDetail: { paymentId: string };
 };
-
-
-// 2. Tạo các type helper để sử dụng trong các component
+//Stack cho AuthScreen
+export type AuthStackParamList = {
+  Auth: undefined;
+  MainApp: undefined; 
+  Login: undefined;
+  ForgotPassword: undefined;
+  Register: undefined;
+};
+//Stack cho HomeScreen
+export type HomeStackParamList = {
+  Notification:undefined;
+  Home:undefined;
+  NotificationSetting:undefined;
+  NoteScreen:undefined;
+  HealthStatisticsScreen:undefined;
+};
+//Stack cho ProfileSCreen
+export type ProfileStackParamList = {
+  Profile: undefined;
+  Settings: undefined;
+};
+// Các type helper để sử dụng trong các component
 
 // Props cho các màn hình trong RootStack
 export type RootStackScreenProps<T extends keyof RootStackParamList> = 

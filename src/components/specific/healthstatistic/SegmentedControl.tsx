@@ -2,13 +2,9 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { COLORS, SIZES } from '@/constants/theme'; // Đảm bảo đường dẫn đúng
+import { SegmentedControlProps } from './types'; // import type
 
-interface SegmentedControlProps {
-  options: string[];
-  selectedOption: string;
-  onSelect: (option: string) => void;
-}
-
+// Component SegmentedControl: dạng toggle nhiều lựa chọn
 const SegmentedControl: React.FC<SegmentedControlProps> = ({
   options,
   selectedOption,
@@ -30,6 +26,8 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
           >
             {option}
           </Text>
+
+          {/* Thanh chỉ thị option đang chọn */}
           {selectedOption === option && (
             <Animated.View
               style={styles.activeIndicator}
@@ -45,7 +43,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#EFF6FF', // Màu xanh nhạt hơn, tương tự COLORS.primaryLight
+    backgroundColor: '#EFF6FF', // Nền xanh nhạt
     borderRadius: SIZES.radius * 2,
     marginVertical: SIZES.padding,
   },
@@ -59,11 +57,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   textActive: {
-    color: '#3B82F6', // Màu xanh dương, tương tự COLORS.introduction
+    color: '#3B82F6', // Màu xanh dương
     fontWeight: 'bold',
   },
   textInactive: {
-    color: '#64748B', // Màu xám, tương tự COLORS.textLight
+    color: '#64748B', // Màu xám
     opacity: 0.8,
   },
   activeIndicator: {
@@ -71,7 +69,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: 3,
     width: '50%',
-    backgroundColor: '#3B82F6', // Màu xanh dương
+    backgroundColor: '#3B82F6',
     borderRadius: 2,
   },
 });

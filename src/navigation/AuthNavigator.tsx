@@ -2,10 +2,7 @@ import React from 'react';
 import AuthScreen from '../screens/auth/AuthScreen'
 import TabNavigator from './TabNavigator'; 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-export type AuthStackParamList = {
-  Auth: undefined;
-  MainApp: undefined; 
-};
+import type {AuthStackParamList} from './types'
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 

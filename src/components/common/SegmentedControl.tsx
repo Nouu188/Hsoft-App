@@ -4,12 +4,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
 import { COLORS, SIZES } from '@/constants/theme';
-
-interface SegmentedControlProps {
-  options: string[];
-  selectedIndex: number;
-  onOptionPress: (index: number) => void;
-}
+import type { SegmentedControlProps } from './types';
 
 const SegmentedControl: React.FC<SegmentedControlProps> = ({ options, selectedIndex, onOptionPress }) => {
   const { width } = useWindowDimensions();
