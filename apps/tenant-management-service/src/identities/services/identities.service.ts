@@ -1,3 +1,4 @@
+import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import {
   Injectable,
   InternalServerErrorException,
@@ -6,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { HospitalsService } from '../../hospitals/hospitals.service';
 import { CreateIdentityInput } from '../dtos/create-identity-input.dto';
 import { Identity } from '../entities/identity.entity';
@@ -17,6 +19,7 @@ export class IdentitiesService {
   constructor(
     @InjectRepository(Identity, 'tenantConnection') private readonly identityRepository: Repository<Identity>,
     private readonly hospitalService: HospitalsService,
+    private readonly hospitalApiClient: HospitalApiClientService,
   ) { }
 
   async findOne(id: string): Promise<Identity> {
@@ -42,6 +45,73 @@ export class IdentitiesService {
       throw new NotFoundException(`Identity for userId ${userId} not found.`);
     }
     return identity;
+  }
+
+  async fetchIdentityFromHospital(
+    phoneNumber: string,
+    externalHospitalCode: string,
+  ): Promise<Identity | null> {
+    this.logger.debug(
+      `[fetchIdentityFromHospital] Bắt đầu fetch cho phone=${phoneNumber}, externalCode=${externalHospitalCode}`,
+    );
+
+    try {
+      const plainExternalCode = await this.hospitalService.getPlainExternalCode(externalHospitalCode);
+      if (!plainExternalCode) {
+        this.logger.error(
+          `[fetchIdentityFromHospital] Không tìm thấy plainExternalCode cho externalCode=${externalHospitalCode}`,
+        );
+        throw new NotFoundException(`Hospital code not found: ${externalHospitalCode}`);
+      }
+
+      const hospitalUrl = await this.hospitalService.getHospitalUrlByCode(externalHospitalCode);
+      if (!hospitalUrl) {
+        this.logger.warn(
+          `[Resolver] Không tìm thấy hospitalUrl cho externalCode=${externalHospitalCode}`,
+        );
+        throw new NotFoundException(
+          `Hospital not found with code ${externalHospitalCode}`,
+        );
+      }
+
+      const patient = await this.hospitalApiClient.fetchPatientFromHospital(
+        phoneNumber,
+        hospitalUrl,
+        plainExternalCode,
+      );
+
+      if (!patient) {
+        this.logger.warn(
+          `[fetchIdentityFromHospital] Không tìm thấy bệnh nhân tại bệnh viện externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+        );
+        return null;
+      }
+
+      this.logger.debug(
+        `[fetchIdentityFromHospital] Tìm thấy bệnh nhân mabn=${patient.mabn}, hoten=${patient.hoten}`,
+      );
+
+      const identity = this.identityRepository.create({
+        id: uuidv4(),
+        phoneNumber: patient.sodienthoai,
+        fullName: patient.hoten,
+        nationalId: patient.socmnd,
+        birthYear: Number(patient.namsinh),
+        hospitals: [],
+      });
+
+      console.log("Alooooo", identity)
+
+      return identity;
+    } catch (error) {
+      this.logger.error(
+        `[fetchIdentityFromHospital] Lỗi khi fetch thông tin từ bệnh viện externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+        error.stack || error,
+      );
+      throw new InternalServerErrorException(
+        `Không thể lấy thông tin bệnh nhân từ bệnh viện`,
+      );
+    }
   }
 
   async create(

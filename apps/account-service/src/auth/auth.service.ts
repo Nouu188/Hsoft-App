@@ -80,13 +80,11 @@ export class AuthService {
 
         const hospitalUrl = await this.tenantApiClient.getHospitalUrlByCode(externalHospitalCode);
 
-        const patientData = await this.hospitalClient.fetchPatientFromHospital(phoneNumber, hospitalUrl);
-        if (!patientData) {
+        const identity = await this.tenantApiClient.fetchIdentityFromHospital(phoneNumber, externalHospitalCode);
+        if (!identity) {
             throw new UnauthorizedException('Patient information not found in hospital system.');
         }
-
-        const identity: CreateIdentityInput = normalizeHospitalPatient(patientData);
-
+        
         const birthYear = identity.birthYear;
         if (!birthYear) {
             throw new UnauthorizedException('Birth year not set for this user.');

@@ -91,6 +91,18 @@ export class HospitalsService {
     }
   }
 
+  async getPlainExternalCode(externalCode: string): Promise<string> {
+    const hospital = await this.hospitalRepository.findOne({
+      where: { externalCode },
+      select: ['id', 'name', 'plainExternalCode'],
+    });
+
+    if (!hospital) {
+      throw new NotFoundException(`Hospital with externalCode=${externalCode} not found`);
+    }
+
+    return hospital.plainExternalCode;
+  }
 
   // ============================================================
   // MUTATIONS (WRITE - with transaction)

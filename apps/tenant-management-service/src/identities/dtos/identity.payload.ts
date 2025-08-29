@@ -34,7 +34,7 @@ export class IdentityPayload {
   birthYear?: number;
 
   @Field(() => [Hospital], { nullable: true, description: 'Danh sách bệnh viện liên kết' })
-  hospitals?: Hospital[];
+  hospitals: Hospital[];
 
   @Field({ description: 'Ngày tạo bản ghi' })
   createdAt: Date;

@@ -81,6 +81,7 @@ type Hospital {
   id: ID!
   identities: [Identity!]
   name: String!
+  plainExternalCode: String
   updatedAt: DateTime!
 }
 
@@ -160,6 +161,7 @@ type Query {
 
   """Lấy bác sĩ theo ID"""
   doctors(doctorId: ID!): DoctorObjectType!
+  fetchIdentityFromHospital(externalHospitalCode: String!, phoneNumber: String!): Identity
   hospital(id: ID!): Hospital!
   hospitalUrlByCode(externalHospitalCode: String!): HospitalUrlResponse!
   hospitals(isActive: Boolean): [HospitalPayload!]!

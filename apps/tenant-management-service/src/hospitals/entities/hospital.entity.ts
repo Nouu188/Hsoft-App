@@ -19,6 +19,10 @@ export class Hospital {
   @Column({ name: 'external_code', unique: true, nullable: true })
   externalCode: string;
 
+  @Field({ nullable: true })
+  @Column({ name: 'plain_external_code', unique: true, nullable: true })
+  plainExternalCode: string;
+
   @Field()
   @Column({ name: 'graphql_endpoint', unique: true })
   graphqlEndpoint: string;

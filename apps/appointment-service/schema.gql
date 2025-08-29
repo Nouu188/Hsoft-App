@@ -95,6 +95,7 @@ type Hospital {
   id: ID!
   identities: [Identity!]
   name: String!
+  plainExternalCode: String
   updatedAt: DateTime!
 }
 

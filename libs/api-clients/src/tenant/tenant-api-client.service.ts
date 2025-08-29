@@ -12,6 +12,7 @@ import { Hospital } from 'apps/tenant-management-service/src/hospitals/entities/
 import { DoctorObjectType } from 'apps/tenant-management-service/src/doctors/dto/doctor.object-type';
 import { ClinicObjectType } from 'apps/tenant-management-service/src/clinics/dto/clinic.object-type';
 import { Identity } from 'apps/tenant-management-service/src/identities/entities/identity.entity';
+import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
 
 @Injectable()
 export class TenantApiClientService {
@@ -220,5 +221,59 @@ export class TenantApiClientService {
 
     this.logger.debug(`Successfully fetched Identity for userId=${userId}`);
     return data.identityByUserId;
+  }
+
+  async fetchIdentityFromHospital(
+    phoneNumber: string,
+    externalHospitalCode: string,
+  ): Promise<IdentityPayload | null> {
+    this.logger.debug(
+      `[TenantApiClientService] Fetch identity from hospital externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+    );
+
+    const query = `
+    query ($phoneNumber: String!, $externalHospitalCode: String!) {
+      fetchIdentityFromHospital(
+        phoneNumber: $phoneNumber,
+        externalHospitalCode: $externalHospitalCode
+      ) {
+        id
+        fullName
+        phoneNumber
+        nationalId
+        birthYear
+        gender
+        address
+      }
+    }
+  `;
+
+    try {
+      const data = await this.executeGraphQL<{ fetchIdentityFromHospital: IdentityPayload | null }>(
+        query,
+        { phoneNumber, externalHospitalCode },
+      );
+
+      if (!data.fetchIdentityFromHospital) {
+        this.logger.warn(
+          `[TenantApiClientService] Không tìm thấy bệnh nhân với externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+        );
+        return null;
+      }
+
+      this.logger.debug(
+        `[TenantApiClientService] Đã fetch thành công identity cho phone=${phoneNumber}, externalCode=${externalHospitalCode}`,
+      );
+
+      return data.fetchIdentityFromHospital;
+    } catch (error) {
+      this.logger.error(
+        `[TenantApiClientService] Lỗi khi fetch identity từ hospital externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+        error.stack || error,
+      );
+      throw new InternalServerErrorException(
+        'Failed to fetch identity from hospital via Tenant Management Service',
+      );
+    }
   }
 }

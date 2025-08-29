@@ -1,14 +1,11 @@
+import { YLenhThuoc } from '@app/common/types/ylenhthuoc.interface';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { YLenhThuoc } from '@app/common/types/ylenhthuoc.interface';
-import { Hospital } from 'apps/tenant-management-service/src/hospitals/entities/hospital.entity';
-import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
-import { Gender } from 'apps/tenant-management-service/src/identities/entities/identity.entity';
+import { md5Hash } from 'libs/crypto/src/md5-hasher';
 import { firstValueFrom } from 'rxjs';
+import { HospitalPatient } from '../../../common/src/types/hospitalPatient.interface';
 import { FetchClinicsResponse, HospitalClinicDto } from './dto/clinic.dto';
 import { FetchDoctorsResponse } from './dto/doctor.dto';
-import { HospitalPatient } from '../../../common/src/types/hospitalPatient.interface';
-import { CreateIdentityInput } from 'apps/tenant-management-service/src/identities/dtos/create-identity-input.dto';
 
 @Injectable()
 export class HospitalApiClientService {
@@ -16,9 +13,6 @@ export class HospitalApiClientService {
 
   constructor(private readonly httpService: HttpService) { }
 
-  /**
-   * Common executor for GraphQL requests
-   */
   private async executeGraphQL<T>(
     graphqlEndpoint: string,
     query: string,
@@ -128,49 +122,54 @@ export class HospitalApiClientService {
     }
   }
 
-
   async fetchPatientFromHospital(
     phoneNumber: string,
     graphqlEndpoint: string,
+    plainExternalCode: string,
     idNumber: string = "",
     birthYear: string = "",
   ): Promise<HospitalPatient | null> {
+    const key = md5Hash(plainExternalCode);
+    this.logger.debug(`[fetchPatientFromHospital] MD5 key=${key} from input=${plainExternalCode}`);
+
     const query = `
-    {
-      ylenhthuoc(
-        mabn: ""
-        sodienthoai: "${phoneNumber}"
-        socmnd: "${idNumber}"
-        ngay: ""
-        namsinh: "${birthYear}"
-      ) {
-        mabn
-        hoten
-        namsinh
-        socmnd
-        sodienthoai
+      {
+        btdbn(
+          key: "${key}",
+          mabn: "",
+          sodienthoai: "${phoneNumber}",
+          socmnd: "${idNumber}",
+          sothe: ""
+        ) {
+          mabn
+          hoten
+          ngaysinh
+          namsinh
+          diachi
+          sodienthoai
+          socmnd
+        }
       }
-    }
-  `;
+    `;
 
     try {
       this.logger.debug(
-        `[fetchPatientFromHospital] Sending request to ${graphqlEndpoint}. Query=ylenhthuoc, phone=${phoneNumber}, idNumber=${idNumber}, birthYear=${birthYear}`,
+        `[fetchPatientFromHospital] Sending request to ${graphqlEndpoint}. Query=btdbn, phone=${phoneNumber}, idNumber=${idNumber}, birthYear=${birthYear}, externalCode=${plainExternalCode}`,
       );
 
-      const data = await this.executeGraphQL<{ ylenhthuoc: HospitalPatient[] }>(
+      const data = await this.executeGraphQL<{ btdbn: HospitalPatient[] }>(
         graphqlEndpoint,
         query,
       );
 
-      if (!data?.ylenhthuoc || data.ylenhthuoc.length === 0) {
+      if (!data?.btdbn || data.btdbn.length === 0) {
         this.logger.warn(
           `[fetchPatientFromHospital] Không tìm thấy bệnh nhân với phone=${phoneNumber}, endpoint=${graphqlEndpoint}`,
         );
         return null;
       }
 
-      const patient = data.ylenhthuoc[0];
+      const patient = data.btdbn[0];
       this.logger.debug(
         `[fetchPatientFromHospital] Found patient mabn=${patient.mabn}, hoten=${patient.hoten}`,
       );
@@ -180,7 +179,7 @@ export class HospitalApiClientService {
         sodienthoai: patient.sodienthoai ?? phoneNumber,
         hoten: patient.hoten ?? "",
         socmnd: patient.socmnd ?? idNumber,
-        namsinh: patient.namsinh ?? birthYear,
+        namsinh: patient.namsinh ?? birthYear, 
       };
     } catch (error) {
       const errorResponse =
@@ -199,9 +198,6 @@ export class HospitalApiClientService {
     }
   }
 
-  /**
-   * Fetch clinics from hospital
-   */
   async fetchClinics(graphqlEndpoint: string): Promise<HospitalClinicDto[]> {
     const query = `
       query GetClinics($loai: String!, $makp: String!) {
@@ -222,9 +218,6 @@ export class HospitalApiClientService {
     return data.btdkp || [];
   }
 
-  /**
-   * Fetch doctors from hospital
-   */
   async fetchDoctors(graphqlEndpoint: string, externalDoctorCode: string = '') {
     const query = `
       query GetDoctors($loai: String!, $ma: String!) {

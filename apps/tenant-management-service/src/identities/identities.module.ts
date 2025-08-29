@@ -7,13 +7,15 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq';
 import { IdentityCreatedConsumer } from './jobs/consumers/identity-created.consumer';
 import { AuthLibModule } from '@app/auth';
 import { HospitalsModule } from '../hospitals/hospitals.module';
+import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ Identity ], 'tenantConnection'),
     AuthLibModule,
     AppRabbitMQModule,
-    HospitalsModule
+    HospitalsModule,
+    HospitalApiClientModule
   ],
   providers: [
     IdentitiesResolver, 
