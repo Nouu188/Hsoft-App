@@ -23,7 +23,7 @@ type ClinicObjectType {
 }
 
 input CreateHospitalInput {
-  code: String!
+  externalCode: String!
   graphqlEndpoint: String!
   isActive: Boolean = true
   name: String!

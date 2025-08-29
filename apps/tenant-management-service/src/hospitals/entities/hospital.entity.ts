@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Clinic } from '../../clinics/entities/clinic.entity';
 import { Identity } from '../../identities/entities/identity.entity';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+import * as bcrypt from 'bcrypt';
 
 @ObjectType('Hospital')
 @Entity('hospitals')
@@ -37,4 +38,12 @@ export class Hospital {
   @Field()
   @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   updatedAt: Date;
+
+  @BeforeInsert()
+  async hashExternalCode() {
+    if (this.externalCode) {
+      const salt = await bcrypt.genSalt();
+      this.externalCode = await bcrypt.hash(this.externalCode, salt);
+    }
+  }
 }

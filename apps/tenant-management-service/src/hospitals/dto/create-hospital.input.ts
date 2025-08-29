@@ -11,7 +11,7 @@ export class CreateHospitalInput {
   @Field()
   @IsString()
   @IsNotEmpty()
-  code: string;
+  externalCode: string;
 
   @Field()
   @IsUrl({}, { message: 'GraphQL Endpoint phải là một URL hợp lệ' })
