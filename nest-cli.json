@@ -76,6 +76,15 @@
         "tsConfigPath": "apps/immunization-service/tsconfig.app.json"
       }
     },
+    "note-service": {
+      "type": "application",
+      "root": "apps/note-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/note-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/note-service/tsconfig.app.json"
+      }
+    },
     "notification-service": {
       "type": "application",
       "root": "apps/notification-service",

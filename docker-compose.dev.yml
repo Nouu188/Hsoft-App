@@ -70,6 +70,19 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=100
 
+  note-service:
+    build:
+      target: development
+    command: npm run dev:docker:note
+    ports:
+      - "3006:3006"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+
   # immunization-service:
   #   build:
   #     target: development

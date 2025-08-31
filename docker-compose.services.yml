@@ -81,6 +81,22 @@ services:
       account-service:
         condition: service_started
 
+  note-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: note-service
+    env_file:
+      - ./apps/note-service/.env.local
+    depends_on:
+      db-notes:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
   # immunization-service:
   #   build:
   #     context: .

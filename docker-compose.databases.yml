@@ -73,6 +73,24 @@ services:
       timeout: 5s
       retries: 5
 
+  db-notes:
+    image: postgres:17
+    container_name: med-db-note
+    environment:
+      POSTGRES_USER: notes_user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: notes_db
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_note_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notes_user -d notes_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   db-auth:
     image: postgres:17
     container_name: med-db-auth
@@ -113,5 +131,6 @@ volumes:
   postgres_auth_data:
   postgres_notification_data:
   postgres_appointment_data:
+  postgres_note_data:
   postgres_patient_identity_data:
   postgres_tenant_management_data:

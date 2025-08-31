@@ -1,8 +1,9 @@
 import { Resolver, Query, Args, ID } from '@nestjs/graphql';
-import { Logger, UseGuards } from '@nestjs/common';
-import { M2MJwtGuard } from '@app/auth';
+import { Logger, NotFoundException, UseGuards } from '@nestjs/common';
+import { CurrentUser, JwtAuthGuard, M2MJwtGuard } from '@app/auth';
 import { IdentitiesService } from './services/identities.service';
 import { Identity } from './entities/identity.entity';
+import { User } from 'apps/account-service/src/users/entities/user.entity';
 
 @Resolver(() => Identity)
 @UseGuards(M2MJwtGuard) 
@@ -21,9 +22,22 @@ export class IdentitiesResolver {
     return this.identitiesService.findMany(ids);
   }
 
-  @Query(() => Identity, { name: 'identityByUserId' })
-  async getIdentityByUserId(@Args('userId', { type: () => ID }) userId: string): Promise<Identity> {
-    return this.identitiesService.findByUserId(userId);
+  @Query(() => Identity, { name: 'identityByUserId', nullable: true })
+  @UseGuards(JwtAuthGuard)
+  async getIdentityByUserId(
+    @CurrentUser() user: User,
+    @Args('userId', { type: () => ID, nullable: true }) userId?: string,
+  ): Promise<Identity | null> {
+    const targetUserId = userId ?? user.id;
+    this.logger.debug(`Fetching identity for userId=${targetUserId}`);
+
+    const identity = await this.identitiesService.findByUserId(targetUserId);
+    if (!identity) {
+      this.logger.warn(`Identity not found for userId=${targetUserId}`);
+      throw new NotFoundException(`Identity not found for user ${targetUserId}`);
+    }
+
+    return identity;
   }
 
   @Query(() => Identity, { name: 'fetchIdentityFromHospital', nullable: true })

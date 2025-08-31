@@ -34,6 +34,11 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type DeviceToken {
+  token: String!
+  type: String!
+}
+
 type Doctor {
   avatarUrl: String
   bio: String
@@ -167,7 +172,7 @@ type Query {
   hospitals(isActive: Boolean): [HospitalPayload!]!
   identitiesByIds(ids: [ID!]!): [Identity!]!
   identity(id: ID!): Identity
-  identityByUserId(userId: ID!): Identity!
+  identityByUserId(userId: ID): Identity
 }
 
 type TimeSlot {
