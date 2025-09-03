@@ -38,7 +38,7 @@ const SettingsScreen: React.FC = () => {
                     <SectionHeader title="General" />
                     <SettingsMenuItem icon="options-outline" text="Preferences" />
                     <SettingsMenuItem icon="document-text-outline" text="Essential settings" />
-                    <SettingsMenuItem icon="cloud-upload-outline" text="Back up / Restore data" />
+                    <SettingsMenuItem icon="information-circle-outline" text="Back up / Restore data" />
                     <SettingsMenuItem icon="refresh-outline" text="Restore subscription" />
                     <SettingsMenuItem icon="log-out-outline" text="Log out" onPress={handleLogout}/>
                 </View>

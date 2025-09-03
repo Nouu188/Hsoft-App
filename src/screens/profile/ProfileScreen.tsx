@@ -1,30 +1,61 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
 import { COLORS, SIZES } from '@/constants/theme';
 import ProfileMenuItem from '@/components/specific/profile/ProfileMenuItem';
 import ProfileHeader from '@/components/specific/profile/ProfileHeader';
 import UserInfo from '../../components/specific/profile/UserInfo';
-import QuickActions from '@/components/specific/profile/QuickAction';
-
+import SettingsMenuItem from '@/components/specific/profile/setting/SettingMenuItem';
+import { useAuthStore } from '@/store/useAuthStore';
 const ProfileScreen: React.FC = () => {
+  const { logout } = useAuthStore();
+  
+      const handleLogout = async () => {
+          try {
+          console.log('[AuthScreen] handleLogout triggered. Calling logout action...');
+          await logout();
+  
+          console.log('[AuthScreen] Logout action completed successfully.');
+          } catch (e) {
+          console.error("[AuthScreen] Caught error from logout action.");
+          }
+      };
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ProfileHeader />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <UserInfo />
-        <QuickActions />
-        
-        <View style={styles.menuList}>
-          <ProfileMenuItem icon="medkit-outline" text="Add a prescriber" />
-          <ProfileMenuItem icon="storefront-outline" text="Add a pharmacy" />
-          <ProfileMenuItem icon="git-network-outline" text="Add an appointment" />
-          <ProfileMenuItem icon="people-outline" text="Add a dependent" />
-          <ProfileMenuItem icon="add-circle-outline" text="Add..." />
-        </View>
-      </ScrollView>
-      {/* Tab Bar sẽ là một component riêng trong hệ thống navigation của bạn */}
-    </SafeAreaView>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+  <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+  {/* Header background */}
+  <View style={styles.headerBackground} />
+
+  {/* Nội dung header */}
+  <View style={styles.headerWrapper}>
+    <ProfileHeader />
+  </View>
+
+  <View style={styles.useInfoStyle}>
+    <UserInfo />
+  </View>
+
+  <ScrollView
+    showsVerticalScrollIndicator={false}
+    contentContainerStyle={styles.scrollViewContent}
+  >
+    <View style={styles.menuList}>
+      <ProfileMenuItem icon="person-outline" text="Account Settings" />
+      <ProfileMenuItem icon="wallet-outline" text="Payment Method" />
+      <View style={{ borderTopWidth: 0.2, marginBottom: SIZES.base * 1.5, height: SIZES.padding * 1.2, width: '90%', marginTop: SIZES.padding * 1.2, alignSelf: 'center', borderColor: COLORS.primary }} />
+      <SettingsMenuItem icon="language-outline" text="Languages" />
+      <SettingsMenuItem icon="heart-outline" text="Favorite Doctors" />
+      <SettingsMenuItem icon="musical-notes-outline" text="Ringtone & haptic" />
+      <SettingsMenuItem icon="information-circle-outline" text="Help & Supports" />
+      <ProfileMenuItem icon="notifications-outline" text="Thông báo" />
+      <SettingsMenuItem icon="shield-outline" text="Privacys" />
+      <SettingsMenuItem icon="log-out-outline" text="Log out" onPress={handleLogout}/>
+    </View>
+  </ScrollView>
+</SafeAreaView>
+
   );
 };
 
@@ -32,8 +63,38 @@ const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background, // Fallback background
   },
+  headerBackground: {
+  position: 'absolute',
+  backgroundColor: COLORS.primary,
+  borderBottomLeftRadius: 30,
+  borderBottomRightRadius: 30,
+},
+useInfoStyle: {
+   marginTop: -SIZES.padding * 2, // kéo card lên (tùy chỉnh giá trị để được khoảng 1/2)
+  paddingHorizontal: SIZES.padding,
+},
+  gradientBackground: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    // Adjusted height to visually match the image's background coverage
+    height: 180, 
+    borderBottomLeftRadius: 30, 
+    borderBottomRightRadius: 30,
+  },
+  headerWrapper: {
+    // No paddingTop here, ProfileHeader will handle its own padding relative to SafeAreaView
+  },
+  scrollViewContent: {
+    paddingBottom: SIZES.padding * 2,
+    // Negative margin to pull the content up slightly,
+    // making the UserInfo card overlap the gradient more as in the image.
+    marginTop: -SIZES.padding * 2, 
+  },
+  
   menuList: {
     marginTop: SIZES.padding * 2,
     paddingHorizontal: SIZES.padding,
