@@ -13,6 +13,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { join } from 'path';
 import { Note } from './notes/entities/note.entity';
+import { NotesModule } from './notes/note.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { Note } from './notes/entities/note.entity';
         synchronize: true,
       }),
     }),
+    NotesModule,
     ApiClientsModule,
     AuthLibModule,
     MetricsModule
@@ -54,7 +56,7 @@ import { Note } from './notes/entities/note.entity';
     }
   ],
 })
-export class SchedulingServiceModule implements NestModule {
+export class NoteServiceModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(MetricsMiddleware).forRoutes('*');
   }

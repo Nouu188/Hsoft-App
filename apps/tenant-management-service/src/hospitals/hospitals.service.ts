@@ -38,17 +38,17 @@ export class HospitalsService {
     return hospital;
   }
 
-  async getHospitalUrlByCode(externalCode: string): Promise<string> {
-    this.logger.debug(`Fetching GraphQL endpoint for hospital code=${externalCode}`);
+  async getHospitalUrlByCode(plainExternalCode: string): Promise<string> {
+    this.logger.debug(`Fetching GraphQL endpoint for hospital code=${plainExternalCode}`);
 
     const hospital = await this.hospitalRepository.findOne({
-      where: { externalCode },
+      where: { plainExternalCode },
       select: ['graphqlEndpoint'],
     });
 
     if (!hospital) {
       throw new NotFoundException(
-        `Hospital with externalCode ${externalCode} not found.`,
+        `Hospital with externalCode ${plainExternalCode} not found.`,
       );
     }
 

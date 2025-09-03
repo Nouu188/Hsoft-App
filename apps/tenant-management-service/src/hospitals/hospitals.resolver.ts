@@ -62,14 +62,14 @@ export class HospitalsResolver {
   @Query(() => HospitalUrlResponse, { name: 'hospitalUrlByCode' })
   @UseGuards(JwtAuthGuard)
   async getHospitalUrlByCode(
-    @Args('externalHospitalCode', { type: () => String }) externalHospitalCode: string,
+    @Args('externalHospitalCode', { type: () => String }) plainExternalCode: string,
   ): Promise<HospitalUrlResponse> {
     try {
-      const url = await this.hospitalsService.getHospitalUrlByCode(externalHospitalCode);
+      const url = await this.hospitalsService.getHospitalUrlByCode(plainExternalCode);
       return { graphqlEndpoint: url };
     } catch (error) {
       this.logger.error(
-        `Failed to fetch hospital URL for code=${externalHospitalCode}`,
+        `Failed to fetch hospital URL for code=${plainExternalCode}`,
         error.stack,
       );
       if (error instanceof NotFoundException || error instanceof BadRequestException) {

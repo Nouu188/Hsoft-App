@@ -27,6 +27,7 @@ input CreateHospitalInput {
   graphqlEndpoint: String!
   isActive: Boolean = true
   name: String!
+  plainExternalCode: String
 }
 
 """

@@ -17,6 +17,9 @@ export class CreateHospitalInput {
   @IsUrl({}, { message: 'GraphQL Endpoint phải là một URL hợp lệ' })
   graphqlEndpoint: string;
 
+  @Field({ nullable: true })
+  plainExternalCode: string;
+
   @Field({ defaultValue: true, nullable: true })
   @IsOptional()
   @IsBoolean()
