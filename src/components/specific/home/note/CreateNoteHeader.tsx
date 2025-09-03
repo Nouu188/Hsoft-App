@@ -1,50 +1,29 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES } from '@/constants/theme';
-import { CreateNoteHeaderProps } from './types'; 
-// Component CreateNoteHeader: phần header khi tạo ghi chú
-const CreateNoteHeader: React.FC<CreateNoteHeaderProps> = ({ onClose, onSave }) => {
-  return (
-    <View style={styles.header}>
-      {/* Nút quay lại */}
-      <TouchableOpacity onPress={onClose}>
-        <Ionicons name="arrow-back" size={28} color={COLORS.text} />
+import { COLORS, FONTS, SIZES } from '@/constants/theme';
+
+const CreateNoteHeader = ({ onClose, onSave, onDelete, mode = 'create' }: any) => (
+  <View style={styles.header}>
+    <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} /></TouchableOpacity>
+    <Text style={styles.title}>{mode === 'create' ? 'Tạo ghi chú' : 'Chỉnh sửa ghi chú'}</Text>
+    <View style={{ flexDirection: 'row' }}>
+      {mode === 'edit' && onDelete && (
+        <TouchableOpacity onPress={onDelete} style={{ marginRight: 12 }}>
+          <Ionicons name="trash-outline" size={22} color={COLORS.danger} />
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity onPress={onSave}>
+        <Text style={styles.save}>Lưu</Text>
       </TouchableOpacity>
-
-      {/* Nhóm các nút chức năng bên phải */}
-      <View style={styles.headerActions}>
-        {/* Nút undo (hiện chưa gắn logic) */}
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="return-up-back-outline" size={24} color={COLORS.text} />
-        </TouchableOpacity>
-
-        {/* Nút redo (hiện chưa gắn logic) */}
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="return-up-forward-outline" size={24} color={COLORS.text} />
-        </TouchableOpacity>
-
-        {/* Nút lưu */}
-        <TouchableOpacity style={styles.iconButton} onPress={onSave}>
-          <Ionicons name="checkmark-outline" size={28} color={COLORS.text} />
-        </TouchableOpacity>
-      </View>
     </View>
-  );
-};
-
+  </View>
+);
 
 const styles = StyleSheet.create({
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingHorizontal: SIZES.padding, 
-    paddingBottom: SIZES.padding, 
-    paddingTop: SIZES.padding * 2, 
-  },
-  headerActions: { flexDirection: 'row', alignItems: 'center' },
-  iconButton: { marginLeft: 20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: SIZES.padding },
+  title: { ...FONTS.h3 },
+  save: { color: COLORS.primary, fontWeight: '600' },
 });
 
 export default CreateNoteHeader;

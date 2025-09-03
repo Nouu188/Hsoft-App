@@ -7,10 +7,10 @@ export const GET_MY_NOTIFICATION_HISTORY = gql`
       limit: $limit
     ) {
       id
-      user_id
+      userId
       title
       body
-      dose_ids
+      doseIds
       type
       status
       payload

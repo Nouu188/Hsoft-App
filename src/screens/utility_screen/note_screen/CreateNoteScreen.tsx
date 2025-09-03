@@ -1,5 +1,5 @@
-// src/screens/Note/CreateNoteScreen.tsx
-import React, { useState } from 'react';
+// CreateNoteScreen.tsx
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -16,21 +16,32 @@ import Animated, {
   SharedValue,
 } from 'react-native-reanimated';
 import CreateNoteHeader from '@/components/specific/home/note/CreateNoteHeader';
-
+import { Note } from '@/store/useNotesStore';
 
 interface CreateNoteScreenProps {
   isVisibleProgress: SharedValue<number>;
   onClose: () => void;
   onSave: (note: { title: string; content: string }) => void;
+  onDelete?: (noteId: string) => void;
+  note?: Note;
+  mode?: 'create' | 'edit';
 }
 
 const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({
   isVisibleProgress,
   onClose,
   onSave,
+  onDelete,
+  note,
+  mode = 'create',
 }) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState(note?.title ?? '');
+  const [content, setContent] = useState(note?.content ?? '');
+
+  useEffect(() => {
+    setTitle(note?.title ?? '');
+    setContent(note?.content ?? '');
+  }, [note?.id]);
 
   const contentAnimatedStyle = useAnimatedStyle(() => {
     const opacity = interpolate(isVisibleProgress.value, [0.4, 1], [0, 1]);
@@ -40,16 +51,27 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({
 
   const handleSave = () => {
     if (title.trim() === '' && content.trim() === '') {
-      onClose(); // Không lưu ghi chú rỗng, chỉ đóng lại
+      onClose();
       return;
     }
-    onSave({ title, content });
+    onSave({ title: title.trim(), content: content.trim() });
+  };
+
+  const handleDelete = () => {
+    if (mode === 'edit' && note && onDelete) {
+      onDelete(note.id);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.contentWrapper, contentAnimatedStyle]}>
-        <CreateNoteHeader onClose={onClose} onSave={handleSave} />
+        <CreateNoteHeader
+          onClose={onClose}
+          onSave={handleSave}
+          onDelete={mode === 'edit' ? handleDelete : undefined}
+          mode={mode}
+        />
 
         <ScrollView contentContainerStyle={{ paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
           <TextInput

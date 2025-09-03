@@ -9,3 +9,7 @@ export * from './dtos/dose/meal-relation.dto';
 export * from './enums/notification-type.enum';
 export * from './enums/notification-status.enum';
 export * from './dtos/notification/notification-history.dto';
+export * from './dtos/identity/patient-identity.dto';
+export * from './dtos/clinic/clinic.dto';
+export * from './dtos/doctor/doctor.dto';
+export * from './dtos/tenant/hospital.dto';

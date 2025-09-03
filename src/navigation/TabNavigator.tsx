@@ -4,6 +4,8 @@ import ScheduleScreen from '../screens/schedule/ScheduleScreen';
 import CustomTabBar from './CustomTabBar';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import HomeScreenNavigator from './HomeScreenNavigator';
+import BookingWizard from '@/components/specific/booking-wizard/BookingWizard';
+
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
@@ -14,6 +16,7 @@ const TabNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomeScreenNavigator} />
       <Tab.Screen name="Schedule" component={ScheduleScreen} />
+      <Tab.Screen name="Booking" component={BookingWizard} />
       <Tab.Screen name="ProfileStack" component={ProfileStackNavigator} />
     </Tab.Navigator>
   );

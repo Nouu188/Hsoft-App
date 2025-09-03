@@ -23,7 +23,7 @@ interface ScheduleState {
   groupDosesForSelectedDay: GroupedDose[];
   isLoading: boolean;
   error: string | null;
-  doseIdToFocus: string | null; 
+  doseIdToFocus: string | null;
   setDoseIdToFocus: (doseId: string | null) => void;
   setSelectedDate: (date: dayjs.Dayjs) => void;
   fetchDosesByDateRange: (startDate: dayjs.Dayjs, endDate: dayjs.Dayjs) => Promise<void>;
@@ -246,16 +246,34 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
 
   updateDoseStatus: async (doseId, status, reason) => {
     const user = useAuthStore.getState().user;
-    if (!user) return;
+    if (!user) {
+      console.warn("[DoseStatus] No authenticated user, aborting update");
+      return;
+    }
+
+    const actionContext = {
+      doseId,
+      status,
+      reason,
+      userId: user.id,
+      timestamp: new Date().toISOString(),
+    };
 
     const previousDosesForSelectedDay = get().dosesForSelectedDay;
+
+    console.group(`[DoseStatus][OptimisticUpdate] ${doseId}`);
+    console.info("Action Context:", actionContext);
 
     // Optimistic Update
     set(state => {
       const updatedDosesForDay = state.dosesForSelectedDay.map(dose =>
-        dose.id === doseId ? { ...dose, status: status, is_prepared: false } : dose
+        dose.id === doseId ? { ...dose, status, is_prepared: false } : dose
       );
       const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
+
+      console.info("Optimistic update applied", {
+        updatedDose: updatedDosesForDay.find(d => d.id === doseId),
+      });
 
       return {
         dosesForSelectedDay: updatedDosesForDay,
@@ -267,7 +285,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
       const updatePayload = {
         id: doseId,
         data: {
-          status: status,
+          status,
           ...(status === DoseStatus.SKIPPED && reason && {
             skipReasonCategory: reason.category,
             skipReasonDetail: reason.detail,
@@ -275,23 +293,40 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
         },
       };
 
+      console.info("Sending mutation with payload:", updatePayload);
+
       await schedulingClient.mutate({
         mutation: UPDATE_DOSES_MUTATION,
         variables: { updates: [updatePayload] },
       });
+
+      console.info("✅ Server confirmed update");
+      console.groupEnd();
     } catch (e: any) {
+      console.error("Failed to update dose on server", {
+        error: e.message,
+        context: actionContext,
+      });
+
       // Rollback
       set(state => {
         const previousDosesForDay = previousDosesForSelectedDay.filter(dose =>
-          dayjs(dose.due_at).isSame(state.selectedDate, 'day')
+          dayjs(dose.due_at).isSame(state.selectedDate, "day")
         );
         const previousGroupedDoses = groupAndProcessDoses(previousDosesForDay);
+
+        console.warn("↩ Rolling back to previous state", {
+          restoredDose: previousDosesForDay.find(d => d.id === doseId),
+        });
+
         return {
           error: `Failed to update status: ${e.message}`,
           dosesForSelectedDay: previousDosesForDay,
           groupDosesForSelectedDay: previousGroupedDoses,
         };
       });
+
+      console.groupEnd();
     }
   },
 
@@ -324,15 +359,15 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     set(state => {
       const sanitizedDoses = state.dosesForSelectedDay.map(dose => ({
         ...dose,
-        due_at: dayjs(dose.due_at).toISOString(), 
+        due_at: dayjs(dose.due_at).toISOString(),
       }));
 
       const updatedDosesForDay = sanitizedDoses.map(dose =>
         dose.id === doseId ? { ...dose, due_at: newTime } : dose
       );
-      
+
       const updatedGroupedDoses = groupAndProcessDoses(updatedDosesForDay);
-      
+
       return {
         dosesForSelectedDay: updatedDosesForDay,
         groupDosesForSelectedDay: updatedGroupedDoses,

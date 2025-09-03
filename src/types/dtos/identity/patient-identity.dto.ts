@@ -8,8 +8,6 @@ export interface Identity {
   healthInsuranceNumber?: string;
   address?: string;
   birthYear?: number;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
   hospitals?: {
     id: string;
     name: string;

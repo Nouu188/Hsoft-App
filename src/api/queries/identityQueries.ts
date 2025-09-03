@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
 export const GET_IDENTITY_BY_USER_ID = gql`
-  query GetIdentityByUserId($userId: ID!) {
+  query GetIdentityByUserId($userId: ID) {
     identityByUserId(userId: $userId) {
       id
       userId
@@ -13,12 +13,9 @@ export const GET_IDENTITY_BY_USER_ID = gql`
       healthInsuranceNumber
       address
       birthYear
-      createdAt
-      updatedAt
       hospitals {
         id
         name
-        graphqlEndpoint
       }
     }
   }
