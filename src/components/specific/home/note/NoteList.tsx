@@ -23,6 +23,7 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onNotePress }) => {
 const styles = StyleSheet.create({
   notesListContainer: {
     padding: SIZES.padding, 
+    paddingBottom: SIZES.padding*5,
   },
 });
 

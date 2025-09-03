@@ -8,7 +8,18 @@ import ProfileHeader from '@/components/specific/profile/ProfileHeader';
 import UserInfo from '../../components/specific/profile/UserInfo';
 import SettingsMenuItem from '@/components/specific/profile/setting/SettingMenuItem';
 import { useAuthStore } from '@/store/useAuthStore';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ProfileStackParamList } from '@/navigation/types';
+import { useNavigation } from '@react-navigation/native';
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  ProfileStackParamList,
+  'Profile'
+>;
 const ProfileScreen: React.FC = () => {
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const handleLanguagePress = () => {
+    navigation.navigate('Settings'); // Chuyển sang SettingsScreen
+  };
   const { logout } = useAuthStore();
   
       const handleLogout = async () => {
@@ -45,7 +56,7 @@ const ProfileScreen: React.FC = () => {
       <ProfileMenuItem icon="person-outline" text="Account Settings" />
       <ProfileMenuItem icon="wallet-outline" text="Payment Method" />
       <View style={{ borderTopWidth: 0.2, marginBottom: SIZES.base * 1.5, height: SIZES.padding * 1.2, width: '90%', marginTop: SIZES.padding * 1.2, alignSelf: 'center', borderColor: COLORS.primary }} />
-      <SettingsMenuItem icon="language-outline" text="Languages" />
+      <SettingsMenuItem icon="language-outline" text="Languages" onPress={handleLanguagePress}/>
       <SettingsMenuItem icon="heart-outline" text="Favorite Doctors" />
       <SettingsMenuItem icon="musical-notes-outline" text="Ringtone & haptic" />
       <SettingsMenuItem icon="information-circle-outline" text="Help & Supports" />

@@ -85,7 +85,7 @@ const Step1_SelectHospital: React.FC<Step1_SelectHospitalProps> = ({ onNext }) =
             onPress={() => setBookingType('DOCTOR')}
           >
             <Ionicons name="medical-outline" size={24} color={bookingData.bookingType === 'DOCTOR' ? COLORS.primary : COLORS.textDark} />
-            <Text style={[styles.optionText, bookingData.bookingType === 'DOCTOR' && styles.optionTextActive]}>Theo bác sĩ</Text>
+            <Text style={[styles.optionText, bookingData.bookingType === 'DOCTOR' && styles.optionTextActive]}>Theo bác sỹ</Text>
           </TouchableOpacity>
         </View>
       </View>

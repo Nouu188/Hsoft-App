@@ -8,6 +8,8 @@ import {
   StatusBar,
   ActivityIndicator,
   Text,
+  useWindowDimensions,
+  Platform,
 } from "react-native";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import Animated from "react-native-reanimated";
@@ -20,17 +22,24 @@ import NoteList from "@/components/specific/home/note/NoteList";
 import EmptyState from "@/components/specific/home/note/NoteEmptyState";
 
 import { useMorphingAnimation } from "@/hooks/useMorphingAnimation";
-import { useNotesStore } from "@/store/useNotesStore";
-import { Note } from "@/store/useNotesStore";
-
-const FAB_CONFIG = {
-  size: 60,
-  bottom: 30 + (SIZES.padding ? SIZES.padding * 3 : 24),
-  right: 30,
-};
+import { useNotesStore, Note } from "@/store/useNotesStore";
 
 const NoteScreen = ({ navigation }: { navigation: any }) => {
-  const { notes, fetchNotes, addNote, updateNote, removeNote, loading, error } = useNotesStore();
+  const { width, height } = useWindowDimensions();
+  const isPortrait = height >= width;
+  const isSmallDevice = width < 360;
+
+  // FAB config responsive
+  const FAB_CONFIG = {
+    size: isSmallDevice ? 50 : 60,
+    bottom:
+      (Platform.OS === "ios" ? 70 : 60) +
+      (SIZES.padding ? SIZES.padding * (isPortrait ? 2 : 1) : 20),
+    right: isSmallDevice ? 20 : 30,
+  };
+
+  const { notes, fetchNotes, addNote, updateNote, removeNote, loading, error } =
+    useNotesStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeNote, setActiveNote] = useState<Note | null>(null);
@@ -93,26 +102,50 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.lightGray} />
 
+      {/* Header */}
       <Header
         onBackPress={() => navigation.goBack()}
         onSettingsPress={() => {}}
       />
-      <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
 
-      <View style={styles.mainContent}>
-        {loading ? (
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        ) : error ? (
-          <Text style={{ color: "red", textAlign: "center" }}>{error}</Text>
-        ) : filteredNotes.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <NoteList notes={filteredNotes} onNotePress={handleNotePress} />
-        )}
+      {/* Portrait: search trên, list dưới 
+          Landscape: search bên trái, list bên phải */}
+      <View
+        style={[
+          styles.contentWrapper,
+          { flexDirection: isPortrait ? "column" : "row" },
+        ]}
+      >
+        <View style={[styles.searchWrapper, !isPortrait && { flex: 0.4 }]}>
+          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        </View>
+
+        <View style={[styles.mainContent, !isPortrait && { flex: 0.6 }]}>
+          {loading ? (
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          ) : error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : filteredNotes.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <NoteList notes={filteredNotes} onNotePress={handleNotePress} />
+          )}
+        </View>
       </View>
 
       {/* Morphing FAB */}
-      <View style={styles.morphingContainer} pointerEvents="box-none">
+      <View
+        style={[
+          styles.morphingContainer,
+          {
+            bottom: FAB_CONFIG.bottom,
+            right: FAB_CONFIG.right,
+            width: FAB_CONFIG.size,
+            height: FAB_CONFIG.size,
+          },
+        ]}
+        pointerEvents="box-none"
+      >
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => {
@@ -150,7 +183,7 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
               />
             ) : (
               <Animated.View style={[styles.fabIconContainer, iconStyle]}>
-                <Ionicons name="add-outline" size={30} color={COLORS.primary} />
+                <Ionicons name="add-outline" size={28} color={COLORS.primary} />
               </Animated.View>
             )}
           </Animated.View>
@@ -162,15 +195,16 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.lightGray },
+  contentWrapper: { flex: 1 },
+  searchWrapper: { paddingHorizontal: 10, paddingTop: 5 },
   mainContent: { flex: 1 },
-  morphingContainer: {
-    position: "absolute",
-    bottom: FAB_CONFIG.bottom,
-    right: FAB_CONFIG.right,
-    width: FAB_CONFIG.size,
-    height: FAB_CONFIG.size,
+  morphingContainer: { position: "absolute" },
+  fabIconContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  fabIconContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorText: { color: "red", textAlign: "center", marginTop: 10 },
 });
 
 export default NoteScreen;

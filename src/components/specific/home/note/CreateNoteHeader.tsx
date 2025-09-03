@@ -21,7 +21,7 @@ const CreateNoteHeader = ({ onClose, onSave, onDelete, mode = 'create' }: any) =
 );
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: SIZES.padding },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: SIZES.padding,marginTop:20 },
   title: { ...FONTS.h3 },
   save: { color: COLORS.primary, fontWeight: '600' },
 });

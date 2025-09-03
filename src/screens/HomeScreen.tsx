@@ -1,5 +1,5 @@
 import NextScheduleView from '@/components/specific/home/next_schedule/components/ScheduleItem';
-import { COLORS, SIZES } from '@/constants/theme';
+import { COLORS, SHADOWS, SIZES } from '@/constants/theme';
 import { useScheduleStore } from '@/store/useScheduleStore';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import dayjs from 'dayjs';
@@ -144,7 +144,7 @@ const TipCard = ({ title, content }: { title: string, content: string }) => (
       case 'medical_text':
         // Giữ nguyên logic và style gốc của bạn
         return (
-          <View style={{ marginTop: HEADER_MAX_HEIGHT - 320 }}>
+          <View style={{ marginTop: SIZES.padding }}>
             <HealthCardsView />
           </View>
         );
@@ -220,18 +220,16 @@ const TipCard = ({ title, content }: { title: string, content: string }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffffff'
+    backgroundColor: COLORS.white
   },
   tipCardContainer: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.white,
     borderRadius: 16,
     padding: 20,
     height: 180,
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3
+    ...SHADOWS.medium,
   },
   tipCardTitle: {
     fontSize: 18,

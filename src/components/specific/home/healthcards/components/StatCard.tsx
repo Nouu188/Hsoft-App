@@ -21,28 +21,17 @@ import { StatCardComponentProps } from '../types';
  */
 const StatCard: React.FC<StatCardComponentProps> = React.memo(
   ({ stat, healthProps, large = false, onDelete }) => {
-    // State để quản lý card đang mở rộng hay thu gọn
-    const [expanded, setExpanded] = useState(true);
-
-    // Tính toán giá trị progress (ví dụ % hoàn thành mục tiêu)
     const progressValue = stat.progress ? stat.progress(healthProps) : 0;
-
-    // Lấy giá trị hiển thị chính (ví dụ: số bước, nhịp tim, calo)
     const displayValue = stat.getValue(healthProps);
 
-    // Nếu là "nhịp tim" thì lấy trạng thái (màu, lời khuyên, text)
     const heartStatus =
       stat.key === 'heart' ? getHeartRateStatus(healthProps.heartRate) : null;
 
-    // Toggle mở rộng/thu gọn khi bấm vào card
-    const toggleExpand = () => setExpanded(!expanded);
+    // Luôn hiển thị expanded
+    const expanded = true;
 
     return (
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={toggleExpand}
-        style={[styles.card, large && styles.largeCard]}
-      >
+      <View style={[styles.card, large && styles.largeCard]}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconWrapper, { backgroundColor: stat.icon.bg }]}>
             <Ionicons name={stat.icon.name} size={18} color={stat.icon.color} />
@@ -62,33 +51,25 @@ const StatCard: React.FC<StatCardComponentProps> = React.memo(
 
         <View style={styles.cardBody}>
           {stat.key === 'heart' && heartStatus ? (
-            expanded ? (
-              <View style={styles.heartBlock}>
-                <HeartRateDisplay
-                  value={displayValue}
-                  bpmColor={heartStatus.color}
-                  large={large}
-                />
-                <HeartRateStatus
-                  text={heartStatus.text}
-                  advice={heartStatus.advice}
-                  color={heartStatus.color}
-                  large={large}
-                />
-              </View>
-            ) : (
+            <View style={styles.heartBlock}>
               <HeartRateDisplay
                 value={displayValue}
                 bpmColor={heartStatus.color}
-                large={false}
+                large={large}
               />
-            )
+              <HeartRateStatus
+                text={heartStatus.text}
+                advice={heartStatus.advice}
+                color={heartStatus.color}
+                large={large}
+              />
+            </View>
           ) : (
             <Text style={styles.cardValue}>{displayValue}</Text>
           )}
         </View>
 
-        {stat.progress && expanded && (
+        {stat.progress && (
           <View style={styles.progressBar}>
             <View
               style={[
@@ -101,10 +82,11 @@ const StatCard: React.FC<StatCardComponentProps> = React.memo(
             />
           </View>
         )}
-      </TouchableOpacity>
+      </View>
     );
   }
 );
+
 
 const styles = StyleSheet.create({
   card: {
