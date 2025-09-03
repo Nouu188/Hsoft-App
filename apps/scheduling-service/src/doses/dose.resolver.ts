@@ -101,15 +101,15 @@ export class DosesResolver {
     }
 
     try {
-      const hospitalUrl = await this.tenantApiClient.getHospitalUrlByCode(externalHospitalCode);
-      if (!hospitalUrl) {
+      const hospital = await this.tenantApiClient.getHospitalByCode(externalHospitalCode);
+      if (!hospital) {
         this.logger.error(`[DosesSyncResolver] Cannot fetch hospital URL for code: ${externalHospitalCode}`);
         throw new BadRequestException(`Cannot fetch hospital URL for code: ${externalHospitalCode}`);
       }
 
       const payload = {
         identity: { phoneNumber },
-        hospitalUrl,
+        hospitalUrl: hospital.graphqlEndpoint,
       };
 
       this.amqpConnection.publish(
