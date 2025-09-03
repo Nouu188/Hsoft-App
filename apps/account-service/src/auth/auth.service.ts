@@ -78,7 +78,8 @@ export class AuthService {
 
         this.logger.log(`User with phoneNumber "${phoneNumber}" not found. Attempting to fetch from hospital API...`);
 
-        const hospitalUrl = await this.tenantApiClient.getHospitalUrlByCode(externalHospitalCode);
+        const hospital = await this.tenantApiClient.getHospitalByCode(externalHospitalCode);
+        console.log(hospital)
 
         const identity = await this.tenantApiClient.fetchIdentityFromHospital(phoneNumber, externalHospitalCode);
         if (!identity) {
@@ -113,7 +114,7 @@ export class AuthService {
             RoutingKey.USER_FIRST_LOGIN_SCHEDULING,
             {
                 identity: identity,
-                hospitalUrl: hospitalUrl
+                hospitalUrl: hospital.graphqlEndpoint
             },
         );
 

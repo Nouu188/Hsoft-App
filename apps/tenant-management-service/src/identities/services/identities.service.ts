@@ -56,15 +56,15 @@ export class IdentitiesService {
     );
 
     try {
-      const plainExternalCode = await this.hospitalService.getPlainExternalCode(externalHospitalCode);
-      if (!plainExternalCode) {
+      const hospital = await this.hospitalService.getHospitalByCode(externalHospitalCode);
+      if (!hospital) {
         this.logger.error(
           `[fetchIdentityFromHospital] Không tìm thấy plainExternalCode cho externalCode=${externalHospitalCode}`,
         );
         throw new NotFoundException(`Hospital code not found: ${externalHospitalCode}`);
       }
 
-      const hospitalUrl = await this.hospitalService.getHospitalUrlByCode(externalHospitalCode);
+      const hospitalUrl = await this.hospitalService.getHospitalUrlByCode(hospital.plainExternalCode);
       if (!hospitalUrl) {
         this.logger.warn(
           `[Resolver] Không tìm thấy hospitalUrl cho externalCode=${externalHospitalCode}`,
@@ -77,7 +77,7 @@ export class IdentitiesService {
       const patient = await this.hospitalApiClient.fetchPatientFromHospital(
         phoneNumber,
         hospitalUrl,
-        plainExternalCode,
+        hospital.plainExternalCode,
       );
 
       if (!patient) {

@@ -1,0 +1,58 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateNoteInput {
+  content: String!
+  metadata: JSONObject
+  title: String!
+}
+
+"""DateTime custom scalar type"""
+scalar DateTime
+
+type DeviceToken {
+  token: String!
+  type: String!
+}
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject
+
+type Mutation {
+  """Create a new note for the authenticated user."""
+  createNote(createNoteInput: CreateNoteInput!): Note!
+
+  """Remove a note (only if it belongs to the user)."""
+  removeNote(id: ID!): Boolean!
+
+  """Update a note (only if it belongs to the user)."""
+  updateNote(updateNoteInput: UpdateNoteInput!): Note!
+}
+
+type Note {
+  content: String!
+  createdAt: DateTime!
+  id: ID!
+  metadata: JSONObject
+  title: String!
+  updatedAt: DateTime!
+  userId: String
+}
+
+type Query {
+  """Get a specific note by ID (must belong to the user)."""
+  note(id: ID!): Note!
+
+  """Get all notes of the authenticated user."""
+  notes: [Note!]!
+}
+
+input UpdateNoteInput {
+  content: String
+  id: ID!
+  metadata: JSONObject
+  title: String
+}

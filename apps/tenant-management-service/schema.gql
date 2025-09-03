@@ -106,10 +106,7 @@ type HospitalPayload {
 
   """Tên bệnh viện"""
   name: String!
-}
-
-type HospitalUrlResponse {
-  graphqlEndpoint: String!
+  plainExternalCode: String
 }
 
 type Identity {
@@ -167,9 +164,9 @@ type Query {
 
   """Lấy bác sĩ theo ID"""
   doctors(doctorId: ID!): DoctorObjectType!
-  fetchIdentityFromHospital(externalHospitalCode: String!, phoneNumber: String!): Identity
+  fetchIdentityFromHospital(externalCode: String!, phoneNumber: String!): Identity
   hospital(id: ID!): Hospital!
-  hospitalUrlByCode(externalHospitalCode: String!): HospitalUrlResponse!
+  hospitalByExternalCode(externalCode: String!): HospitalPayload!
   hospitals(isActive: Boolean): [HospitalPayload!]!
   identitiesByIds(ids: [ID!]!): [Identity!]!
   identity(id: ID!): Identity

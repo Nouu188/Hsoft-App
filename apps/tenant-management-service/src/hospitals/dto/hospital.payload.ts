@@ -11,6 +11,9 @@ export class HospitalPayload {
   @Field({ nullable: true, description: 'Mã ngoài hệ thống (nếu có)' })
   externalCode?: string;
 
+  @Field({ nullable: true })
+  plainExternalCode: string;
+
   @Field({ description: 'GraphQL endpoint của bệnh viện' })
   graphqlEndpoint?: string;
 }

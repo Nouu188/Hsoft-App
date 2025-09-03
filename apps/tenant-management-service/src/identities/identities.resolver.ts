@@ -43,7 +43,7 @@ export class IdentitiesResolver {
   @Query(() => Identity, { name: 'fetchIdentityFromHospital', nullable: true })
   async fetchIdentityFromHospital(
     @Args('phoneNumber', { type: () => String }) phoneNumber: string,
-    @Args('externalHospitalCode', { type: () => String }) externalHospitalCode: string,
+    @Args('externalCode', { type: () => String }) externalHospitalCode: string,
   ): Promise<Identity | null> {
     this.logger.debug(
       `[Resolver] Fetch identity from hospital externalCode=${externalHospitalCode}, phone=${phoneNumber}`,

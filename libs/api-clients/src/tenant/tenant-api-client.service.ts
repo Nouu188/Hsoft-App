@@ -13,6 +13,7 @@ import { DoctorObjectType } from 'apps/tenant-management-service/src/doctors/dto
 import { ClinicObjectType } from 'apps/tenant-management-service/src/clinics/dto/clinic.object-type';
 import { Identity } from 'apps/tenant-management-service/src/identities/entities/identity.entity';
 import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
+import { HospitalPayload } from 'apps/tenant-management-service/src/hospitals/dto/hospital.payload';
 
 @Injectable()
 export class TenantApiClientService {
@@ -158,26 +159,34 @@ export class TenantApiClientService {
     return data.getClinicById;
   }
 
-  async getHospitalUrlByCode(externalHospitalCode: string): Promise<string> {
-    this.logger.debug(`Fetching GraphQL endpoint for hospital code=${externalHospitalCode}`);
+  async getHospitalByCode(externalCode: string): Promise<HospitalPayload> {
+    this.logger.debug(`Fetching GraphQL endpoint for hospital code=${externalCode}`);
     const query = `
-      query ($externalHospitalCode: String!) {
-        hospitalUrlByCode(externalHospitalCode: $externalHospitalCode) {
+      query ($externalCode: String!) {
+        hospitalByExternalCode(externalCode: $externalCode) {
+          id
+          name
+          plainExternalCode
           graphqlEndpoint
         }
       }
     `;
 
-    const data = await this.executeGraphQL<{ hospitalUrlByCode: Hospital }>(query, {
-      externalHospitalCode,
-    });
+    const data = await this.executeGraphQL<{ hospitalByExternalCode: Hospital }>(
+      query,
+      { externalCode },
+    );
 
-    if (!data.hospitalUrlByCode) {
-      this.logger.warn(`Active hospital with externalHospitalCode=${externalHospitalCode} not found`);
-      throw new NotFoundException(`Hospital with externalHospitalCode=${externalHospitalCode} not found`);
+    if (!data.hospitalByExternalCode) {
+      this.logger.warn(
+        `Active hospital with externalCode=${externalCode} not found`,
+      );
+      throw new NotFoundException(
+        `Hospital with externalCode=${externalCode} not found`,
+      );
     }
 
-    return data.hospitalUrlByCode.graphqlEndpoint;
+    return data.hospitalByExternalCode;
   }
 
   async getIdentityByUserId(userId: string): Promise<Identity> {
@@ -225,17 +234,17 @@ export class TenantApiClientService {
 
   async fetchIdentityFromHospital(
     phoneNumber: string,
-    externalHospitalCode: string,
+    externalCode: string,
   ): Promise<IdentityPayload | null> {
     this.logger.debug(
-      `[TenantApiClientService] Fetch identity from hospital externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+      `[TenantApiClientService] Fetch identity from hospital externalCode=${externalCode}, phone=${phoneNumber}`,
     );
 
     const query = `
-    query ($phoneNumber: String!, $externalHospitalCode: String!) {
+    query ($phoneNumber: String!, $externalCode: String!) {
       fetchIdentityFromHospital(
         phoneNumber: $phoneNumber,
-        externalHospitalCode: $externalHospitalCode
+        externalCode: $externalCode
       ) {
         id
         fullName
@@ -251,24 +260,24 @@ export class TenantApiClientService {
     try {
       const data = await this.executeGraphQL<{ fetchIdentityFromHospital: IdentityPayload | null }>(
         query,
-        { phoneNumber, externalHospitalCode },
+        { phoneNumber, externalCode },
       );
 
       if (!data.fetchIdentityFromHospital) {
         this.logger.warn(
-          `[TenantApiClientService] Không tìm thấy bệnh nhân với externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+          `[TenantApiClientService] Không tìm thấy bệnh nhân với externalCode=${externalCode}, phone=${phoneNumber}`,
         );
         return null;
       }
 
       this.logger.debug(
-        `[TenantApiClientService] Đã fetch thành công identity cho phone=${phoneNumber}, externalCode=${externalHospitalCode}`,
+        `[TenantApiClientService] Đã fetch thành công identity cho phone=${phoneNumber}, externalCode=${externalCode}`,
       );
 
       return data.fetchIdentityFromHospital;
     } catch (error) {
       this.logger.error(
-        `[TenantApiClientService] Lỗi khi fetch identity từ hospital externalCode=${externalHospitalCode}, phone=${phoneNumber}`,
+        `[TenantApiClientService] Lỗi khi fetch identity từ hospital externalCode=${externalCode}, phone=${phoneNumber}`,
         error.stack || error,
       );
       throw new InternalServerErrorException(
