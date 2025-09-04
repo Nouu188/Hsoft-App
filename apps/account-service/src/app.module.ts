@@ -12,8 +12,8 @@ import { ServiceClient } from './auth/entities/service-client.entity';
 import { AuthModule } from './auth/auth.module';
 import { MetricsModule } from '@app/common/metrics/metrics.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
-import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
+import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
+import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 
 @Module({

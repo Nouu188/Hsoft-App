@@ -4,7 +4,7 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { Histogram } from 'prom-client';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { MetricName, MetricLabel } from './metrics.contracts';
+import { MetricName, MetricLabel } from '../contracts/metrics.contracts';
 
 @Injectable()
 export class MetricsMiddleware implements NestMiddleware {
@@ -14,7 +14,6 @@ export class MetricsMiddleware implements NestMiddleware {
   ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
-    // Bỏ qua endpoint /metrics để tránh vòng lặp
     if (req.originalUrl === '/metrics') {
       return next();
     }
@@ -24,7 +23,6 @@ export class MetricsMiddleware implements NestMiddleware {
     res.on('finish', () => {
       end({
         [MetricLabel.METHOD]: req.method,
-        // Sử dụng `req.route.path` để nhóm các URL động (ví dụ: /users/1, /users/2 -> /users/:id)
         [MetricLabel.ROUTE]: req.route ? req.route.path : req.originalUrl,
         [MetricLabel.STATUS_CODE]: res.statusCode,
       });

@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Histogram } from 'prom-client';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { MetricName, MetricLabel } from './metrics.contracts';
+import { MetricName, MetricLabel } from '../contracts/metrics.contracts';
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {

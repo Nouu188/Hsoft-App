@@ -11,9 +11,9 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { NotificationHistory } from './history/entities/notification-history.entity';
 import { HistoryModule } from './history/history.module';
 import { JobsModule } from './jobs/jobs.module';
-import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
+import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
+import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({

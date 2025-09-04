@@ -1,15 +1,12 @@
-import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
-import { Injectable, Logger } from '@nestjs/common';
-import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
-import { NotificationService } from '../services/notification.service';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import { Counter } from 'prom-client';
-import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
-import { MeasureDuration } from '@app/common/metrics/decorators/measure-duration.decorator';
-import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
-import { HospitalPatient } from '@app/common/types/hospitalPatient.interface';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges';
 import { QueueName } from '@app/common/rabbitmq/queues';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { Nack, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { Injectable, Logger } from '@nestjs/common';
+import { NotificationService } from '../services/notification.service';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
+import { MetricName } from '@app/common/metrics/contracts/metrics.contracts';
+import { Counter } from 'prom-client';
 
 interface GroupedNotificationPayload {
     userId: string;
@@ -22,6 +19,9 @@ export class NotificationConsumer {
 
     constructor(
         private readonly notificationService: NotificationService,
+
+        @InjectMetric(MetricName.NOTIFICATIONS_SCHEDULED_TOTAL)
+        private readonly notificationsScheduledCounter: Counter<string>,
     ) { }
 
     @RabbitSubscribe({
@@ -41,8 +41,12 @@ export class NotificationConsumer {
         try {
             await this.notificationService.processDoseReminder(payload);
 
+            this.notificationsScheduledCounter.inc(labels, 1);
+
         } catch (error) {
             this.logger.error(`CRITICAL error processing dose reminder for user ${userId}. Message will be NACKed.`, error.stack);
+
+            this.notificationsScheduledCounter.inc({ ...labels, status: 'failure' }, 1);
 
             return new Nack(false);
         }

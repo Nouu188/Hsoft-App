@@ -1,22 +1,22 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { DosesModule } from './doses/doses.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Dose } from './doses/entities/dose.entity';
-import { HttpModule } from '@nestjs/axios';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { join } from 'path';
 import { ApiClientsModule } from '@app/api-clients';
-import { JobsModule } from './jobs/jobs.module';
 import { AuthLibModule } from '@app/auth';
-import { GraphQLJSONObject } from 'graphql-type-json';
 import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
+import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
+import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { MetricsModule } from '@app/common/metrics/metrics.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
-import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { HttpModule } from '@nestjs/axios';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { GraphQLModule } from '@nestjs/graphql';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { GraphQLJSONObject } from 'graphql-type-json';
+import { join } from 'path';
+import { DosesModule } from './doses/doses.module';
+import { Dose } from './doses/entities/dose.entity';
+import { JobsModule } from './jobs/jobs.module';
 
 @Module({
   imports: [

@@ -1,7 +1,7 @@
-import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
-import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { MetricName } from '@app/common/metrics/contracts/metrics.contracts';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
@@ -9,13 +9,12 @@ import { BadRequestException, ConflictException, Inject, Injectable, InternalSer
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateIdentityInput } from 'apps/tenant-management-service/src/identities/dtos/create-identity-input.dto';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
+import { Counter } from 'prom-client';
 import { Repository } from 'typeorm';
-import { AuthPayload } from '../../../../libs/auth/src/dtos/auth.payload';
-import { Role } from '../../../../libs/auth/src/enums/role.enum';
 import { UsersService } from '../users/users.service';
 import { CreateServiceClientInput } from './dto/create-service-client.input';
 import { GoogleLoginInput } from './dto/google-login.input';
@@ -26,7 +25,7 @@ import { RequestOtpResponse } from './dto/request-otp-response.dto';
 import { VerifyEmailInput } from './dto/verify-email.input';
 import { ServiceClient } from './entities/service-client.entity';
 import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
-import { normalizeHospitalPatient } from 'libs/normalizers/src/lib/normalize-hospital-patient';
+import { AuthPayload, Role } from '@app/auth';
 
 @Injectable()
 export class AuthService {
@@ -49,7 +48,15 @@ export class AuthService {
 
         private readonly mailerService: MailerService,
         private readonly tenantApiClient: TenantApiClientService,
-        private readonly hospitalClient: HospitalApiClientService,
+
+        @InjectMetric(MetricName.AUTH_LOGIN_ATTEMPTS_TOTAL)
+        private readonly loginAttemptsCounter: Counter<string>,
+
+        @InjectMetric(MetricName.AUTH_REGISTRATIONS_TOTAL)
+        private readonly registrationsCounter: Counter<string>,
+
+        @InjectMetric(MetricName.AUTH_OTP_SENT_TOTAL)
+        private readonly otpSentCounter: Counter<string>,
     ) { }
 
     async loginByPhoneNumber(loginInput: LoginInputByPhoneNumber): Promise<LoginResponse> {
@@ -58,69 +65,87 @@ export class AuthService {
             throw new ConflictException("Invalid input");
         }
 
-        let user = await this.usersService.findByPhoneNumber(phoneNumber);
-        if (user) {
-            if (!user.password) {
-                throw new UnauthorizedException('Password not set for this user.');
+        try {
+            let user = await this.usersService.findByPhoneNumber(phoneNumber);
+            if (user) {
+                if (!user.password) {
+                    throw new UnauthorizedException('Password not set for this user.');
+                }
+
+                const isPasswordMatching = await bcrypt.compare(password!, user.password);
+                if (isPasswordMatching) {
+                    this.logger.log(`User ${user.phoneNumber} logged in from internal DB.`);
+
+                    const accessToken = this.generateToken(user.id, user.roles);
+
+                    return { user, accessToken };
+                }
+
+                throw new UnauthorizedException("Invalid credentials");
             }
 
-            const isPasswordMatching = await bcrypt.compare(password!, user.password);
-            if (isPasswordMatching) {
-                this.logger.log(`User ${user.phoneNumber} logged in from internal DB.`);
+            this.logger.log(`User with phoneNumber "${phoneNumber}" not found. Attempting to fetch from hospital API...`);
 
-                const accessToken = this.generateToken(user.id, user.roles);
+            const hospital = await this.tenantApiClient.getHospitalByCode(externalHospitalCode);
+            console.log(hospital)
 
-                return { user, accessToken };
+            const identity = await this.tenantApiClient.fetchIdentityFromHospital(phoneNumber, externalHospitalCode);
+            if (!identity) {
+                throw new UnauthorizedException('Patient information not found in hospital system.');
             }
 
-            throw new UnauthorizedException("Invalid credentials");
+            const birthYear = identity.birthYear;
+            if (!birthYear) {
+                throw new UnauthorizedException('Birth year not set for this user.');
+            }
+
+            if (loginInput.password !== birthYear.toString()) {
+                throw new UnauthorizedException('Invalid credentials.');
+            }
+
+            this.logger.log(`First-time login successful for phone ${identity.phoneNumber}. Creating local user...`);
+            const userPayload = await this.usersService.createUserFromHospital(identity);
+
+            this.logger.log(`Publishing 'user.first_login' event for user ${identity.phoneNumber}`);
+            this.amqpConnection.publish(
+                ExchangeName.USER_EVENTS,
+                RoutingKey.USER_FIRST_LOGIN_IDENTITY,
+                {
+                    identity: identity,
+                    userId: userPayload.id,
+                    externalHospitalCode: externalHospitalCode,
+                },
+            );
+
+            this.amqpConnection.publish(
+                ExchangeName.USER_EVENTS,
+                RoutingKey.USER_FIRST_LOGIN_SCHEDULING,
+                {
+                    identity: identity,
+                    hospitalUrl: hospital.graphqlEndpoint
+                },
+            );
+
+            const accessToken = this.generateToken(userPayload.id, userPayload.roles);
+
+            this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'success' });
+
+            return { accessToken, user: userPayload }
+        } catch (error) {
+            this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'failure' });
+
+            this.logger.error(
+                `[LoginByPhoneNumber] Failed login attempt`,
+                {
+                    phoneNumber,
+                    externalHospitalCode,
+                    reason: error instanceof Error ? error.message : 'Unknown error',
+                    stack: error instanceof Error ? error.stack : undefined,
+                },
+            );
+
+            throw error;
         }
-
-        this.logger.log(`User with phoneNumber "${phoneNumber}" not found. Attempting to fetch from hospital API...`);
-
-        const hospital = await this.tenantApiClient.getHospitalByCode(externalHospitalCode);
-        console.log(hospital)
-
-        const identity = await this.tenantApiClient.fetchIdentityFromHospital(phoneNumber, externalHospitalCode);
-        if (!identity) {
-            throw new UnauthorizedException('Patient information not found in hospital system.');
-        }
-        
-        const birthYear = identity.birthYear;
-        if (!birthYear) {
-            throw new UnauthorizedException('Birth year not set for this user.');
-        }
-
-        if (loginInput.password !== birthYear.toString()) {
-            throw new UnauthorizedException('Invalid credentials.');
-        }
-
-        this.logger.log(`First-time login successful for phone ${identity.phoneNumber}. Creating local user...`);
-        const userPayload = await this.usersService.createUserFromHospital(identity);
-
-        this.logger.log(`Publishing 'user.first_login' event for user ${identity.phoneNumber}`);
-        this.amqpConnection.publish(
-            ExchangeName.USER_EVENTS,
-            RoutingKey.USER_FIRST_LOGIN_IDENTITY,
-            { 
-                identity: identity,
-                userId: userPayload.id,
-                externalHospitalCode: externalHospitalCode,
-            },
-        );
-
-        this.amqpConnection.publish(
-            ExchangeName.USER_EVENTS,
-            RoutingKey.USER_FIRST_LOGIN_SCHEDULING,
-            {
-                identity: identity,
-                hospitalUrl: hospital.graphqlEndpoint
-            },
-        );
-
-        const accessToken = this.generateToken(userPayload.id, userPayload.roles);
-
-        return { accessToken, user: userPayload }
     }
 
     async loginByEmail(loginInput: LoginInputByEmail): Promise<LoginResponse> {
@@ -132,29 +157,44 @@ export class AuthService {
 
         this.logger.debug(`Login attempt for email: ${email}`);
 
-        const user = await this.usersService.findByEmail(email);
-        if (!user) {
-            this.logger.warn(`Login failed: User with email ${email} not found`);
-            throw new UnauthorizedException('Invalid email or password');
+        try {
+            const user = await this.usersService.findByEmail(email);
+            if (!user) {
+                this.logger.warn(`Login failed: User with email ${email} not found`);
+                throw new UnauthorizedException('Invalid email or password');
+            }
+
+            if (!user.password) {
+                throw new UnauthorizedException('Password not set for this user.');
+            }
+
+            const isPasswordValid = await bcrypt.compare(password as string, user.password);
+            if (!isPasswordValid) {
+                this.logger.warn(`Login failed: Invalid password for email ${email}`);
+                throw new UnauthorizedException('Invalid email or password');
+            }
+
+            this.logger.log(`Login successful for email: ${email}`);
+
+            const accessToken = this.generateToken(user.id, user.roles);
+
+            const { password: _, ...userResult } = user;
+
+            return { user: userResult, accessToken };
+        } catch (error) {
+            this.loginAttemptsCounter.inc({ login_method: 'email', status: 'failure' });
+
+            this.logger.error(
+                `[LoginByEmail] Login failed`,
+                {
+                    email,
+                    reason: error instanceof Error ? error.message : 'Unknown error',
+                    stack: error instanceof Error ? error.stack : undefined,
+                },
+            );
+
+            throw error;
         }
-
-        if (!user.password) {
-            throw new UnauthorizedException('Password not set for this user.');
-        }
-
-        const isPasswordValid = await bcrypt.compare(password as string, user.password);
-        if (!isPasswordValid) {
-            this.logger.warn(`Login failed: Invalid password for email ${email}`);
-            throw new UnauthorizedException('Invalid email or password');
-        }
-
-        this.logger.log(`Login successful for email: ${email}`);
-
-        const accessToken = this.generateToken(user.id, user.roles);
-
-        const { password: _, ...userResult } = user;
-
-        return { user: userResult, accessToken };
     }
 
     async loginWithGoogle(googleLoginInput: GoogleLoginInput): Promise<LoginResponse> {
@@ -181,16 +221,25 @@ export class AuthService {
                 avatarUrl: picture,
                 googleId,
             });
-            // TODO: Phát sự kiện 'user.registered' nếu cần
 
-            // 3. Tạo và trả về token của hệ thống
             const accessToken = this.generateToken(user.id, user.roles);
 
             this.logger.log(`Successfully authenticated user ${user.id} via Google.`);
+
+            this.loginAttemptsCounter.inc({ login_method: 'google', status: 'success' });
             return { user, accessToken };
 
         } catch (error) {
-            this.logger.error('Failed to authenticate with Google.', error.stack);
+            this.otpSentCounter.inc({ otp_channel: 'email', status: 'failure' });
+
+            this.logger.error(
+                `[LoginWithGoogle] Google authentication failed`,
+                {
+                    reason: error instanceof Error ? error.message : 'Unknown error',
+                    stack: error instanceof Error ? error.stack : undefined,
+                },
+            );
+
             if (error instanceof UnauthorizedException) {
                 throw error;
             }
@@ -241,52 +290,82 @@ export class AuthService {
                 context: { otp },
             });
             this.logger.log(`[OTP] Sent verification OTP to ${email} successfully`);
+
+            this.otpSentCounter.inc({ otp_channel: 'email', status: 'success' });
+
             return { success: true, message: 'OTP đã được gửi thành công.' };
         } catch (error) {
-            this.logger.error(`[OTP] Failed to send OTP to ${email}: ${error.message}`, error.stack);
+            this.registrationsCounter.inc({ login_method: 'email', status: 'failure' });
+            this.otpSentCounter.inc({ otp_channel: 'email', status: 'failure' });
+
+            this.logger.error(
+                `[RequestEmailVerification] Failed to send OTP`,
+                {
+                    email,
+                    reason: error instanceof Error ? error.message : 'Unknown error',
+                    stack: error instanceof Error ? error.stack : undefined,
+                },
+            );
+
             return { success: false, message: 'Không thể gửi OTP. Vui lòng thử lại sau.' };
         }
     }
 
     async verifyEmailAndRegister(verifyInput: VerifyEmailInput): Promise<LoginResponse> {
         const { email, otp } = verifyInput;
-        const otpKey = `otp:verify-email:${email}`;
-        this.logger.log(`Verifying OTP for email: ${email}`);
 
-        const storedDataString = await this.cacheManager.get<string>(otpKey);
+        try {
+            const otpKey = `otp:verify-email:${email}`;
+            this.logger.log(`Verifying OTP for email: ${email}`);
 
-        if (!storedDataString) {
-            throw new BadRequestException('OTP đã hết hạn hoặc không hợp lệ.');
-        }
+            const storedDataString = await this.cacheManager.get<string>(otpKey);
 
-        const storedData = JSON.parse(storedDataString) as { otp: string, attempts: number, registerInput: RegisterByEmailInput };
+            if (!storedDataString) {
+                throw new BadRequestException('OTP đã hết hạn hoặc không hợp lệ.');
+            }
 
-        if (storedData.attempts >= 5) {
+            const storedData = JSON.parse(storedDataString) as { otp: string, attempts: number, registerInput: RegisterByEmailInput };
+
+            if (storedData.attempts >= 5) {
+                await this.cacheManager.del(otpKey);
+                throw new BadRequestException('Bạn đã nhập sai OTP quá 5 lần. Vui lòng yêu cầu OTP mới.');
+            }
+
+            if (storedData.otp !== otp) {
+                storedData.attempts += 1;
+                const remainingTTL = await (this.cacheManager.stores as any).ttl(otpKey);
+                await this.cacheManager.set(otpKey, JSON.stringify(storedData), remainingTTL);
+                throw new BadRequestException(`OTP không chính xác. Bạn còn ${5 - storedData.attempts} lần thử.`);
+            }
+
+            const { registerInput } = storedData;
+
+            const newUser = await this.usersService.createUserByEmail({
+                email: registerInput.email,
+                password: registerInput.password,
+            });
+
             await this.cacheManager.del(otpKey);
-            throw new BadRequestException('Bạn đã nhập sai OTP quá 5 lần. Vui lòng yêu cầu OTP mới.');
+            const retryKey = `otp:retry-count:verify-email:${email}`;
+            await this.cacheManager.del(retryKey);
+
+            const accessToken = this.generateToken(newUser.id, newUser.roles);
+
+            return { user: newUser, accessToken };
+        } catch (error) {
+            this.registrationsCounter.inc({ login_method: 'email', status: 'failure' });
+
+            this.logger.error(
+                `[VerifyEmailAndRegister] Failed to verify OTP or register user`,
+                {
+                    email,
+                    reason: error instanceof Error ? error.message : 'Unknown error',
+                    stack: error instanceof Error ? error.stack : undefined,
+                },
+            );
+
+            throw error;
         }
-
-        if (storedData.otp !== otp) {
-            storedData.attempts += 1;
-            const remainingTTL = await (this.cacheManager.stores as any).ttl(otpKey);
-            await this.cacheManager.set(otpKey, JSON.stringify(storedData), remainingTTL);
-            throw new BadRequestException(`OTP không chính xác. Bạn còn ${5 - storedData.attempts} lần thử.`);
-        }
-
-        const { registerInput } = storedData;
-
-        const newUser = await this.usersService.createUserByEmail({
-            email: registerInput.email,
-            password: registerInput.password,
-        });
-
-        await this.cacheManager.del(otpKey);
-        const retryKey = `otp:retry-count:verify-email:${email}`;
-        await this.cacheManager.del(retryKey);
-
-        const accessToken = this.generateToken(newUser.id, newUser.roles);
-
-        return { user: newUser, accessToken };
     }
 
     private generateToken(userId: string, roles: Role[]): string {

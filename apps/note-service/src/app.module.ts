@@ -1,8 +1,8 @@
 import { ApiClientsModule } from '@app/api-clients';
 import { AuthLibModule } from '@app/auth';
 import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
-import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
-import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
+import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
+import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { MetricsModule } from '@app/common/metrics/metrics.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';

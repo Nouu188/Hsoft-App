@@ -6,7 +6,7 @@ import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 
 const BATCH_SIZE = 200; // Mỗi batch xử lý 100 user
-const BATCH_DELAY_MINUTES = 5; // Mỗi batch cách nhau 5 phút
+const BATCH_DELAY_MINUTES = 5; 
 
 @Injectable()
 export class BatchCreationConsumer {

@@ -1,69 +1,84 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import * as moment from 'moment-timezone';
-import { LessThan, Repository } from 'typeorm';
+import { Counter } from 'prom-client';
+import { Repository } from 'typeorm';
 import { Dose, DoseStatus } from '../../doses/entities/dose.entity';
 
 @Injectable()
 export class DoseStatusTransitionService {
   private readonly logger = new Logger(DoseStatusTransitionService.name);
+  private readonly tz = 'Asia/Ho_Chi_Minh';
 
   constructor(
     @InjectRepository(Dose)
     private readonly doseRepository: Repository<Dose>,
-  ) { }
+    private readonly configService: ConfigService,
 
-  @Cron(CronExpression.EVERY_5_MINUTES) // Chạy mỗi 5 phút
+    @InjectMetric('doses_status_transitions_total')
+    private readonly doseStatusTransitions: Counter<string>,
+  ) {}
+
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async handleCron() {
-    this.logger.log('Running Dose Status Transition Job...');
-    await this.transitionUpcomingToPending();
-    await this.transitionPendingToMissed();
-    this.logger.log('Dose Status Transition Job finished.');
+    this.logger.debug('Dose Status Transition Job started');
+
+    const transitionedUpcoming = await this.transitionUpcomingToPending();
+    const transitionedMissed = await this.transitionPendingToMissed();
+
+    this.logger.debug('Dose Status Transition Job finished', {
+      transitionedUpcoming,
+      transitionedMissed,
+    });
   }
 
   /**
-   * Chuyển các liều UPCOMING thành PENDING khi đến giờ uống.
-   * Một liều được coi là "đến giờ" khi thời gian hiện tại nằm trong khoảng
-   * từ thời gian uống (due_at) đến thời gian uống của liều tiếp theo.
+   * UPCOMING -> PENDING
    */
-  async transitionUpcomingToPending(): Promise<void> {
-    const now = moment().tz('Asia/Ho_Chi_Minh').toDate();
+  async transitionUpcomingToPending(): Promise<number> {
+    const now = moment().tz(this.tz).toDate();
 
-    // Tìm tất cả các liều UPCOMING mà đã đến giờ uống
-    const dosesToBecomePending = await this.doseRepository.find({
-      where: {
-        status: DoseStatus.UPCOMING,
-        due_at: LessThan(now),
-      },
-    });
+    const result = await this.doseRepository
+      .createQueryBuilder()
+      .update(Dose)
+      .set({ status: DoseStatus.PENDING })
+      .where('status = :status', { status: DoseStatus.UPCOMING })
+      .andWhere('due_at < :now', { now })
+      .returning('id')
+      .execute();
 
-    if (dosesToBecomePending.length > 0) {
-      const ids = dosesToBecomePending.map(d => d.id);
-      await this.doseRepository.update(ids, { status: DoseStatus.PENDING });
-      this.logger.log(`Transitioned ${ids.length} doses from UPCOMING to PENDING.`);
+    const affected = result.affected ?? 0;
+    if (affected > 0) {
+      this.logger.log(`Transitioned ${affected} doses from UPCOMING to PENDING`);
+      this.doseStatusTransitions.inc({ from: DoseStatus.UPCOMING, to: DoseStatus.PENDING }, affected);
     }
+    return affected;
   }
 
   /**
-   * Chuyển các liều PENDING thành MISSED nếu quá hạn.
-   * Một liều được coi là quá hạn nếu đã qua 4 tiếng kể từ giờ uống.
+   * PENDING -> MISSED
    */
-  async transitionPendingToMissed(): Promise<void> {
-    const fourHoursAgo = moment().tz('Asia/Ho_Chi_Minh').subtract(4, 'hours').toDate();
+  async transitionPendingToMissed(): Promise<number> {
+    const hours = this.configService.get<number>('DOSE_PENDING_GRACE_HOURS', 4);
+    const threshold = moment().tz(this.tz).subtract(hours, 'hours').toDate();
 
-    // Tìm tất cả các liều PENDING mà đã quá 4 tiếng
-    const dosesToBecomeMissed = await this.doseRepository.find({
-      where: {
-        status: DoseStatus.PENDING,
-        due_at: LessThan(fourHoursAgo),
-      },
-    });
+    const result = await this.doseRepository
+      .createQueryBuilder()
+      .update(Dose)
+      .set({ status: DoseStatus.MISSED })
+      .where('status = :status', { status: DoseStatus.PENDING })
+      .andWhere('due_at < :threshold', { threshold })
+      .returning('id')
+      .execute();
 
-    if (dosesToBecomeMissed.length > 0) {
-      const ids = dosesToBecomeMissed.map(d => d.id);
-      await this.doseRepository.update(ids, { status: DoseStatus.MISSED });
-      this.logger.log(`Transitioned ${ids.length} doses from PENDING to MISSED.`);
+    const affected = result.affected ?? 0;
+    if (affected > 0) {
+      this.logger.warn(`Transitioned ${affected} doses from PENDING to MISSED`);
+      this.doseStatusTransitions.inc({ from: DoseStatus.PENDING, to: DoseStatus.MISSED }, affected);
     }
+    return affected;
   }
 }

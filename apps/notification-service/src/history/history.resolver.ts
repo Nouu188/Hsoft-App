@@ -8,7 +8,7 @@ import { MarkAsReadInput } from './dto/mark-as-read.input';
 import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Histogram } from 'prom-client';
-import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
+import { MetricLabel, MetricName } from '@app/common/metrics/contracts/metrics.contracts';
 
 @Resolver(() => NotificationHistory)
 @UseGuards(JwtAuthGuard)

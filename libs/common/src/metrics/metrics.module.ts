@@ -1,9 +1,9 @@
 import { Global, Module } from '@nestjs/common';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CommonMetricsProviders } from './metrics.provider';
-import { MetricsMiddleware } from './metrics.middleware';
-import { MetricsInterceptor } from './metrics.interceptor';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { MetricsInterceptor } from './instrumentation/metrics.interceptor';
+import { MetricsMiddleware } from './instrumentation/metrics.middleware';
+import { AllMetricsProviders } from './providers';
 
 @Global()
 @Module({
@@ -13,7 +13,7 @@ import { MetricsInterceptor } from './metrics.interceptor';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        path: '/metrics', 
+        path: '/metrics',
         defaultLabels: {
           app: configService.get<string>('NPM_PACKAGE_NAME') || 'unknown',
         },
@@ -21,15 +21,15 @@ import { MetricsInterceptor } from './metrics.interceptor';
     }),
   ],
   providers: [
-    ...CommonMetricsProviders,
+    ...AllMetricsProviders,
     MetricsMiddleware,
     MetricsInterceptor,
   ],
   exports: [
     PrometheusModule,
-    ...CommonMetricsProviders,
+    ...AllMetricsProviders,
     MetricsMiddleware,
     MetricsInterceptor,
   ],
 })
-export class MetricsModule {}
+export class MetricsModule { }
