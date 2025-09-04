@@ -1,8 +1,8 @@
 import { Mutation, Resolver, Args, ID } from '@nestjs/graphql';
 import { Logger } from '@nestjs/common';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import { ExchangeName } from '@app/common/rabbitmq/exchanges';
-import { RoutingKey } from '@app/common/rabbitmq';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
 
 @Resolver()
 export class JobsResolver {
@@ -23,7 +23,7 @@ export class JobsResolver {
       
       this.amqpConnection.publish(
           ExchangeName.NOTIFICATION,
-          RoutingKey.NOTIFICATION_SCHEDULE,
+          RoutingKey.NOTIFICATION_SCHEDULED,
           payload,
       );
       return true;

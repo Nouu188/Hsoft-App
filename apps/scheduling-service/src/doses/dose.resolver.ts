@@ -6,8 +6,8 @@ import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { CurrentUser, JwtAuthGuard } from '@app/auth';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { UpdateDoseInput } from './dto/update-dose.input';
-import { ExchangeName } from '@app/common/rabbitmq/exchanges';
-import { RoutingKey } from '@app/common/rabbitmq';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
 import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
 
 @Resolver(() => Dose)
@@ -113,8 +113,8 @@ export class DosesResolver {
       };
 
       this.amqpConnection.publish(
-        ExchangeName.SYNC,
-        RoutingKey.SYNC_REQUEST,
+        ExchangeName.DOSES_EVENTS,
+        RoutingKey.DOSES_SYNC_REQUESTED,
         payload,
       );
 

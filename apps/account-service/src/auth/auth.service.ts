@@ -1,7 +1,7 @@
 import { HospitalApiClientService } from '@app/api-clients/hospital/hospital-api.service';
 import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
-import { RoutingKey } from '@app/common/rabbitmq';
-import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';

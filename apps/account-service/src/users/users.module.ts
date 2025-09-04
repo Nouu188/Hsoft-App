@@ -7,13 +7,13 @@ import { UsersService } from './users.service';
 import { AuthLibModule } from '@app/auth';
 import { ConfigModule } from '@nestjs/config';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
-import { AppRabbitMQModule } from '@app/common/rabbitmq';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   providers: [UsersResolver, UsersService],
   imports: [
-    ConfigModule, 
-    TypeOrmModule.forFeature([ User ], 'accountConnection'),
+    ConfigModule,
+    TypeOrmModule.forFeature([User], 'accountConnection'),
     HospitalApiClientModule,
     AuthLibModule,
     AppRabbitMQModule,
@@ -23,4 +23,4 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq';
     UsersService,
   ]
 })
-export class UsersModule {}
+export class UsersModule { }

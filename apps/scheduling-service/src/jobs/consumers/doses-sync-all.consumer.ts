@@ -2,9 +2,10 @@ import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
-import { ExchangeName } from '@app/common/rabbitmq/exchanges';
-import { QueueName, RoutingKey } from '@app/common/rabbitmq';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
 import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
+import { QueueName } from '@app/common/rabbitmq/queues';
 
 interface UserFirstLoginPayload {
   identity?: IdentityPayload;

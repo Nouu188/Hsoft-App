@@ -1,7 +1,8 @@
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
-import { QueueName, RoutingKey } from '@app/common/rabbitmq';
-import { ExchangeName } from '@app/common/rabbitmq/exchanges';
-import { RabbitSubscribe, Nack, AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
+import { QueueName } from '@app/common/rabbitmq/queues';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 
 const BATCH_SIZE = 200; // Mỗi batch xử lý 100 user
@@ -17,9 +18,9 @@ export class BatchCreationConsumer {
     ) {}
 
     @RabbitSubscribe({
-        exchange: ExchangeName.BATCH_SYNC,
-        routingKey: RoutingKey.BATCH_START_FULL_SYNC,
-        queue: QueueName.BATCH_CREATION,
+        exchange: ExchangeName.DOSES_EVENTS,
+        routingKey: RoutingKey.DOSES_BATCH_SYNC_STARTED,
+        queue: QueueName.SCHEDULING_DOSES_BATCH_CREATION,
     })
     public async handleStartFullSync(): Promise<void> {
         this.logger.log('Received request to start full sync. Fetching all users...');
@@ -41,8 +42,8 @@ export class BatchCreationConsumer {
             const delay = batchIndex * BATCH_DELAY_MINUTES * 60 * 1000; // Delay tính bằng ms
 
             this.amqpConnection.publish(
-                ExchangeName.BATCH_SYNC,
-                RoutingKey.BATCH_PROCESS_SYNC,
+                ExchangeName.DOSES_EVENTS,
+                RoutingKey.DOSES_BATCH_SYNC_PROCESSED,
                 { userIds: batch },
                 { headers: { 'x-delay': delay } }
             );

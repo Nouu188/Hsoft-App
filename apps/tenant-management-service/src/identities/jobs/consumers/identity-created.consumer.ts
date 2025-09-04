@@ -1,8 +1,10 @@
-import { ExchangeName, QueueName, RoutingKey } from "@app/common/rabbitmq";
+import { RoutingKey } from "@app/common/rabbitmq/routing-keys";
 import { RabbitSubscribe, Nack } from "@golevelup/nestjs-rabbitmq";
 import { Injectable, Logger } from "@nestjs/common";
 import { IdentitiesService } from "../../services/identities.service";
 import { CreateIdentityInput } from "../../dtos/create-identity-input.dto";
+import { ExchangeName } from "@app/common/rabbitmq/exchanges";
+import { QueueName } from "@app/common/rabbitmq/queues";
 
 interface IdentityCreatedEvent {
   identity?: CreateIdentityInput;

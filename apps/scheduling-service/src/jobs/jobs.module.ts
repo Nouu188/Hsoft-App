@@ -5,12 +5,12 @@ import { ApiClientsModule } from '@app/api-clients';
 import { Dose } from '../doses/entities/dose.entity';
 import { DosesSyncService } from './services/doses-sync.service';
 import { SyncConsumer } from './consumers/doses-sync.consumer';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { BatchCreationConsumer } from './consumers/batch-doses-creation.consumer';
 import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
 import { DoseStatusTransitionService } from './services/dose-status-transition.service';
 import { ConfigModule } from '@nestjs/config';
 import { DosesSyncAllConsumer } from './consumers/doses-sync-all.consumer';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [

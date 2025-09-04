@@ -3,7 +3,6 @@ import { Logger, Module, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -18,6 +17,7 @@ import { ClientCredentialsStrategy } from './strategies/client-credentials.strat
 import { GoogleModule } from './strategies/google/google.module';
 import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 
 @Module({

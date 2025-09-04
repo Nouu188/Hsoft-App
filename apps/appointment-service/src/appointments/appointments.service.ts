@@ -1,17 +1,16 @@
+import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
+import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { Between, DataSource, EntityManager, Repository } from 'typeorm';
-import { Appointment, AppointmentStatus, AppointmentType } from './entities/appointment.entity';
-import { BookByClinicInput, BookByDoctorInput } from './dto/book-appointment.input';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import * as dayjs from 'dayjs';
-import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
-import { ExchangeName, RoutingKey } from '@app/common/rabbitmq';
-import { UserPayload } from 'apps/account-service/src/users/dto/user.payload';
-import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
-import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
-import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
+import * as utc from 'dayjs/plugin/utc';
+import { Between, DataSource, EntityManager, Repository } from 'typeorm';
+import { BookByClinicInput, BookByDoctorInput } from './dto/book-appointment.input';
+import { Appointment, AppointmentStatus, AppointmentType } from './entities/appointment.entity';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

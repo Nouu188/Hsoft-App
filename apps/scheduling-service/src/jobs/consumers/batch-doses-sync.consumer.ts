@@ -2,8 +2,9 @@ import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
-import { ExchangeName } from '@app/common/rabbitmq/exchanges';
-import { QueueName, RoutingKey } from '@app/common/rabbitmq';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { QueueName } from '@app/common/rabbitmq/queues';
 
 interface BatchSyncPayload {
     userIds: string[];
@@ -19,9 +20,9 @@ export class BatchSyncConsumer {
     ) {}
 
     @RabbitSubscribe({
-        exchange: ExchangeName.BATCH_SYNC,
-        routingKey: RoutingKey.BATCH_PROCESS_SYNC,
-        queue: QueueName.BATCH_SYNC,
+        exchange: ExchangeName.DOSES_EVENTS,
+        routingKey: RoutingKey.DOSES_BATCH_SYNC_PROCESSED,
+        queue: QueueName.SCHEDULING_DOSES_BATCH_SYNC,
     })
     public async handleProcessBatch(payload: BatchSyncPayload): Promise<void> {
         const { userIds } = payload;

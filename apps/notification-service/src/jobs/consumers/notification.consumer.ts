@@ -1,6 +1,6 @@
 import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
-import { ExchangeName, QueueName, RoutingKey } from '@app/common/rabbitmq';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
 import { NotificationService } from '../services/notification.service';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter } from 'prom-client';
@@ -8,6 +8,8 @@ import { MetricLabel, MetricName } from '@app/common/metrics/metrics.contracts';
 import { MeasureDuration } from '@app/common/metrics/decorators/measure-duration.decorator';
 import { TrackBusinessMetric } from '@app/common/metrics/decorators/track-business-metric.decorator';
 import { HospitalPatient } from '@app/common/types/hospitalPatient.interface';
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { QueueName } from '@app/common/rabbitmq/queues';
 
 interface GroupedNotificationPayload {
     userId: string;
@@ -24,7 +26,7 @@ export class NotificationConsumer {
 
     @RabbitSubscribe({
         exchange: ExchangeName.NOTIFICATION,
-        routingKey: RoutingKey.NOTIFICATION_SCHEDULE,
+        routingKey: RoutingKey.NOTIFICATION_SCHEDULED,
         queue: QueueName.NOTIFICATION_SCHEDULER,
     })
     public async handleSendGroupedNotification(payload: GroupedNotificationPayload): Promise<void | Nack> {
@@ -33,7 +35,7 @@ export class NotificationConsumer {
 
         const labels = {
             exchange: ExchangeName.NOTIFICATION,
-            routing_key: RoutingKey.NOTIFICATION_SCHEDULE
+            routing_key: RoutingKey.NOTIFICATION_SCHEDULED
         };
 
         try {

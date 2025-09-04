@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { DosesModule } from './doses/doses.module';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Dose } from './doses/entities/dose.entity';
@@ -17,6 +16,7 @@ import { MetricsModule } from '@app/common/metrics/metrics.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
 import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [

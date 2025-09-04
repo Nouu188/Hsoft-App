@@ -1,7 +1,6 @@
 import { ApiClientsModule } from '@app/api-clients';
 import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
 import { MetricsModule } from '@app/common/metrics/metrics.module';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -15,6 +14,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { MetricsMiddleware } from '@app/common/metrics/metrics.middleware';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from '@app/common/metrics/metrics.interceptor';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [

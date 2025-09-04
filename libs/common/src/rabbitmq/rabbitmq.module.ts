@@ -1,7 +1,8 @@
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { Global, Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Exchanges } from './exchanges';
+import { Exchanges } from './exchanges/exchanges';
+import { DeadLetterExchanges } from './exchanges';
 @Global()
 @Module({
   imports: [
@@ -10,18 +11,25 @@ import { Exchanges } from './exchanges';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const uri = configService.get<string>('RABBITMQ_URI')!;
+        const prefetch = configService.get<number>('RABBITMQ_PREFETCH') ?? 10;
+        const retryAttempts = configService.get<number>('RABBITMQ_RETRY_ATTEMPTS') ?? 10;
+        const retryDelay = configService.get<number>('RABBITMQ_RETRY_DELAY') ?? 5000;
         const logger = new Logger('RabbitMQConfig');
 
         logger.debug(`Connecting to RabbitMQ at URI: ${uri}`);
 
         return {
-          exchanges: Exchanges,
+          exchanges: [...Exchanges, ...DeadLetterExchanges],
           uri,
-          prefetchCount: 10,
-          retryAttempts: 10,
-          retryDelay: 5000, 
-          connectionInitOptions: { wait: false },
+          prefetchCount: prefetch,
+          retryAttempts,
+          retryDelay,
+          connectionInitOptions: { wait: true },
           enableControllerDiscovery: true,
+          socketOptions: {
+            heartbeat: 30,
+            timeout: 10000,
+          },
         };
       }
     }),

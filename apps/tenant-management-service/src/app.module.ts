@@ -6,13 +6,13 @@ import { HospitalsModule } from './hospitals/hospitals.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { Hospital } from './hospitals/entities/hospital.entity';
-import { AppRabbitMQModule } from '@app/common/rabbitmq';
 import { Clinic } from './clinics/entities/clinic.entity';
 import { Doctor } from './doctors/entities/doctor.entity';
 import { Identity } from './identities/entities/identity.entity';
 import { IdentitiesModule } from './identities/identities.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { ClinicsModule } from './clinics/clinics.module';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [

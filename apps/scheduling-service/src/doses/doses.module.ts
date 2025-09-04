@@ -3,9 +3,9 @@ import { DosesService } from './doses.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Dose } from './entities/dose.entity';
 import { DosesResolver } from './dose.resolver';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { ConfigModule } from '@nestjs/config';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
 @Module({
   providers: [DosesService, DosesResolver],
