@@ -15,6 +15,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
+import { RefreshToken } from './users/entities/refresh-token.entity';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client
         username: configService.get<string>('ACCOUNTS_DB_USER'),
         password: configService.get<string>('ACCOUNTS_DB_PASS'),
         database: configService.get<string>('ACCOUNTS_DB_NAME'),
-        entities: [ User ], 
+        entities: [ User, RefreshToken ], 
         synchronize: true,
       }),
     }),    

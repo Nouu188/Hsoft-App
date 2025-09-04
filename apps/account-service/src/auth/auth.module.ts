@@ -18,11 +18,13 @@ import { GoogleModule } from './strategies/google/google.module';
 import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { RefreshToken } from '../users/entities/refresh-token.entity';
 
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ServiceClient], 'authConnection'),
+    TypeOrmModule.forFeature([RefreshToken], 'accountConnection'),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

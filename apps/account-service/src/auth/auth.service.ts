@@ -1,4 +1,5 @@
 import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
+import { AuthPayload, Role } from '@app/auth';
 import { MetricName } from '@app/common/metrics/contracts/metrics.contracts';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
 import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
@@ -15,6 +16,9 @@ import * as crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { Counter } from 'prom-client';
 import { Repository } from 'typeorm';
+import { v4 as uuid } from 'uuid';
+import { UserPayload } from '../users/dto/user.payload';
+import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { UsersService } from '../users/users.service';
 import { CreateServiceClientInput } from './dto/create-service-client.input';
 import { GoogleLoginInput } from './dto/google-login.input';
@@ -25,7 +29,6 @@ import { RequestOtpResponse } from './dto/request-otp-response.dto';
 import { VerifyEmailInput } from './dto/verify-email.input';
 import { ServiceClient } from './entities/service-client.entity';
 import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
-import { AuthPayload, Role } from '@app/auth';
 
 @Injectable()
 export class AuthService {
@@ -43,6 +46,7 @@ export class AuthService {
         private readonly amqpConnection: AmqpConnection,
 
         @InjectRepository(ServiceClient, 'authConnection') private serviceClientRepository: Repository<ServiceClient>,
+        @InjectRepository(RefreshToken, 'accountConnection') private readonly refreshTokenRepo: Repository<RefreshToken>,
 
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
 
@@ -76,9 +80,7 @@ export class AuthService {
                 if (isPasswordMatching) {
                     this.logger.log(`User ${user.phoneNumber} logged in from internal DB.`);
 
-                    const accessToken = this.generateToken(user.id, user.roles);
-
-                    return { user, accessToken };
+                    return await this.buildLoginResponse(user);
                 }
 
                 throw new UnauthorizedException("Invalid credentials");
@@ -87,7 +89,6 @@ export class AuthService {
             this.logger.log(`User with phoneNumber "${phoneNumber}" not found. Attempting to fetch from hospital API...`);
 
             const hospital = await this.tenantApiClient.getHospitalByCode(externalHospitalCode);
-            console.log(hospital)
 
             const identity = await this.tenantApiClient.fetchIdentityFromHospital(phoneNumber, externalHospitalCode);
             if (!identity) {
@@ -126,11 +127,9 @@ export class AuthService {
                 },
             );
 
-            const accessToken = this.generateToken(userPayload.id, userPayload.roles);
-
             this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'success' });
 
-            return { accessToken, user: userPayload }
+            return await this.buildLoginResponse(userPayload);
         } catch (error) {
             this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'failure' });
 
@@ -176,11 +175,8 @@ export class AuthService {
 
             this.logger.log(`Login successful for email: ${email}`);
 
-            const accessToken = this.generateToken(user.id, user.roles);
-
-            const { password: _, ...userResult } = user;
-
-            return { user: userResult, accessToken };
+            this.loginAttemptsCounter.inc({ login_method: 'email', status: 'success' });
+            return await this.buildLoginResponse(user);
         } catch (error) {
             this.loginAttemptsCounter.inc({ login_method: 'email', status: 'failure' });
 
@@ -221,14 +217,10 @@ export class AuthService {
                 avatarUrl: picture,
                 googleId,
             });
-
-            const accessToken = this.generateToken(user.id, user.roles);
-
             this.logger.log(`Successfully authenticated user ${user.id} via Google.`);
 
             this.loginAttemptsCounter.inc({ login_method: 'google', status: 'success' });
-            return { user, accessToken };
-
+            return await this.buildLoginResponse(user);
         } catch (error) {
             this.otpSentCounter.inc({ otp_channel: 'email', status: 'failure' });
 
@@ -349,9 +341,7 @@ export class AuthService {
             const retryKey = `otp:retry-count:verify-email:${email}`;
             await this.cacheManager.del(retryKey);
 
-            const accessToken = this.generateToken(newUser.id, newUser.roles);
-
-            return { user: newUser, accessToken };
+            return await this.buildLoginResponse(newUser);
         } catch (error) {
             this.registrationsCounter.inc({ login_method: 'email', status: 'failure' });
 
@@ -368,13 +358,89 @@ export class AuthService {
         }
     }
 
-    private generateToken(userId: string, roles: Role[]): string {
-        const payload: AuthPayload = {
-            sub: userId,
-            roles,
-        };
+    private generateAccessToken(userId: string, roles: Role[]): string {
+        const payload = { sub: userId, roles };
+        const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES') || '15m';
+        this.logger.debug(`Generating access token for userId=${userId}, expiresIn=${expiresIn}`);
+        return this.jwtService.sign(payload, { expiresIn });
+    }
 
-        return this.jwtService.sign(payload);
+    async generateRefreshToken(user: UserPayload, deviceInfo?: string, ipAddress?: string): Promise<string> {
+        const token = uuid();
+        const expiresInDays = this.configService.get<number>('JWT_REFRESH_DAYS') || 7;
+        const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+
+        const refreshTokenEntity = this.refreshTokenRepo.create({
+            token,
+            user,
+            deviceInfo,
+            ipAddress,
+            expiresAt,
+            revoked: false,
+        });
+        await this.refreshTokenRepo.save(refreshTokenEntity);
+
+        const redisKey = `refresh_token:${token}`;
+        await this.cacheManager.set(redisKey, JSON.stringify({ userId: user.id, expiresAt }), expiresInDays * 24 * 60 * 60);
+
+        this.logger.log(`Generated refresh token for userId=${user.id}, device=${deviceInfo || 'unknown'}, ip=${ipAddress || 'unknown'}`);
+        return token;
+    }
+
+    async buildLoginResponse(user: UserPayload, deviceInfo?: string, ipAddress?: string) {
+        const accessToken = this.generateAccessToken(user.id, user.roles);
+        const refreshToken = await this.generateRefreshToken(user, deviceInfo, ipAddress);
+
+        this.logger.log(`User ${user.id} login response built (access + refresh token)`);
+        return { user, accessToken, refreshToken };
+    }
+
+    async refreshAccessToken(refreshToken: string, deviceInfo?: string, ipAddress?: string) {
+        const redisKey = `refresh_token:${refreshToken}`;
+        const cached = await this.cacheManager.get<string>(redisKey);
+
+        if (!cached) {
+            this.logger.warn(`Refresh token not found in Redis: ${refreshToken}`);
+            throw new UnauthorizedException('Refresh token is invalid or expired');
+        }
+
+        const { userId, expiresAt } = JSON.parse(cached);
+
+        if (new Date(expiresAt) < new Date()) {
+            this.logger.warn(`Refresh token expired for userId=${userId}`);
+            await this.markTokenRevoked(refreshToken);
+            throw new UnauthorizedException('Refresh token expired');
+        }
+
+        const user = await this.usersService.findById(userId);
+        if (!user) {
+            this.logger.error(`User not found for refresh token: ${refreshToken}`);
+            await this.markTokenRevoked(refreshToken);
+            throw new UnauthorizedException('User not found');
+        }
+
+        const accessToken = this.generateAccessToken(user.id, user.roles);
+
+        await this.markTokenRevoked(refreshToken);
+        const newRefreshToken = await this.generateRefreshToken(user, deviceInfo, ipAddress);
+
+        this.logger.log(`Refresh token rotated for userId=${userId}`);
+        return { accessToken, refreshToken: newRefreshToken };
+    }
+
+    private async markTokenRevoked(token: string) {
+        const redisKey = `refresh_token:${token}`;
+        await this.refreshTokenRepo.update({ token }, { revoked: true });
+        await this.cacheManager.del(redisKey);
+        this.logger.debug(`Refresh token marked revoked and removed from Redis: ${token}`);
+    }
+
+    async logout(refreshToken: string, userId?: string) {
+        const redisKey = `refresh_token:${refreshToken}`;
+        await this.refreshTokenRepo.update({ token: refreshToken }, { revoked: true });
+        await this.cacheManager.del(redisKey);
+
+        this.logger.log(`User ${userId || 'unknown'} logged out, refresh token revoked: ${refreshToken}`);
     }
 
     generateM2MToken(client: ServiceClient): { accessToken: string } {
