@@ -53,4 +53,10 @@ export const BusinessMetricsProviders: Provider[] = [
     labelNames: [MetricLabel.SYNC_TYPE, MetricLabel.STATUS],
     buckets: SYNC_LATENCY_BUCKETS,
   }),
+
+  makeCounterProvider({
+    name: MetricName.DOSES_STATUS_TRANSITIONS_TOTAL,
+    help: 'Total number of dose status transitions',
+    labelNames: ['from', 'to'], 
+  }),
 ];

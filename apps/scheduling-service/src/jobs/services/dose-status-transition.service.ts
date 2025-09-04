@@ -7,6 +7,7 @@ import * as moment from 'moment-timezone';
 import { Counter } from 'prom-client';
 import { Repository } from 'typeorm';
 import { Dose, DoseStatus } from '../../doses/entities/dose.entity';
+import { MetricName } from '@app/common/metrics/contracts/metrics.contracts';
 
 @Injectable()
 export class DoseStatusTransitionService {
@@ -18,7 +19,7 @@ export class DoseStatusTransitionService {
     private readonly doseRepository: Repository<Dose>,
     private readonly configService: ConfigService,
 
-    @InjectMetric('doses_status_transitions_total')
+    @InjectMetric(MetricName.DOSES_STATUS_TRANSITIONS_TOTAL)
     private readonly doseStatusTransitions: Counter<string>,
   ) {}
 

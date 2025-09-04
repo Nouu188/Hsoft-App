@@ -6,12 +6,17 @@ export enum MetricName {
 
   // Business
   USER_REGISTRATIONS_TOTAL = 'user_registrations_total',
+
   DOSES_SYNCED_TOTAL = 'doses_synced_total',
   DOSES_DELETED_TOTAL = 'doses_deleted_total',
+  DOSES_STATUS_TRANSITIONS_TOTAL= 'doses_status_transitions_total',
+
   NOTIFICATIONS_SCHEDULED_TOTAL = 'notifications_scheduled_total',
+
   AUTH_LOGIN_ATTEMPTS_TOTAL = 'auth_login_attempts_total',
   AUTH_REGISTRATIONS_TOTAL = 'auth_registrations_total',
   AUTH_OTP_SENT_TOTAL = 'auth_otp_sent_total',
+
   SYNC_DURATION_SECONDS = 'sync_duration_seconds',
 }
 
