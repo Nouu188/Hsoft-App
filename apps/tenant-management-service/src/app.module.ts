@@ -13,6 +13,7 @@ import { IdentitiesModule } from './identities/identities.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { ClinicsModule } from './clinics/clinics.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
         username: configService.get<string>('TENANT_MANAGEMENT_DB_USER'),
         password: configService.get<string>('TENANT_MANAGEMENT_DB_PASS'),
         database: configService.get<string>('TENANT_MANAGEMENT_DB_NAME'),
-        entities: [ Hospital, Clinic, Doctor, Identity ],
+        entities: [ Hospital, Clinic, Doctor, Identity, OutboxEntity ],
         synchronize: true,
       }),
     }),

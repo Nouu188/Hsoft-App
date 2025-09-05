@@ -19,6 +19,7 @@ import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { RefreshToken } from '../users/entities/refresh-token.entity';
+import { OutboxModule } from '@app/outbox';
 
 
 @Module({
@@ -82,13 +83,14 @@ import { RefreshToken } from '../users/entities/refresh-token.entity';
         },
       }),
     }),
+    OutboxModule.forRoot('authConnection'),
     forwardRef(() => UsersModule),
     ConfigModule,
     AppRabbitMQModule,
     AuthLibModule,
     GoogleModule,
     HospitalApiClientModule,
-    TenantApiClientModule
+    TenantApiClientModule,
   ],
   controllers: [AuthController],
   providers: [

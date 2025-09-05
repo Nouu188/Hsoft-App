@@ -97,6 +97,22 @@ services:
       account-service:
         condition: service_started
 
+  orchestrator-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: orchestrator-service
+    env_file:
+      - ./apps/orchestrator-service/.env.local
+    depends_on:
+      db-orchestrator:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
   # immunization-service:
   #   build:
   #     context: .

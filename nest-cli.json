@@ -101,6 +101,24 @@
         ]
       }
     },
+    "orchestrator-service": {
+      "type": "application",
+      "root": "apps/orchestrator-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/orchestrator-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/orchestrator-service/tsconfig.app.json"
+      }
+    },
+    "outbox": {
+      "type": "library",
+      "root": "libs/outbox",
+      "entryFile": "index",
+      "sourceRoot": "libs/outbox/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/outbox/tsconfig.lib.json"
+      }
+    },
     "patient-identity-service": {
       "type": "application",
       "root": "apps/patient-identity-service",

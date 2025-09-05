@@ -30,6 +30,12 @@
       "@app/common/*": [
         "libs/common/src/*"
       ],
+      "@app/outbox": [
+        "libs/outbox/src"
+      ],
+      "@app/outbox/*": [
+        "libs/outbox/src/*"
+      ],
       "src/*": [
         "src/*"
       ]
@@ -43,11 +49,6 @@
     "noFallthroughCasesInSwitch": false
   },
   "watchOptions": {
-    // "watchFile": "priorityPollingInterval",
-    // "watchDirectory": "dynamicPriorityPolling",
-    // "fallbackPolling": "dynamicPriority",
-    // "synchronousWatchDirectory": true,
-    // "excludeDirectories": ["**/node_modules", "**/dist"]
     "watchFile": "dynamicPriorityPolling",
     "watchDirectory": "dynamicPriorityPolling",
     "excludeDirectories": [

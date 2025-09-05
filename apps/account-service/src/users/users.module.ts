@@ -8,12 +8,14 @@ import { AuthLibModule } from '@app/auth';
 import { ConfigModule } from '@nestjs/config';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { OutboxModule } from '@app/outbox';
 
 @Module({
   providers: [UsersResolver, UsersService],
   imports: [
     ConfigModule,
     TypeOrmModule.forFeature([User], 'accountConnection'),
+    OutboxModule.forRoot('accountConnection'),
     HospitalApiClientModule,
     AuthLibModule,
     AppRabbitMQModule,

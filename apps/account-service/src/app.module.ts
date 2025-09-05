@@ -16,6 +16,8 @@ import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.
 import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { RefreshToken } from './users/entities/refresh-token.entity';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { OutboxModule } from '@app/outbox';
 
 @Module({
   imports: [
@@ -41,7 +43,7 @@ import { RefreshToken } from './users/entities/refresh-token.entity';
         username: configService.get<string>('ACCOUNTS_DB_USER'),
         password: configService.get<string>('ACCOUNTS_DB_PASS'),
         database: configService.get<string>('ACCOUNTS_DB_NAME'),
-        entities: [ User, RefreshToken ], 
+        entities: [ User, RefreshToken, OutboxEntity ], 
         synchronize: true,
       }),
     }),    
@@ -56,13 +58,14 @@ import { RefreshToken } from './users/entities/refresh-token.entity';
         username: configService.get<string>('AUTH_DB_USER'),
         password: configService.get<string>('AUTH_DB_PASS'),
         database: configService.get<string>('AUTH_DB_NAME'),
-        entities: [ ServiceClient ], 
+        entities: [ ServiceClient, OutboxEntity ], 
         synchronize: true,
       }),
     }),  
     UsersModule, 
     AuthLibModule,
     AuthModule,
+    OutboxModule,
     HospitalApiClientModule,
     MetricsModule,
     TenantApiClientModule

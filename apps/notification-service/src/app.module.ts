@@ -15,6 +15,7 @@ import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.m
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
         username: configService.get<string>('NOTIFICATION_DB_USER'),
         password: configService.get<string>('NOTIFICATION_DB_PASS'),
         database: configService.get<string>('NOTIFICATION_DB_NAME'),
-        entities: [ NotificationHistory ],
+        entities: [ NotificationHistory, OutboxEntity ],
         synchronize: true,
       }),
     }),

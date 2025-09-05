@@ -3,7 +3,7 @@ import { AuthPayload, Role } from '@app/auth';
 import { MetricName } from '@app/common/metrics/contracts/metrics.contracts';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
 import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { OutboxService } from '@app/outbox';
 import { MailerService } from '@nestjs-modules/mailer';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
@@ -43,8 +43,6 @@ export class AuthService {
 
         private jwtService: JwtService,
 
-        private readonly amqpConnection: AmqpConnection,
-
         @InjectRepository(ServiceClient, 'authConnection') private serviceClientRepository: Repository<ServiceClient>,
         @InjectRepository(RefreshToken, 'accountConnection') private readonly refreshTokenRepo: Repository<RefreshToken>,
 
@@ -52,6 +50,8 @@ export class AuthService {
 
         private readonly mailerService: MailerService,
         private readonly tenantApiClient: TenantApiClientService,
+
+        private readonly outboxService: OutboxService,
 
         @InjectMetric(MetricName.AUTH_LOGIN_ATTEMPTS_TOTAL)
         private readonly loginAttemptsCounter: Counter<string>,
@@ -108,24 +108,23 @@ export class AuthService {
             const userPayload = await this.usersService.createUserFromHospital(identity);
 
             this.logger.log(`Publishing 'user.first_login' event for user ${identity.phoneNumber}`);
-            this.amqpConnection.publish(
-                ExchangeName.USER_EVENTS,
-                RoutingKey.USER_FIRST_LOGIN_IDENTITY,
-                {
-                    identity: identity,
-                    userId: userPayload.id,
-                    externalHospitalCode: externalHospitalCode,
-                },
-            );
+            await this.outboxService.createOutboxMessage({
+                aggregateType: 'auth',
+                aggregateId: userPayload.id,
+                eventType: 'UserFirstLoginIdentity', 
+                payload: { identity, userId: userPayload.id, externalHospitalCode },
+                exchange: ExchangeName.USER_EVENTS,
+                routingKey: RoutingKey.USER_FIRST_LOGIN_IDENTITY,
+            });
 
-            this.amqpConnection.publish(
-                ExchangeName.USER_EVENTS,
-                RoutingKey.USER_FIRST_LOGIN_SCHEDULING,
-                {
-                    identity: identity,
-                    hospitalUrl: hospital.graphqlEndpoint
-                },
-            );
+            await this.outboxService.createOutboxMessage({
+                aggregateType: 'auth',
+                aggregateId: userPayload.id,
+                eventType: 'UserFirstLoginScheduling',
+                payload: { identity, hospitalUrl: hospital.graphqlEndpoint },
+                exchange: ExchangeName.USER_EVENTS,
+                routingKey: RoutingKey.USER_FIRST_LOGIN_SCHEDULING,
+            });
 
             this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'success' });
 
@@ -360,7 +359,7 @@ export class AuthService {
 
     private generateAccessToken(userId: string, roles: Role[]): string {
         const payload = { sub: userId, roles };
-        const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES') || '15m';
+        const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES') || '1d';
         this.logger.debug(`Generating access token for userId=${userId}, expiresIn=${expiresIn}`);
         return this.jwtService.sign(payload, { expiresIn });
     }

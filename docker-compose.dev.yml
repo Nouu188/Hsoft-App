@@ -83,6 +83,19 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=100
 
+  orchestrator-service:
+    build:
+      target: development
+    command: npm run dev:docker:orchestrator
+    ports:
+      - "3007:3007"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+
   # immunization-service:
   #   build:
   #     target: development

@@ -17,6 +17,7 @@ import { join } from 'path';
 import { DosesModule } from './doses/doses.module';
 import { Dose } from './doses/entities/dose.entity';
 import { JobsModule } from './jobs/jobs.module';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { JobsModule } from './jobs/jobs.module';
         username: configService.get<string>('SCHEDULES_DB_USER'),
         password: configService.get<string>('SCHEDULES_DB_PASS'),
         database: configService.get<string>('SCHEDULES_DB_NAME'),
-        entities: [Dose],
+        entities: [ Dose, OutboxEntity ],
         synchronize: true,
       }),
     }),

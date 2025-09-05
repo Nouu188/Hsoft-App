@@ -125,6 +125,24 @@ services:
       timeout: 5s
       retries: 5
 
+  db-orchestrator:
+    image: postgres:17
+    container_name: med-db-orchestrator
+    environment:
+      POSTGRES_USER: orchestrator_user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: orchestrator_db
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "5440:5432"
+    volumes:
+      - postgres_orchestrator_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orchestrator_user -d orchestrator_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_account_data:
   postgres_schedules_data:
@@ -134,3 +152,4 @@ volumes:
   postgres_note_data:
   postgres_patient_identity_data:
   postgres_tenant_management_data:
+  postgres_orchestrator_data:
