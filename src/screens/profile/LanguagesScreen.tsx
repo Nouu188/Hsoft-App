@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
-import { COLORS, FONTS, SHADOWS, SIZES } from '@/constants/theme'; // Adjust path as per your project structure
+import { COLORS, FONTS, SHADOWS, SIZES } from '@/constants/theme'; 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '@/navigation/types';
 import { useNavigation } from '@react-navigation/native';
@@ -51,11 +51,13 @@ const LanguageSelectionScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} >
-                    <Ionicons name="arrow-back" size={24} color={COLORS.textDark} />
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back-outline" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Languages</Text>
+                <View style={{ width: 40 }} /> 
             </View>
+
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollViewContent}>
                 <View style={styles.sectionContainer}>
@@ -89,18 +91,22 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.background,
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: SIZES.padding,
-        paddingVertical: SIZES.base,
+    header: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        paddingHorizontal: SIZES.padding / 2, 
+        height: 56, 
+        borderBottomWidth: 1, 
+        borderBottomColor: COLORS.border 
     },
-    backButton: {
-        marginRight: SIZES.base,
+    backButton: { 
+        padding: SIZES.padding / 2 
     },
-    headerTitle: {
-        ...FONTS.h2,
-        color: COLORS.textDark,
+    headerTitle: { 
+        flex: 1, 
+        textAlign: 'center', 
+        fontSize: 18, 
+        fontWeight: 'bold' 
     },
     scrollViewContent: {
         paddingBottom: SIZES.padding , 

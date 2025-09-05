@@ -54,6 +54,13 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   Register: undefined;
 };
+export interface Ringtone {
+  id: string;
+  name: string;
+  duration: string;
+  isCustom: boolean;
+  uri: string;
+}
 //Stack cho HomeScreen
 export type HomeStackParamList = {
   Notification:undefined;
@@ -65,7 +72,17 @@ export type HomeStackParamList = {
 //Stack cho ProfileSCreen
 export type ProfileStackParamList = {
   Profile: undefined;
-  Settings: undefined;
+  Languages: undefined;
+  RingTone: { 
+    newRingtone?: { 
+      id: string; 
+      name: string; 
+      duration: string; 
+      isCustom: boolean; 
+      uri: string;
+    } 
+  } | undefined;
+  AddRingTone: { onSelect?: (newRingtone: Ringtone) => void };
 };
 // Các type helper để sử dụng trong các component
 
