@@ -9,7 +9,7 @@ import { NotificationHistory } from '../history/entities/notification-history.en
 import { NotificationService } from './services/notification.service';
 import { HistoryModule } from '../history/history.module';
 import { ConfigModule } from '@nestjs/config';
-import { CommonMetricsProviders } from '@app/common/metrics/metrics.provider';
+import { AllMetricsProviders } from '@app/common/metrics/providers';
 
 @Module({
   imports: [
@@ -24,7 +24,7 @@ import { CommonMetricsProviders } from '@app/common/metrics/metrics.provider';
     NotificationConsumer, 
     NotificationService,
     JobsResolver, 
-    ...CommonMetricsProviders
+    ...AllMetricsProviders
   ],
   exports: [NotificationConsumer, NotificationService]
 })

@@ -5,8 +5,7 @@ import { HistoryService } from './history.service';
 import { NotificationHistory } from './entities/notification-history.entity';
 import { HistoryResolver } from './history.resolver';
 import { AuthLibModule } from '@app/auth';
-import { MetricsModule } from '@app/common/metrics/metrics.module';
-import { CommonMetricsProviders } from '@app/common/metrics/metrics.provider';
+import { AllMetricsProviders } from '@app/common/metrics/providers';
 
 @Module({
   imports: [
@@ -14,7 +13,7 @@ import { CommonMetricsProviders } from '@app/common/metrics/metrics.provider';
     TypeOrmModule.forFeature([ NotificationHistory ], 'notificationConnection'),
     AuthLibModule
   ],
-  providers: [HistoryService, HistoryResolver, ...CommonMetricsProviders],
+  providers: [HistoryService, HistoryResolver, ...AllMetricsProviders],
   exports: [HistoryService], 
 })
 export class HistoryModule {}
