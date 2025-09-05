@@ -7,7 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Dose } from '../doses/entities/dose.entity';
 import { BatchCreationConsumer } from './consumers/batch-doses-creation.consumer';
 import { BatchSyncConsumer } from './consumers/batch-doses-sync.consumer';
-import { DosesSyncAllConsumer } from './consumers/doses-sync-all.consumer';
+import { DoseHistorySyncConsumer } from './consumers/dose-history-sync.consumer.ts';
 import { SyncConsumer } from './consumers/doses-sync.consumer';
 import { DoseStatusTransitionService } from './services/dose-status-transition.service';
 import { DosesSyncService } from './services/doses-sync.service';
@@ -24,7 +24,7 @@ import { DosesSyncService } from './services/doses-sync.service';
     DosesSyncService,
     DoseStatusTransitionService, 
     SyncConsumer,
-    DosesSyncAllConsumer,
+    DoseHistorySyncConsumer,
     BatchCreationConsumer,
     BatchSyncConsumer,
   ],

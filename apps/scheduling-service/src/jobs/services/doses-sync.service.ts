@@ -221,7 +221,7 @@ export class DosesSyncService {
         }
     }
 
-    public async syncAllDoses(user: UserPayload, hospitalUrl: string): Promise<SyncResult> {
+    public async syncAllDosesByUserId(userId: string, phoneNumber: string, hospitalUrl: string): Promise<SyncResult> {
         const endTimer = this.syncDurationHistogram.startTimer({
             [MetricLabel.SYNC_TYPE]: "full_history",
         });
@@ -231,22 +231,21 @@ export class DosesSyncService {
         let notificationsScheduled = 0;
 
         try {
-            const phoneNumber = user.phoneNumber;
             if (!phoneNumber) throw new Error("User phoneNumber is required.");
             if (!hospitalUrl) throw new Error("hospitalUrl is required.");
 
-            this.logger.log(`[DosesSyncService] Starting full history sync for user=${user.id} phone=${phoneNumber}`);
+            this.logger.log(`[DosesSyncService] Starting full history sync for user=${userId} phone=${phoneNumber}`);
 
             let allYlenhthuoc: YLenhThuoc[];
             try {
                 allYlenhthuoc = await this.hospitalClient.fetchYLenhThuoc(phoneNumber, hospitalUrl);
             } catch (error) {
-                this.logger.error(`[DosesSyncService] Failed to fetch treatment data for user=${user.id}`, error.stack);
+                this.logger.error(`[DosesSyncService] Failed to fetch treatment data for user=${userId}`, error.stack);
                 throw error;
             }
 
             if (!allYlenhthuoc || allYlenhthuoc.length === 0) {
-                this.logger.log(`[DosesSyncService] No treatment records from hospital for user=${user.id}`);
+                this.logger.log(`[DosesSyncService] No treatment records from hospital for user=${userId}`);
                 return { created: 0, deleted: 0, notificationsScheduled: 0 };
             }
 
@@ -285,7 +284,7 @@ export class DosesSyncService {
 
                     allDosesToCreate.set(externalId, {
                         external_id: externalId,
-                        userId: user.id,
+                        userId: userId,
                         due_at: dueAt.toDate(),
                         notify_at: dueAt.clone().subtract(15, "minutes").toDate(),
                         status: dueAt.isBefore(moment()) ? DoseStatus.MISSED : DoseStatus.UPCOMING,
@@ -300,7 +299,7 @@ export class DosesSyncService {
             }
 
             if (allDosesToCreate.size === 0) {
-                this.logger.log(`[DosesSyncService] No valid doses to create for user=${user.id}`);
+                this.logger.log(`[DosesSyncService] No valid doses to create for user=${userId}`);
                 return { created: 0, deleted: 0, notificationsScheduled: 0 };
             }
 
@@ -315,7 +314,7 @@ export class DosesSyncService {
                     [MetricLabel.QUERY_TYPE]: "DELETE",
                     [MetricLabel.TABLE_NAME]: "dose",
                 });
-                const deleteResult = await queryRunner.manager.delete(Dose, { userId: user.id });
+                const deleteResult = await queryRunner.manager.delete(Dose, { userId: userId });
                 dbEndDelete();
 
                 deleted = deleteResult.affected ?? 0;
@@ -325,7 +324,7 @@ export class DosesSyncService {
                         deleted,
                     );
                 }
-                this.logger.log(`[DosesSyncService] Deleted ${deleted} old doses for user=${user.id}`);
+                this.logger.log(`[DosesSyncService] Deleted ${deleted} old doses for user=${userId}`);
 
                 // INSERT liều mới theo chunks
                 const dbEndInsert = this.dbQueryDurationHistogram.startTimer({
@@ -343,13 +342,13 @@ export class DosesSyncService {
                     { [MetricLabel.SYNC_TYPE]: "full_history", [MetricLabel.STATUS]: "success" },
                     created,
                 );
-                this.logger.log(`[DosesSyncService] Created ${created} new doses for user=${user.id}`);
+                this.logger.log(`[DosesSyncService] Created ${created} new doses for user=${userId}`);
 
                 await queryRunner.commitTransaction();
             } catch (error) {
                 await queryRunner.rollbackTransaction();
 
-                this.logger.error(`[DosesSyncService] Transaction failed for user=${user.id}`, error.stack);
+                this.logger.error(`[DosesSyncService] Transaction failed for user=${userId}`, error.stack);
                 this.dosesSyncedCounter.inc({ [MetricLabel.SYNC_TYPE]: "full_history", [MetricLabel.STATUS]: "error" });
                 this.dosesDeletedCounter.inc({ [MetricLabel.SYNC_TYPE]: "full_history", [MetricLabel.STATUS]: "error" });
 
@@ -370,12 +369,12 @@ export class DosesSyncService {
                     { [MetricLabel.SYNC_TYPE]: "full_history", [MetricLabel.STATUS]: "success" },
                     notificationsScheduled,
                 );
-                this.logger.log(`[DosesSyncService] Scheduled ${notificationsScheduled} notifications for user=${user.id}`);
+                this.logger.log(`[DosesSyncService] Scheduled ${notificationsScheduled} notifications for user=${userId}`);
             }
 
             return { created, deleted, notificationsScheduled };
         } catch (error) {
-            this.logger.error(`[DosesSyncService] syncAllDoses failed for user=${user.id}`, error.stack);
+            this.logger.error(`[DosesSyncService] syncAllDoses failed for user=${userId}`, error.stack);
             this.notificationsScheduledCounter.inc({ [MetricLabel.SYNC_TYPE]: "full_history", [MetricLabel.STATUS]: "error" });
             throw error;
         } finally {

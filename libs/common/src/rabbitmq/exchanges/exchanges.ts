@@ -1,14 +1,15 @@
 import { RabbitMQExchangeConfig } from '@golevelup/nestjs-rabbitmq';
 
 export const ExchangeName = {
-  NOTIFICATION: 'notification.exchange',
+  // === COMMANDS ===
+  COMMANDS: 'commands.exchange', 
 
+  // === EVENTS ===
+  USER_EVENTS: 'user.events.exchange', 
+  APPOINTMENT_EVENTS: 'appointment.events.exchange',
   DOSES_EVENTS: 'doses.events.exchange',
   DOSES_EVENTS_DELAY: 'doses.events.delay.exchange',
-
-  USER_EVENTS: 'user.events.exchange', 
-
-  APPOINTMENT_EVENTS: 'appointment.events.exchange'
+  NOTIFICATION: 'notification.exchange',
 };
 
 export const Exchanges: RabbitMQExchangeConfig[] = [
@@ -35,12 +36,17 @@ export const Exchanges: RabbitMQExchangeConfig[] = [
   },
   {
     name: ExchangeName.USER_EVENTS,
-    type: 'direct',
+    type: 'topic',
     options: { durable: true },
   },
   {
     name: ExchangeName.APPOINTMENT_EVENTS,
     type: 'direct',
+    options: { durable: true },
+  },
+  {
+    name: ExchangeName.COMMANDS,
+    type: 'topic',
     options: { durable: true },
   },
 ];

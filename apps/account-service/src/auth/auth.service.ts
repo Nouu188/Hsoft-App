@@ -111,19 +111,10 @@ export class AuthService {
             await this.outboxService.createOutboxMessage({
                 aggregateType: 'auth',
                 aggregateId: userPayload.id,
-                eventType: 'UserFirstLoginIdentity', 
-                payload: { identity, userId: userPayload.id, externalHospitalCode },
+                eventType: 'UserFirstLoginSagaInitiated', 
+                payload: { identity, userId: userPayload.id, externalHospitalCode, hospitalUrl: hospital.graphqlEndpoint },
                 exchange: ExchangeName.USER_EVENTS,
-                routingKey: RoutingKey.USER_FIRST_LOGIN_IDENTITY,
-            });
-
-            await this.outboxService.createOutboxMessage({
-                aggregateType: 'auth',
-                aggregateId: userPayload.id,
-                eventType: 'UserFirstLoginScheduling',
-                payload: { identity, hospitalUrl: hospital.graphqlEndpoint },
-                exchange: ExchangeName.USER_EVENTS,
-                routingKey: RoutingKey.USER_FIRST_LOGIN_SCHEDULING,
+                routingKey: RoutingKey.USER_FIRST_LOGIN_SAGA_INITIATED,
             });
 
             this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'success' });

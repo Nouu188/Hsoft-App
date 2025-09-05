@@ -8,6 +8,8 @@ export const DeadLetterExchangeName = {
   USER_EVENTS_DL: 'user.events.dlx',
   
   APPOINTMENT_EVENTS_DL: 'appointment.events.dlx',
+
+  COMMANDS_DL: 'commanfs.dlx',
 };
 
 export const DeadLetterExchanges: RabbitMQExchangeConfig[] = [
@@ -28,6 +30,11 @@ export const DeadLetterExchanges: RabbitMQExchangeConfig[] = [
   },
   {
     name: DeadLetterExchangeName.APPOINTMENT_EVENTS_DL,
+    type: 'direct',
+    options: { durable: true },
+  },
+  {
+    name: DeadLetterExchangeName.COMMANDS_DL,
     type: 'direct',
     options: { durable: true },
   },

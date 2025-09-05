@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Identity } from './entities/identity.entity';
 import { IdentitiesResolver } from './identities.resolver';
 import { IdentitiesService } from './services/identities.service';
-import { IdentityCreatedConsumer } from './jobs/consumers/identity-created.consumer';
+import { IdentityCreatedConsumer } from './jobs/consumers/create-identity.consumer';
 import { AuthLibModule } from '@app/auth';
 import { HospitalsModule } from '../hospitals/hospitals.module';
 import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
