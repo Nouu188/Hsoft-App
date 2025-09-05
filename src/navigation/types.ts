@@ -11,7 +11,8 @@ export type RootStackParamList = {
   AuthFlow: undefined;
   MainApp: undefined;
   OTPScreen: { email: string; hoten?: string; password?: string,type:string };
-  ForgotPasswordScreen:undefined;
+  ForgotPasswordScreen: undefined;
+  ResetPasswordScreen: undefined;
   Auth: undefined; // Màn hình đăng nhập/đăng ký
   MainTabs: NavigatorScreenParams<MainTabsParamList>; // Lồng Tab Navigator vào
   // Thêm các màn hình modal toàn cục ở đây nếu có

@@ -1,11 +1,17 @@
 import { useState, useEffect, createRef } from 'react';
 import { TextInput, Keyboard, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/types'; // đổi theo project của bạn
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface UseOTPProps {
   otpLength?: number;
   initialCountdown?: number;
   onSubmit: (otp: string) => void;
   onResend?: () => Promise<void>;
+  navigation: NavigationProp;
 }
 
 export interface UseOTPReturnType {
@@ -27,6 +33,7 @@ export const useOTP = ({
   initialCountdown = 300,
   onSubmit,
   onResend,
+  navigation,
 }: UseOTPProps): UseOTPReturnType => {
   const [otp, setOtp] = useState<string[]>(Array(otpLength).fill(''));
   const [countdown, setCountdown] = useState<number>(initialCountdown);
@@ -111,7 +118,7 @@ export const useOTP = ({
   const handleSubmit = () => {
     const enteredOtp = otp.join('');
     if (enteredOtp.length === otpLength) {
-      onSubmit(enteredOtp);
+      onSubmit(enteredOtp); // ✅ để screen xử lý navigate hoặc logic
     } else {
       Alert.alert('Lỗi', `Vui lòng nhập đủ ${otpLength} số của mã OTP.`);
     }

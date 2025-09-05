@@ -11,13 +11,35 @@ import { RootStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<RootStackParamList, 'OTPScreen'>;
 
 const OTPScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { email } = route.params || {};
+  const { email,type } = route.params || {};
 
-  const { otp, countdown, isResendDisabled, formattedCountdown, inputRefs, handleOtpChange, handleKeyPress, handleResend, handleSubmit, resetCountdown } =
-    useOTP({
-      onSubmit: (enteredOtp) => console.log('OTP Submit:', enteredOtp),
-      onResend: async () => console.log('OTP Resend')
-    });
+  const {
+  otp,
+  countdown,
+  isResendDisabled,
+  formattedCountdown,
+  inputRefs,
+  handleOtpChange,
+  handleKeyPress,
+  handleResend,
+  handleSubmit,
+  resetCountdown
+} = useOTP({
+    onSubmit: (enteredOtp) => {
+       if (enteredOtp === '1111') {
+        if (type === 'forgotPassword') {
+          navigation.navigate('ResetPasswordScreen'); 
+        } else {
+          console.log(`OTP đúng, type = ${type}`);
+        }
+      } else {
+        console.log('OTP sai hoặc chưa xử lý:', enteredOtp);
+      }
+    },
+    onResend: async () => console.log('OTP Resend'),
+    navigation, 
+  });
+
 
   return (
     <SafeAreaView style={styles.container}>

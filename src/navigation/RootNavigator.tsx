@@ -7,6 +7,7 @@ import TabNavigator from './TabNavigator';
 import OTPScreen from '@/screens/otp/OTPScreen';
 import ForgotPasswordScreen from '@/screens/otp/ForgotPasswordScreen';
 import type { RootStackParamList } from './types'
+import ResetPasswordSCreen from '@/screens/otp/ResetPasswordScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -22,6 +23,7 @@ const RootNavigator: React.FC = () => {
       <Stack.Screen name="MainApp" component={TabNavigator} />
       <Stack.Screen name="OTPScreen" component={OTPScreen} />
       <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordSCreen} />
     </Stack.Navigator>
   );
 };
