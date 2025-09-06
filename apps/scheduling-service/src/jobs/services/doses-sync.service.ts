@@ -9,8 +9,9 @@ import * as moment from 'moment-timezone';
 import { Counter, Histogram } from 'prom-client';
 import { DataSource, In } from 'typeorm';
 import { YLenhThuoc } from '../../../../../libs/common/src/types/ylenhthuoc.interface';
+import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
 
-interface SyncResult {
+export interface SyncResult {
     created: number;
     deleted: number;
     notificationsScheduled: number;
@@ -23,6 +24,7 @@ export class DosesSyncService {
     constructor(
         private readonly hospitalClient: HospitalApiClientService,
         private readonly notificationClient: NotificationApiClientService,
+        private readonly accountClient: AccountApiClientService,
         private readonly dataSource: DataSource,
 
         @InjectMetric(MetricName.DOSES_SYNCED_TOTAL)
@@ -221,7 +223,7 @@ export class DosesSyncService {
         }
     }
 
-    public async syncAllDosesByUserId(userId: string, phoneNumber: string, hospitalUrl: string): Promise<SyncResult> {
+    public async syncAllDosesByUserId(userId: string, hospitalUrl: string): Promise<SyncResult> {
         const endTimer = this.syncDurationHistogram.startTimer({
             [MetricLabel.SYNC_TYPE]: "full_history",
         });
@@ -231,14 +233,33 @@ export class DosesSyncService {
         let notificationsScheduled = 0;
 
         try {
-            if (!phoneNumber) throw new Error("User phoneNumber is required.");
             if (!hospitalUrl) throw new Error("hospitalUrl is required.");
 
-            this.logger.log(`[DosesSyncService] Starting full history sync for user=${userId} phone=${phoneNumber}`);
+            let user: UserPayload | null = null;
+            try {
+                user = await this.accountClient.fetchUserById(userId);
+            } catch (error) {
+                this.logger.error(
+                    `[DosesSyncService] Failed to fetch user. userId=${userId} hospitalUrl=${hospitalUrl}`,
+                    error.stack,
+                );
+                throw error;
+            }
+
+            if (!user) {
+                this.logger.warn(`[DosesSyncService] User not found. userId=${userId} hospitalUrl=${hospitalUrl}`);
+                return { created: 0, deleted: 0, notificationsScheduled: 0 };
+            }
+            if (!user.phoneNumber) {
+                this.logger.warn(`[DosesSyncService] User has no phone number. userId=${userId}`);
+                return { created: 0, deleted: 0, notificationsScheduled: 0 };
+            }
+
+            this.logger.log(`[DosesSyncService] Starting full history sync for user=${userId} phone=${user?.phoneNumber}`);
 
             let allYlenhthuoc: YLenhThuoc[];
             try {
-                allYlenhthuoc = await this.hospitalClient.fetchYLenhThuoc(phoneNumber, hospitalUrl);
+                allYlenhthuoc = await this.hospitalClient.fetchYLenhThuoc(user.phoneNumber, hospitalUrl);
             } catch (error) {
                 this.logger.error(`[DosesSyncService] Failed to fetch treatment data for user=${userId}`, error.stack);
                 throw error;
@@ -357,7 +378,6 @@ export class DosesSyncService {
                 await queryRunner.release();
             }
 
-            // Schedule notifications
             const upcomingDoses = dosesToSave.filter(d => d.status === DoseStatus.UPCOMING);
             if (upcomingDoses.length > 0) {
                 await this.notificationClient.scheduleNotifications(

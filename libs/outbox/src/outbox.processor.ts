@@ -1,8 +1,7 @@
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { OutboxEntity, OutboxStatus } from './entities/outbox.entity';
 
 @Injectable()

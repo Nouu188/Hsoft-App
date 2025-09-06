@@ -5,6 +5,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { Payload } from '@nestjs/microservices';
 import { UserFirstLoginIdentityEvent } from './dtos/user-first-login-identity.event';
 import { UserRegistrationService } from './user-registration.service';
+import { SyncResult } from 'apps/scheduling-service/src/jobs/services/doses-sync.service';
 
 @Controller()
 export class UserRegistrationController {
@@ -48,7 +49,7 @@ export class UserRegistrationController {
     routingKey: RoutingKey.DOSE_HISTORY_SYNCED_SUCCESS,
     queue: 'orchestrator.user-registration.dose-sync-success',
   })
-  async handleDoseHistorySyncedSuccess(@Payload() payload: { userId: string }) {
+  async handleDoseHistorySyncedSuccess(@Payload() payload: { userId: string, result: SyncResult }) {
     await this.userRegistrationService.handleDoseHistorySyncedSuccess(payload);
   }
 

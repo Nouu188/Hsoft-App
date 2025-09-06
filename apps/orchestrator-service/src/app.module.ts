@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { UserRegistrationSaga } from './sagas/user-registration/entities/user-registration-saga.entity';
 import { UserRegistrationModule } from './sagas/user-registration/user-registration.module';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { UserRegistrationModule } from './sagas/user-registration/user-registrat
         username: configService.get<string>('ORCHESTRATOR_DB_USER'),
         password: configService.get<string>('ORCHESTRATOR_DB_PASS'),
         database: configService.get<string>('ORCHESTRATOR_DB_NAME'),
-        entities: [ UserRegistrationSaga ],
+        entities: [ UserRegistrationSaga, OutboxEntity ],
         synchronize: true,
       }),
     }),

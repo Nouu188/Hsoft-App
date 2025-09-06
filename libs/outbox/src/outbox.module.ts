@@ -5,8 +5,13 @@ import { OutboxProcessor } from './outbox.processor';
 import { OutboxEntity } from './entities/outbox.entity';
 import { Repository } from 'typeorm';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { ScheduleModule } from '@nestjs/schedule';
 
-@Module({})
+@Module({
+  imports: [
+    ScheduleModule.forRoot(),
+  ]
+})
 export class OutboxModule {
   static forRoot(connectionName?: string): DynamicModule {
     const outboxProcessorProvider: Provider = {

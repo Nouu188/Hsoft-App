@@ -7,6 +7,7 @@ import {
     UpdateDateColumn,
     VersionColumn,
 } from 'typeorm';
+import { UserFirstLoginIdentityEvent } from '../dtos/user-first-login-identity.event';
 
 export enum UserRegistrationSagaStatus {
     STARTED = 'STARTED',
@@ -23,7 +24,7 @@ export class UserRegistrationSaga {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @VersionColumn() 
+    @VersionColumn()
     version: number;
 
     @Index()
@@ -41,7 +42,7 @@ export class UserRegistrationSaga {
     context: Record<string, any>;
 
     @Column({ type: 'jsonb' })
-    initialEventPayload: Record<string, any>;
+    initialEventPayload: UserFirstLoginIdentityEvent;
 
     @Column({ type: 'text', nullable: true })
     lastErrorMessage?: string;

@@ -147,9 +147,8 @@ export class AccountApiClientService {
     query GetUserById($userId: String!) {
       findById(userId: $userId) {
         id
-        sodienthoai
+        phoneNumber
         email
-        name
       }
     }
   `;

@@ -100,8 +100,6 @@ export class IdentitiesService {
         hospitals: [],
       });
 
-      console.log("Alooooo", identity)
-
       return identity;
     } catch (error) {
       this.logger.error(

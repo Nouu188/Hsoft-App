@@ -23,18 +23,18 @@ export class DoseHistorySyncConsumer {
   public async handleSyncDoseHistory(
     payload: SyncDoseHistoryCommand,
   ): Promise<void | Nack> {
-    const { userId, phoneNumber, hospitalUrl } = payload;
+    const { userId, hospitalUrl } = payload;
     this.logger.log(`[DoseHistorySyncConsumer] Received command to sync dose history for userId: ${userId}`);
 
     try {
-      await this.dosesSyncService.syncAllDosesByUserId(userId, phoneNumber, hospitalUrl);
+      const result = await this.dosesSyncService.syncAllDosesByUserId(userId, hospitalUrl);
 
       this.logger.log(`[DoseHistorySyncConsumer] Completed dose history sync for userId: ${userId}`);
 
       await this.amqpConnection.publish(
         ExchangeName.USER_EVENTS,
         RoutingKey.DOSE_HISTORY_SYNCED_SUCCESS,
-        { userId },
+        { userId, result },
       );
     } catch (error) {
       this.logger.error(`[DoseHistorySyncConsumer] Failed to sync doses for userId: ${userId}`, error.stack);
