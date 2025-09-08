@@ -6,10 +6,12 @@ import { AppointmentsResolver } from './appointments.resolver';
 import { AccountApiClientModule } from '@app/api-clients/account/account-api-client.module';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { OutboxModule } from '@app/outbox';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ Appointment ], 'appointmentConnection'),
+    OutboxModule.forRoot('appointmentConnection'),
     AppRabbitMQModule,
     AccountApiClientModule,
     TenantApiClientModule,

@@ -2,6 +2,18 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Clinic {
+  createdAt: DateTime!
+  doctors: [Doctor!]
+  externalCode: String!
+  hospital: Hospital!
+  hospitalId: String!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
 input CreateNoteInput {
   content: String!
   metadata: JSONObject
@@ -14,6 +26,68 @@ scalar DateTime
 type DeviceToken {
   token: String!
   type: String!
+}
+
+type Doctor {
+  avatarUrl: String
+  bio: String
+  clinic: Clinic!
+  clinicId: String!
+  createdAt: DateTime!
+  externalCode: String!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  OTHER
+}
+
+type Hospital {
+  clinics: [Clinic!]
+  createdAt: DateTime!
+  externalCode: String
+  graphqlEndpoint: String!
+  id: ID!
+  identities: [Identity!]
+  name: String!
+  plainExternalCode: String
+  updatedAt: DateTime!
+}
+
+type Identity {
+  address: String
+  avatarUrl: String
+
+  """Năm sinh"""
+  birthYear: Float
+  createdAt: DateTime!
+
+  """Mã bệnh nhân chính"""
+  externalPatientCode: String
+
+  """Họ và tên đầy đủ"""
+  fullName: String!
+  gender: Gender
+
+  """Số thẻ BHYT"""
+  healthInsuranceNumber: String
+  hospitals: [Hospital!]
+  id: ID!
+
+  """Số CMND/CCCD"""
+  nationalId: String
+
+  """Số điện thoại"""
+  phoneNumber: String
+  updatedAt: DateTime!
+
+  """ID của user liên kết"""
+  userId: String!
 }
 
 """

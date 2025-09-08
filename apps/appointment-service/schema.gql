@@ -134,6 +134,9 @@ type IdentityPayload {
   """Địa chỉ liên hệ"""
   address: String
 
+  """Ảnh đại diện"""
+  avatarUrl: String
+
   """Năm sinh"""
   birthYear: Float
 

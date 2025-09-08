@@ -25,6 +25,9 @@ export class CreateIdentityInput {
   @Field({ nullable: true, description: 'Địa chỉ liên hệ' })
   address?: string;
 
+  @Field({ nullable: true, description: 'Ảnh đại diện' })
+  avatarUrl?: string;
+
   @Field({ nullable: true, description: 'Năm sinh' })
   birthYear?: number;
 

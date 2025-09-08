@@ -6,6 +6,9 @@ import { firstValueFrom } from 'rxjs';
 import { HospitalPatient } from '../../../common/src/types/hospitalPatient.interface';
 import { FetchClinicsResponse, HospitalClinicDto } from './dto/clinic.dto';
 import { FetchDoctorsResponse } from './dto/doctor.dto';
+import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
+import { mapHospitalGender } from 'libs/normalizers/src/lib/gender-mapper';
+import { IdentityFromHospitalDto } from './dto/identity-from-hosital.dto';
 
 @Injectable()
 export class HospitalApiClientService {
@@ -122,13 +125,13 @@ export class HospitalApiClientService {
     }
   }
 
-  async fetchPatientFromHospital(
+  async fetchIdentityFromHospital(
     phoneNumber: string,
     graphqlEndpoint: string,
     plainExternalCode: string,
     idNumber: string = "",
     birthYear: string = "",
-  ): Promise<HospitalPatient | null> {
+  ): Promise<IdentityFromHospitalDto | null> {
     const key = md5Hash(plainExternalCode);
     this.logger.debug(`[fetchPatientFromHospital] MD5 key=${key} from input=${plainExternalCode}`);
 
@@ -148,6 +151,10 @@ export class HospitalApiClientService {
           diachi
           sodienthoai
           socmnd
+          diachi
+          gioitinh
+          sothe
+          hinh
         }
       }
     `;
@@ -175,11 +182,15 @@ export class HospitalApiClientService {
       );
 
       return {
-        mabn: patient.mabn ?? "",
-        sodienthoai: patient.sodienthoai ?? phoneNumber,
-        hoten: patient.hoten ?? "",
-        socmnd: patient.socmnd ?? idNumber,
-        namsinh: patient.namsinh ?? birthYear, 
+        externalPatientCode: patient.mabn ?? "",
+        phoneNumber: patient.sodienthoai ?? phoneNumber,
+        fullName: patient.hoten ?? "",
+        nationalId: patient.socmnd ?? idNumber,
+        birthYear: patient.namsinh ? Number(patient.namsinh) : birthYear ? Number(birthYear) : undefined,
+        gender: mapHospitalGender(patient.gioitinh),
+        healthInsuranceNumber: patient.sothe ?? undefined,
+        address: patient.diachi ?? undefined,
+        avatarUrl: patient.hinh ?? undefined,
       };
     } catch (error) {
       const errorResponse =

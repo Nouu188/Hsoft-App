@@ -252,6 +252,9 @@ export class TenantApiClientService {
         nationalId
         birthYear
         gender
+        avatarUrl
+        healthInsuranceNumber
+        externalPatientCode
         address
       }
     }

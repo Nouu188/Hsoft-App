@@ -6,7 +6,7 @@ import { CreateIdentityInput } from "../../dtos/create-identity-input.dto";
 import { ExchangeName } from "@app/common/rabbitmq/exchanges";
 import { QueueName } from "@app/common/rabbitmq/queues";
 
-interface CreateIdentityCommand { // Đổi tên interface thành Command
+interface CreateIdentityCommand { 
   identity: CreateIdentityInput;
   userId: string;
   externalHospitalCode: string;

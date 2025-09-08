@@ -74,7 +74,7 @@ export class IdentitiesService {
         );
       }
 
-      const patient = await this.hospitalApiClient.fetchPatientFromHospital(
+      const patient = await this.hospitalApiClient.fetchIdentityFromHospital(
         phoneNumber,
         hospitalUrl,
         hospital.plainExternalCode,
@@ -88,15 +88,20 @@ export class IdentitiesService {
       }
 
       this.logger.debug(
-        `[fetchIdentityFromHospital] Tìm thấy bệnh nhân mabn=${patient.mabn}, hoten=${patient.hoten}`,
+        `[fetchIdentityFromHospital] Tìm thấy bệnh nhân externalPatientCode=${patient.externalPatientCode}, hoten=${patient.fullName}`,
       );
 
       const identity = this.identityRepository.create({
         id: uuidv4(),
-        phoneNumber: patient.sodienthoai,
-        fullName: patient.hoten,
-        nationalId: patient.socmnd,
-        birthYear: Number(patient.namsinh),
+        phoneNumber: patient.phoneNumber,
+        externalPatientCode: patient.externalPatientCode,
+        fullName: patient.fullName,
+        address: patient.address,
+        gender: patient.gender,
+        avatarUrl: patient.avatarUrl,
+        healthInsuranceNumber: patient.healthInsuranceNumber,
+        nationalId: patient.nationalId,
+        birthYear: Number(patient.birthYear),
         hospitals: [],
       });
 

@@ -32,9 +32,7 @@ export class AppointmentsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  // ============================================================
-  // QUERIES (READ-ONLY)
-  // ============================================================
+  // QUERIES 
 
 async getMyAppointments(userId: string): Promise<Appointment[]> {
   this.logger.debug(`[getMyAppointments] Fetching all appointments for userId=${userId}`);
@@ -51,9 +49,7 @@ async getMyAppointments(userId: string): Promise<Appointment[]> {
   }
 }
 
-  // ============================================================
-  // MUTATIONS (WRITE - with transaction if needed)
-  // ============================================================
+  // MUTATIONS 
 
   async bookByClinics(userId: string, inputs: BookByClinicInput[]): Promise<Appointment[]> {
     this.logger.log(`User ${userId} is booking ${inputs.length} appointments by clinics.`);
@@ -110,9 +106,7 @@ async getMyAppointments(userId: string): Promise<Appointment[]> {
     });
   }
 
-  // ============================================================
   // PRIVATE HELPERS
-  // ============================================================
 
   private async calculateQueueNumber(
     manager: EntityManager,
@@ -162,7 +156,6 @@ async getMyAppointments(userId: string): Promise<Appointment[]> {
 
       const savedAppointment = await manager.save(newAppointment);
 
-      // publish event sau khi commit transaction
       process.nextTick(() => {
         this.amqpConnection.publish(
           ExchangeName.APPOINTMENT_EVENTS,

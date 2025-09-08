@@ -33,6 +33,9 @@ export class IdentityPayload {
   @Field({ nullable: true, description: 'Năm sinh' })
   birthYear?: number;
 
+  @Field({ nullable: true, description: 'Ảnh đại diện' })
+  avatarUrl?: string;
+
   @Field(() => [Hospital], { nullable: true, description: 'Danh sách bệnh viện liên kết' })
   hospitals: Hospital[];
 
