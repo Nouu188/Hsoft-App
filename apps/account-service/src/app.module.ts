@@ -1,23 +1,25 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { UsersModule } from './users/users.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { GraphQLModule } from '@nestjs/graphql';
-import { join } from 'path';
 import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
-import { User } from './users/entities/user.entity';
-import { AuthLibModule } from '@app/auth';
-import { ServiceClient } from './auth/entities/service-client.entity';
-import { AuthModule } from './auth/auth.module';
-import { MetricsModule } from '@app/common/metrics/metrics.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
-import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
-import { RefreshToken } from './users/entities/refresh-token.entity';
-import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { MetricsModule } from '@app/common/metrics/metrics.module';
 import { OutboxModule } from '@app/outbox';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { GraphQLModule } from '@nestjs/graphql';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { join } from 'path';
+import { AuthModule } from './auth/auth.module';
+import { ServiceClient } from './auth/entities/service-client.entity';
+import { RefreshToken } from './users/entities/refresh-token.entity';
+import { User } from './users/entities/user.entity';
+import { UsersModule } from './users/users.module';
+import { TokensModule } from './tokens/tokens.module';
+import { OtpModule } from './otp/otp.module';
+import { M2mModule } from './m2m/m2m.module';
 
 @Module({
   imports: [
@@ -64,10 +66,13 @@ import { OutboxModule } from '@app/outbox';
     }),  
     UsersModule, 
     AuthModule,
+    TokensModule,
+    OtpModule,
+    M2mModule,
     OutboxModule,
     HospitalApiClientModule,
     MetricsModule,
-    TenantApiClientModule
+    TenantApiClientModule,
   ],
   providers: [
     {

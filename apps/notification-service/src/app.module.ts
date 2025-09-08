@@ -1,22 +1,20 @@
-import { ApiClientsModule } from '@app/api-clients';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
 import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
+import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
+import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { MetricsModule } from '@app/common/metrics/metrics.module';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { FirebaseModule } from './firebase/firebase.module';
-import { NotificationHistory } from './history/entities/notification-history.entity';
-import { HistoryModule } from './history/history.module';
 import { JobsModule } from './jobs/jobs.module';
-import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
-import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
-import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
+import { NotificationHistory } from './notification-history/entities/notification-history.entity';
+import { NotificationHistoryModule } from './notification-history/notification-history.module';
 
 @Module({
   imports: [
@@ -49,7 +47,7 @@ import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.modul
     AppRabbitMQModule,
     JobsModule,
     FirebaseModule,
-    HistoryModule,
+    NotificationHistoryModule,
     MetricsModule,
     AuthApiClientModule
   ],

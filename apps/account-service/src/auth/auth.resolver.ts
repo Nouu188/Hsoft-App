@@ -20,13 +20,6 @@ export class AuthResolver {
     private authService: AuthService
   ) { }
 
-  @Mutation(() => ServiceClient, { name: 'admin_createServiceClient' })
-  @Roles(Role.ADMIN)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  createServiceClient(@Args('input') input: CreateServiceClientInput) {
-    return this.authService.createServiceClient(input);
-  }
-
   @Mutation(() => LoginResponse, { name: "loginByPhoneNumber" })
   async loginByPhoneNumber(@Args('loginInput') loginInput: LoginInputByPhoneNumber): Promise<LoginResponse> {
     return this.authService.loginByPhoneNumber(loginInput);
@@ -41,7 +34,7 @@ export class AuthResolver {
   async requestEmailVerification(
     @Args('registerInput') registerInput: RegisterByEmailInput,
   ): Promise<RequestOtpResponse> {
-    return this.authService.requestEmailVerification(registerInput);
+    return this.authService.registerByEmail(registerInput);
   }
 
   @Mutation(() => LoginResponse)

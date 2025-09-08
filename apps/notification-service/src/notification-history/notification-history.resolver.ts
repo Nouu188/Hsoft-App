@@ -1,7 +1,6 @@
 import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 import { Logger, UseGuards } from '@nestjs/common';
 import { CurrentUser, JwtAuthGuard } from '@app/auth';
-import { HistoryService } from './history.service';
 import { GetHistoryArgs } from './dto/get-history.args';
 import { NotificationHistory } from './entities/notification-history.entity';
 import { MarkAsReadInput } from './dto/mark-as-read.input';
@@ -9,14 +8,15 @@ import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Histogram } from 'prom-client';
 import { MetricLabel, MetricName } from '@app/common/metrics/contracts/metrics.contracts';
+import { NotificationHistoryService } from './notification-history.service';
 
 @Resolver(() => NotificationHistory)
 @UseGuards(JwtAuthGuard)
-export class HistoryResolver {
-  private readonly logger = new Logger(HistoryResolver.name);
+export class NotificationHistoryResolver {
+  private readonly logger = new Logger(NotificationHistoryResolver.name);
 
   constructor(
-    private readonly historyService: HistoryService,
+    private readonly historyService: NotificationHistoryService,
 
     @InjectMetric(MetricName.GRAPHQL_REQUESTS_DURATION_SECONDS)
     private readonly requestDuration: Histogram<string>,

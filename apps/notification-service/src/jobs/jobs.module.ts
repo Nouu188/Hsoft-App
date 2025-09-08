@@ -1,17 +1,16 @@
-import { Module } from '@nestjs/common';
-import { HttpModule } from '@nestjs/axios';
-import { JobsResolver } from './jobs.resolver';
-import { NotificationConsumer } from './consumers/notification.consumer';
-import { ApiClientsModule } from '@app/api-clients';
-import { FirebaseModule } from '../firebase/firebase.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { NotificationHistory } from '../history/entities/notification-history.entity';
-import { NotificationService } from './services/notification.service';
-import { HistoryModule } from '../history/history.module';
-import { ConfigModule } from '@nestjs/config';
-import { AllMetricsProviders } from '@app/common/metrics/providers';
 import { AccountApiClientModule } from '@app/api-clients/account/account-api-client.module';
 import { DoseApiClientModule } from '@app/api-clients/doses/dose-api-client.module';
+import { AllMetricsProviders } from '@app/common/metrics/providers';
+import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { FirebaseModule } from '../firebase/firebase.module';
+import { NotificationHistory } from '../notification-history/entities/notification-history.entity';
+import { NotificationConsumer } from './consumers/notification.consumer';
+import { JobsResolver } from './jobs.resolver';
+import { NotificationService } from './services/notification.service';
+import { NotificationHistoryModule } from '../notification-history/notification-history.module';
 
 @Module({
   imports: [
@@ -19,7 +18,7 @@ import { DoseApiClientModule } from '@app/api-clients/doses/dose-api-client.modu
     HttpModule, 
     AccountApiClientModule,
     DoseApiClientModule,
-    HistoryModule,
+    NotificationHistoryModule,
     FirebaseModule,
     TypeOrmModule.forFeature([ NotificationHistory ], 'notificationConnection'),
   ],

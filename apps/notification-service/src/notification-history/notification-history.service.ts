@@ -6,8 +6,8 @@ import { NotificationHistory, NotificationStatus } from './entities/notification
 import { CreateHistoryDto } from './dto/create-history.dto';
 
 @Injectable()
-export class HistoryService {
-  private readonly logger = new Logger(HistoryService.name);
+export class NotificationHistoryService {
+  private readonly logger = new Logger(NotificationHistoryService.name);
 
   constructor(
     @InjectRepository(NotificationHistory, 'notificationConnection')

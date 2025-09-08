@@ -149,6 +149,7 @@ input LoginInputByPhoneNumber {
 
 type LoginResponse {
   accessToken: String!
+  refreshToken: String!
   user: UserPayload!
 }
 

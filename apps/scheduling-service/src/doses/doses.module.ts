@@ -6,6 +6,7 @@ import { DosesResolver } from './dose.resolver';
 import { ConfigModule } from '@nestjs/config';
 import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { AuthLibModule } from '@app/auth';
 
 @Module({
   providers: [DosesService, DosesResolver],
@@ -13,6 +14,7 @@ import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
     ConfigModule,
     TypeOrmModule.forFeature([ Dose ]),
     AppRabbitMQModule,
+    AuthLibModule,
     TenantApiClientModule
   ]
 })

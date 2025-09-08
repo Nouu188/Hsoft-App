@@ -11,7 +11,6 @@ import { join } from 'path';
 import { UsersModule } from '../users/users.module';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
-import { AuthController } from './controllers/auth.controller';
 import { ServiceClient } from './entities/service-client.entity';
 import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
 import { GoogleModule } from './strategies/google/google.module';
@@ -20,6 +19,8 @@ import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { OutboxModule } from '@app/outbox';
+import { OtpModule } from '../otp/otp.module';
+import { TokensModule } from '../tokens/tokens.module';
 
 
 @Module({
@@ -91,8 +92,9 @@ import { OutboxModule } from '@app/outbox';
     GoogleModule,
     HospitalApiClientModule,
     TenantApiClientModule,
+    OtpModule,
+    TokensModule
   ],
-  controllers: [AuthController],
   providers: [
     AuthService,
     AuthResolver,

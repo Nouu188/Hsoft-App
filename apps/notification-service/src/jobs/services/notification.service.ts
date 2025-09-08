@@ -5,8 +5,8 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
 import { DataSource } from 'typeorm';
 import { FirebaseService } from '../../firebase/firebase.service';
-import { NotificationStatus, NotificationType } from '../../history/entities/notification-history.entity';
-import { HistoryService } from '../../history/history.service';
+import { NotificationStatus, NotificationType } from '../../notification-history/entities/notification-history.entity';
+import { HistoryService } from '../../notification-history/notification-history.service';
 
 interface GroupedNotificationPayload {
   userId: string;
