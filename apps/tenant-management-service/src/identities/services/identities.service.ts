@@ -5,12 +5,13 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { HospitalsService } from '../../hospitals/hospitals.service';
 import { CreateIdentityInput } from '../dtos/create-identity-input.dto';
 import { Identity } from '../entities/identity.entity';
+import { Hospital } from '../../hospitals/entities/hospital.entity';
 
 @Injectable()
 export class IdentitiesService {
@@ -18,6 +19,7 @@ export class IdentitiesService {
 
   constructor(
     @InjectRepository(Identity, 'tenantConnection') private readonly identityRepository: Repository<Identity>,
+    @InjectDataSource('tenantConnection') private readonly dataSource: DataSource,
     private readonly hospitalService: HospitalsService,
     private readonly hospitalApiClient: HospitalApiClientService,
   ) { }
@@ -134,42 +136,63 @@ export class IdentitiesService {
       hospitals: payload.hospitals ?? [],
     };
 
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
-      let identity = await this.identityRepository.findOne({
+      const identityRepo = queryRunner.manager.getRepository(Identity);
+
+      let identity = await identityRepo.findOne({
         where: { userId },
         relations: ['hospitals'],
       });
 
       if (externalHospitalCode) {
-        const hospital = await this.hospitalService.getHospitalByCode(externalHospitalCode);
-        if (hospital && !cleanPayload.hospitals.some(h => h.id === hospital.id)) {
-          cleanPayload.hospitals.push(hospital);
+        const hospital = await this.hospitalService.getHospitalByCode(
+          externalHospitalCode,
+        );
+        if (hospital) {
+          const exists = cleanPayload.hospitals.some((h) => h.id === hospital.id);
+          if (!exists) {
+            cleanPayload.hospitals.push(hospital);
+          }
         }
       }
 
       if (identity) {
         Object.assign(identity, cleanPayload);
-        this.logger.debug(`[IdentitiesService] Updating existing Identity id=${identity.id}`);
+        this.logger.debug(
+          `[IdentitiesService] Updating existing Identity id=${identity.id}`,
+        );
       } else {
-        identity = this.identityRepository.create({
+        identity = identityRepo.create({
           ...cleanPayload,
           userId,
         });
-        this.logger.debug(`[IdentitiesService] Creating new Identity for userId=${userId}`);
+        this.logger.debug(
+          `[IdentitiesService] Creating new Identity for userId=${userId}`,
+        );
       }
 
-      const saved = await this.identityRepository.save(identity);
+      const saved = await identityRepo.save(identity);
+
+      await queryRunner.commitTransaction();
 
       this.logger.log(
         `[IdentitiesService] Successfully saved Identity id=${saved.id} for userId=${userId}`,
       );
       return saved;
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+
       this.logger.error(
         `[IdentitiesService] Failed to save Identity for userId=${userId}. Error: ${error.message}`,
         error.stack,
       );
       throw new InternalServerErrorException('Failed to save Identity');
+    } finally {
+      await queryRunner.release();
     }
   }
 }
