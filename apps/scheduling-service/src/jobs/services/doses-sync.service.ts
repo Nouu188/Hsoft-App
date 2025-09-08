@@ -8,8 +8,8 @@ import { Dose, DoseStatus, MealRelation } from 'apps/scheduling-service/src/dose
 import * as moment from 'moment-timezone';
 import { Counter, Histogram } from 'prom-client';
 import { DataSource, In } from 'typeorm';
-import { YLenhThuoc } from '../../../../../libs/common/src/types/ylenhthuoc.interface';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
+import { YLenhThuoc } from '@app/common/types';
 
 export interface SyncResult {
     created: number;

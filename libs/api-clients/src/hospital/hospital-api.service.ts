@@ -2,13 +2,12 @@ import { YLenhThuoc } from '@app/common/types/ylenhthuoc.interface';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { md5Hash } from 'libs/crypto/src/md5-hasher';
+import { mapHospitalGender } from 'libs/normalizers/src/lib/gender-mapper';
 import { firstValueFrom } from 'rxjs';
-import { HospitalPatient } from '../../../common/src/types/hospitalPatient.interface';
 import { FetchClinicsResponse, HospitalClinicDto } from './dto/clinic.dto';
 import { FetchDoctorsResponse } from './dto/doctor.dto';
-import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
-import { mapHospitalGender } from 'libs/normalizers/src/lib/gender-mapper';
 import { IdentityFromHospitalDto } from './dto/identity-from-hosital.dto';
+import { HospitalPatient } from '@app/common/types';
 
 @Injectable()
 export class HospitalApiClientService {
