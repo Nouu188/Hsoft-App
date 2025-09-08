@@ -63,7 +63,6 @@ import { OutboxModule } from '@app/outbox';
       }),
     }),  
     UsersModule, 
-    AuthLibModule,
     AuthModule,
     OutboxModule,
     HospitalApiClientModule,

@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { Appointment } from './appointments/entities/appointment.entity';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
 
 @Module({
   imports: [
@@ -31,11 +33,12 @@ import { Appointment } from './appointments/entities/appointment.entity';
         username: configService.get<string>('APPOINTMENT_DB_USER'),
         password: configService.get<string>('APPOINTMENT_DB_PASS'),
         database: configService.get<string>('APPOINTMENT_DB_NAME'),
-        entities: [ Appointment ], 
+        entities: [ Appointment, OutboxEntity ], 
         synchronize: true,
       }),
     }), 
     AppointmentsModule,
+    AuthApiClientModule
   ],
   providers: [
     

@@ -16,6 +16,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
 
 @Module({
   imports: [
@@ -41,16 +42,16 @@ import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
         username: configService.get<string>('NOTIFICATION_DB_USER'),
         password: configService.get<string>('NOTIFICATION_DB_PASS'),
         database: configService.get<string>('NOTIFICATION_DB_NAME'),
-        entities: [ NotificationHistory, OutboxEntity ],
+        entities: [ NotificationHistory ],
         synchronize: true,
       }),
     }),
     AppRabbitMQModule,
     JobsModule,
     FirebaseModule,
-    ApiClientsModule,
     HistoryModule,
-    MetricsModule
+    MetricsModule,
+    AuthApiClientModule
   ],
   providers: [
     {

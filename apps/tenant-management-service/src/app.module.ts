@@ -1,19 +1,19 @@
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { HospitalsModule } from './hospitals/hospitals.module';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
-import { Hospital } from './hospitals/entities/hospital.entity';
+import { ClinicsModule } from './clinics/clinics.module';
 import { Clinic } from './clinics/entities/clinic.entity';
+import { DoctorsModule } from './doctors/doctors.module';
 import { Doctor } from './doctors/entities/doctor.entity';
+import { Hospital } from './hospitals/entities/hospital.entity';
+import { HospitalsModule } from './hospitals/hospitals.module';
 import { Identity } from './identities/entities/identity.entity';
 import { IdentitiesModule } from './identities/identities.module';
-import { DoctorsModule } from './doctors/doctors.module';
-import { ClinicsModule } from './clinics/clinics.module';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
-import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
 
 @Module({
   imports: [
@@ -42,11 +42,11 @@ import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
         synchronize: true,
       }),
     }),
-    AppRabbitMQModule,
     HospitalsModule,
     IdentitiesModule,
     DoctorsModule,
     ClinicsModule,
+    AuthApiClientModule
   ],
 })
 export class TenantManagementServiceModule {}

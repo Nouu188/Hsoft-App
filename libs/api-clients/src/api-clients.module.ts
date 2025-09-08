@@ -6,6 +6,7 @@ import { AccountApiClientModule } from './account/account-api-client.module';
 import { AuthApiClientModule } from './auth/auth-api-client.module';
 import { ConfigModule } from '@nestjs/config';
 import { TenantApiClientModule } from './tenant/tenant-api-client.module';
+import { OutboxModule } from '@app/outbox';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { TenantApiClientModule } from './tenant/tenant-api-client.module';
     DoseApiClientModule,
     AccountApiClientModule,
     AuthApiClientModule,
-    TenantApiClientModule
+    TenantApiClientModule,
+    OutboxModule
   ],
   exports: [
     HospitalApiClientModule,

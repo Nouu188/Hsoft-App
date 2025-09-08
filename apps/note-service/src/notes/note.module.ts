@@ -3,10 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Note } from './entities/note.entity';
 import { NotesService } from './note.service';
 import { NotesResolver } from './note.resolver';
+import { AuthLibModule } from '@app/auth';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Note])
+    TypeOrmModule.forFeature([Note]),
+    AuthLibModule
   ], 
   providers: [
     NotesResolver, 

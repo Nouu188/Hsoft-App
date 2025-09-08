@@ -1,5 +1,4 @@
-import { ApiClientsModule } from '@app/api-clients';
-import { AuthLibModule } from '@app/auth';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
 import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
 import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
@@ -43,8 +42,7 @@ import { NotesModule } from './notes/note.module';
       }),
     }),
     NotesModule,
-    ApiClientsModule,
-    AuthLibModule,
+    AuthApiClientModule,
     MetricsModule
   ],
   providers: [

@@ -1,12 +1,16 @@
+import { ExchangeName } from '@app/common/rabbitmq/exchanges';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { OutboxService } from '@app/outbox';
 import { Injectable, Logger } from '@nestjs/common';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { DoseForScheduling } from './dto/schedule-notifications.dto';
 
 @Injectable()
 export class NotificationApiClientService {
     private readonly logger = new Logger(NotificationApiClientService.name);
 
-    constructor(private readonly amqpConnection: AmqpConnection) {}
+    constructor(
+        private readonly outboxService: OutboxService,
+    ) { }
 
     async scheduleNotifications(doses: DoseForScheduling[]): Promise<void> {
         if (!doses || doses.length === 0) {
@@ -24,21 +28,23 @@ export class NotificationApiClientService {
             notificationsToSchedule.get(key)!.doseIds.push(dose.id);
         }
 
-        let publishedCount = 0;
+        let storedCount = 0;
         for (const group of notificationsToSchedule.values()) {
             const delay = new Date(group.notifyAt).getTime() - Date.now();
 
             if (delay > 0) {
-                this.amqpConnection.publish(
-                    'notification.exchange',
-                    'notification.send.grouped',
-                    group, 
-                    { headers: { 'x-delay': delay  }, persistent: true },
-                );
-                publishedCount++;
+                await this.outboxService.createOutboxMessage({
+                    aggregateType: 'notification',
+                    aggregateId: group.userId,
+                    eventType: 'GroupedNotificationScheduled',
+                    payload: group,
+                    exchange: ExchangeName.NOTIFICATION,
+                    routingKey: RoutingKey.NOTIFICATION_SCHEDULED,
+                });
+                storedCount++;
             }
         }
-        
-        this.logger.log(`Published ${publishedCount} grouped notification events for user ${doses[0]?.userId}.`);
+
+        this.logger.log(`Stored ${storedCount} grouped notification events into outbox for user ${doses[0]?.userId}.`);
     }
 }

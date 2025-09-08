@@ -10,12 +10,15 @@ import { NotificationService } from './services/notification.service';
 import { HistoryModule } from '../history/history.module';
 import { ConfigModule } from '@nestjs/config';
 import { AllMetricsProviders } from '@app/common/metrics/providers';
+import { AccountApiClientModule } from '@app/api-clients/account/account-api-client.module';
+import { DoseApiClientModule } from '@app/api-clients/doses/dose-api-client.module';
 
 @Module({
   imports: [
     ConfigModule,
     HttpModule, 
-    ApiClientsModule,
+    AccountApiClientModule,
+    DoseApiClientModule,
     HistoryModule,
     FirebaseModule,
     TypeOrmModule.forFeature([ NotificationHistory ], 'notificationConnection'),

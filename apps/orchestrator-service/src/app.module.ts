@@ -1,12 +1,10 @@
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { join } from 'path';
 import { UserRegistrationSaga } from './sagas/user-registration/entities/user-registration-saga.entity';
 import { UserRegistrationModule } from './sagas/user-registration/user-registration.module';
-import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
 
 @Module({
   imports: [
@@ -30,6 +28,7 @@ import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
       }),
     }),
     UserRegistrationModule,
+    AuthApiClientModule
   ],
   providers: [],
 })

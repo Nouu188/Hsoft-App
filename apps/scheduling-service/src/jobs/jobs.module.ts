@@ -1,5 +1,8 @@
-import { ApiClientsModule } from '@app/api-clients';
+import { AccountApiClientModule } from '@app/api-clients/account/account-api-client.module';
+import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
+import { NotificationApiClientModule } from '@app/api-clients/notification/notification-api-client.module';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { OutboxModule } from '@app/outbox';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -11,16 +14,17 @@ import { DoseHistorySyncConsumer } from './consumers/dose-history-sync.consumer.
 import { SyncConsumer } from './consumers/doses-sync.consumer';
 import { DoseStatusTransitionService } from './services/dose-status-transition.service';
 import { DosesSyncService } from './services/doses-sync.service';
-import { OutboxModule } from '@app/outbox';
 
 @Module({
   imports: [
     ConfigModule,
     HttpModule,
-    TypeOrmModule.forFeature([Dose]),
-    ApiClientsModule,
+    TypeOrmModule.forFeature([ Dose ]),
+    HospitalApiClientModule,
+    NotificationApiClientModule,
+    AccountApiClientModule,
     AppRabbitMQModule,
-    OutboxModule,
+    OutboxModule.forRoot(),
   ],
   providers: [
     DosesSyncService,

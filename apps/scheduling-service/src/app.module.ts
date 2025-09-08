@@ -1,10 +1,8 @@
-import { ApiClientsModule } from '@app/api-clients';
-import { AuthLibModule } from '@app/auth';
 import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
 import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { MetricsModule } from '@app/common/metrics/metrics.module';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HttpModule } from '@nestjs/axios';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
@@ -17,7 +15,7 @@ import { join } from 'path';
 import { DosesModule } from './doses/doses.module';
 import { Dose } from './doses/entities/dose.entity';
 import { JobsModule } from './jobs/jobs.module';
-import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
 
 @Module({
   imports: [
@@ -46,13 +44,11 @@ import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
         synchronize: true,
       }),
     }),
-    AppRabbitMQModule,
     HttpModule,
     DosesModule,
-    ApiClientsModule,
-    AuthLibModule,
     JobsModule,
-    MetricsModule
+    MetricsModule,
+    AuthApiClientModule,
   ],
   providers: [
     DateTimeScalar,
