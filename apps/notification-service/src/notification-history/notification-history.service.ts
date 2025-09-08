@@ -17,9 +17,7 @@ export class NotificationHistoryService {
     private readonly dataSource: DataSource,
   ) {}
 
-  // ============================================================
   // QUERIES (READ-ONLY)
-  // ============================================================
 
   async getHistoryForUser(userId: string, args: GetHistoryArgs): Promise<NotificationHistory[]> {
     this.logger.debug(
@@ -40,10 +38,8 @@ export class NotificationHistoryService {
     });
   }
 
-  // ============================================================
-  // MUTATIONS (WRITE - with transaction)
-  // ============================================================
-
+  // MUTATIONS 
+  
   async create(dto: CreateHistoryDto): Promise<NotificationHistory> {
     this.logger.log(
       `Creating notification history for user ${dto.userId} with type ${dto.type}`,
@@ -58,6 +54,7 @@ export class NotificationHistoryService {
         doseIds: dto.doseIds,
         payload: dto.payload,
         status: dto.status,
+        sentAt: dto.sentAt
       });
 
       const savedEntry = await manager.save(historyEntry);

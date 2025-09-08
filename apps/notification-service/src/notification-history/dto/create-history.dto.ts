@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsNotEmpty, IsString, IsOptional, IsEnum, IsArray } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsEnum, IsArray, IsDate } from 'class-validator';
 import { NotificationStatus, NotificationType } from '../entities/notification-history.entity';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
@@ -33,6 +33,10 @@ export class CreateHistoryDto {
   @Field(() => GraphQLJSONObject, { nullable: true })
   @IsOptional()
   payload?: Record<string, any>;
+
+  @Field()
+  @IsDate()
+  sentAt: Date;
 
   @Field(() => NotificationStatus, { nullable: true })
   @IsOptional()

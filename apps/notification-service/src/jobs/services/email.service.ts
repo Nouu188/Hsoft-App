@@ -33,7 +33,8 @@ export class EmailService {
                     ...history,
                     status: NotificationStatus.SENT,
                     userId: history.userId || context.userId || 'system-generated',
-                    type: this._mapStringToNotificationType(history.type)
+                    type: this._mapStringToNotificationType(history.type),
+                    sentAt: new Date(),
                 });
             }
         } catch (error) {
@@ -46,6 +47,7 @@ export class EmailService {
                     userId: history.userId || context.userId || 'system-generated',
                     payload: { ...(history.payload || {}), error: error.message },
                     type: this._mapStringToNotificationType(history.type),
+                    sentAt: new Date(),
                 });
             }
 

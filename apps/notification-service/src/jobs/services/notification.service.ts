@@ -50,6 +50,7 @@ export class NotificationService {
           type: NotificationType.DOSE_REMINDER,
           doseIds,
           status: NotificationStatus.FAILED,
+          sentAt: new Date(),
         });
       });
 
@@ -86,6 +87,7 @@ export class NotificationService {
           ...notificationPayload,
           failureCount: sendResult.failureCount,
         },
+        sentAt: new Date(),
       });
 
       if (sendResult.failedTokens.length > 0) {

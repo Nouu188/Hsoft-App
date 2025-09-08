@@ -41,7 +41,7 @@ export class NotificationHistory {
   id: string;
 
   @Field()
-  @Column({ type: 'uuid', name: 'user_id' })
+  @Column({ name: 'user_id' })
   userId: string;
 
   @Field()
