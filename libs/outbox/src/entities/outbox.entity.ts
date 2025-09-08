@@ -51,6 +51,15 @@ export class OutboxEntity {
   @Column({ type: 'text', nullable: true })
   lastError: string | null;
 
+  @Column({ default: 0 })
+  attempts: number;
+
+  @Column({ default: 5 })
+  maxAttempts: number;
+
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  availableAt: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

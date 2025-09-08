@@ -7,20 +7,24 @@ import { OutboxEntity, OutboxStatus } from './entities/outbox.entity';
 @Injectable()
 export class OutboxProcessor {
   private readonly logger = new Logger(OutboxProcessor.name);
-  private readonly MAX_RETRY = 5;
 
   constructor(
     private readonly outboxRepository: Repository<OutboxEntity>,
     private readonly amqpConnection: AmqpConnection,
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron() {
-    const messages = await this.outboxRepository.find({
-      where: { status: OutboxStatus.PENDING },
-      order: { createdAt: 'ASC' },
-      take: 50,
-    });
+    const now = new Date();
+
+    const messages = await this.outboxRepository
+      .createQueryBuilder('outbox')
+      .where('outbox.status = :status', { status: OutboxStatus.PENDING })
+      .andWhere('outbox.attempts < outbox.maxAttempts')
+      .andWhere('outbox.availableAt <= :now', { now })
+      .orderBy('outbox.createdAt', 'ASC')
+      .limit(50)
+      .getMany();
 
     if (!messages.length) return;
 
@@ -42,23 +46,26 @@ export class OutboxProcessor {
         );
 
         message.status = OutboxStatus.PUBLISHED;
-        message.retryCount = 0;
+        message.attempts += 1;
         message.lastError = null;
         await this.outboxRepository.save(message);
 
         this.logger.log(`Published event=${message.eventType} id=${message.id}`);
       } catch (error: any) {
-        message.retryCount = (message.retryCount ?? 0) + 1;
+        message.attempts += 1;
         message.lastError = error?.message ?? 'Unknown error';
 
-        if (message.retryCount >= this.MAX_RETRY) {
+        if (message.attempts >= message.maxAttempts) {
           message.status = OutboxStatus.FAILED;
           this.logger.error(
             `Failed permanently event=${message.eventType} id=${message.id}: ${message.lastError}`,
           );
         } else {
+          const delayMs = Math.pow(2, message.attempts) * 1000;
+          message.availableAt = new Date(Date.now() + delayMs);
+
           this.logger.warn(
-            `Retry ${message.retryCount}/${this.MAX_RETRY} event=${message.eventType} id=${message.id}: ${message.lastError}`,
+            `Retry scheduled (attempt ${message.attempts}/${message.maxAttempts}) event=${message.eventType} id=${message.id}, next try at ${message.availableAt.toISOString()}: ${message.lastError}`,
           );
         }
 

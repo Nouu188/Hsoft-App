@@ -5,13 +5,12 @@ import { UserRegistrationController } from './user-registration.controller';
 import { UserRegistrationService } from './user-registration.service';
 import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 import { OutboxModule } from '@app/outbox';
-// import { ClientsModule, Transport } from '@nestjs/microservices'; // Sẽ cần để emit commands
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ UserRegistrationSaga ], 'orchestratorConnection',),
     AppRabbitMQModule,
-    OutboxModule
+    OutboxModule.forRoot('orchestratorConnection')
   ],
   controllers: [UserRegistrationController],
   providers: [UserRegistrationService],

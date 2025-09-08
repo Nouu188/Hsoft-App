@@ -17,6 +17,8 @@ export const RoutingKey = {
   SYNC_DOSE_HISTORY_COMMAND: 'sync.doses_history.command',
   DOSE_HISTORY_SYNCED_SUCCESS: 'dose-history.synced.success',
   DOSE_HISTORY_SYNCED_FAILURE: 'dose-history.synced.failure',
+
+  USER_CREATE_COMMAND: 'user.create.command',
   
   // === Các Events hiện có ===
   USER_PROFILE_UPDATED: 'user.profile.updated',

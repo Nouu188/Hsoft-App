@@ -10,7 +10,7 @@ export class OutboxService {
   constructor(
     @InjectRepository(OutboxEntity)
     private readonly outboxRepository: Repository<OutboxEntity>,
-  ) {}
+  ) { }
 
   async createOutboxMessage(
     payload: {
@@ -39,6 +39,9 @@ export class OutboxService {
       const message = repo.create({
         ...payload,
         status: OutboxStatus.PENDING,
+        attempts: 0,
+        maxAttempts: 5,
+        availableAt: new Date(),
       });
 
       await repo.save(message);

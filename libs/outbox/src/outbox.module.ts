@@ -7,11 +7,7 @@ import { Repository } from 'typeorm';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { ScheduleModule } from '@nestjs/schedule';
 
-@Module({
-  imports: [
-    ScheduleModule.forRoot(),
-  ]
-})
+@Module({ })
 export class OutboxModule {
   static forRoot(connectionName?: string): DynamicModule {
     const outboxProcessorProvider: Provider = {
@@ -40,6 +36,7 @@ export class OutboxModule {
       module: OutboxModule,
       imports: [
         TypeOrmModule.forFeature([OutboxEntity], connectionName),
+        ScheduleModule.forRoot(),
       ],
       providers: [
         outboxServiceProvider,

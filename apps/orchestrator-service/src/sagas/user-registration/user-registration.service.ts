@@ -1,162 +1,137 @@
 import { ExchangeName } from '@app/common/rabbitmq/exchanges';
-import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
 import { OutboxEntity, OutboxStatus } from '@app/outbox/entities/outbox.entity';
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, OptimisticLockVersionMismatchError, Repository } from 'typeorm';
-import { UserFirstLoginIdentityEvent } from './dtos/user-first-login-identity.event';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, EntityManager, OptimisticLockVersionMismatchError } from 'typeorm';
+import { UserFirstLoginSagaInitiatedEvent } from './dtos/user-first-login-saga-initiated.event';
 import { UserRegistrationSaga, UserRegistrationSagaStatus } from './entities/user-registration-saga.entity';
+import { UserRegistrationWorkflow } from './workflows/user-registration.workflow';
 
 @Injectable()
 export class UserRegistrationService {
     private readonly logger = new Logger(UserRegistrationService.name);
 
     constructor(
-        @InjectRepository(UserRegistrationSaga, 'orchestratorConnection')
-        private readonly sagaRepository: Repository<UserRegistrationSaga>,
-
         @InjectDataSource('orchestratorConnection')
         private readonly dataSource: DataSource,
     ) { }
 
-    async startSaga(event: UserFirstLoginIdentityEvent): Promise<void> {
-        const { userId, externalHospitalCode, identity } = event;
-        this.logger.log(`[START] Starting saga userId=${userId}`);
+    async startSaga(event: UserFirstLoginSagaInitiatedEvent): Promise<void> {
+        const { userId } = event;
+        this.logger.log(`[START] Attempting to start saga for userId=${userId}`);
 
-        const existing = await this.sagaRepository.findOneBy({ userId });
-        if (existing) {
-            this.logger.warn(`[SKIP] Saga already exists userId=${userId} status=${existing.status}`);
-            return;
-        }
+        try {
+            await this.dataSource.transaction(async (manager) => {
+                const sagaRepo = manager.getRepository(UserRegistrationSaga);
 
-        const now = new Date().toISOString();
-        const saga = this.sagaRepository.create({
-            userId,
-            status: UserRegistrationSagaStatus.STARTED,
-            initialEventPayload: event,
-            context: {
-                initialEvent: event,
-                timestamps: { startedAt: now, lastUpdatedAt: now },
-                errors: [],
-            },
-        });
-
-        await this.dataSource.transaction(async (manager) => {
-            const sagaRepo = manager.getRepository(UserRegistrationSaga);
-            const outboxRepo = manager.getRepository(OutboxEntity);
-
-            const savedSaga = await sagaRepo.save(saga);
-
-            const outbox = outboxRepo.create({
-                aggregateType: 'UserRegistrationSaga',
-                aggregateId: savedSaga.userId,
-                eventType: 'CREATE_IDENTITY_COMMAND',
-                payload: { userId, identity, externalHospitalCode },
-                exchange: ExchangeName.COMMANDS,
-                routingKey: RoutingKey.CREATE_IDENTITY_COMMAND,
-                status: OutboxStatus.PENDING,
-            });
-            await outboxRepo.save(outbox);
-
-            savedSaga.status = UserRegistrationSagaStatus.AWAITING_IDENTITY_CREATION;
-            await sagaRepo.save(savedSaga);
-        });
-
-        this.logger.log(`[COMMAND] Queued CREATE_IDENTITY_COMMAND userId=${userId}`);
-    }
-
-    async handleIdentityCreatedSuccess(payload: {
-        userId: string;
-        identityId: string;
-    }) {
-        await this._updateSaga(
-            payload.userId,
-            async (saga: UserRegistrationSaga, em: EntityManager) => {
-                if (saga.status !== UserRegistrationSagaStatus.AWAITING_IDENTITY_CREATION) {
-                    this.logger.warn(`[SKIP] IdentityCreatedSuccess in wrong state userId=${payload.userId} status=${saga.status}`);
-                    return null;
+                if (await sagaRepo.findOneBy({ userId })) {
+                    this.logger.warn(`[SKIP] Saga already exists for userId=${userId}. No action taken.`);
+                    return;
                 }
 
-                saga.context.identity = {
-                    id: payload.identityId,
-                    createdAt: new Date().toISOString(),
-                };
-                saga.context.timestamps.lastUpdatedAt = new Date().toISOString();
-
-                const outboxRepo = em.getRepository(OutboxEntity);
-                const initialEvent = saga.context.initialEvent;
-                const outbox = outboxRepo.create({
-                    aggregateType: 'UserRegistrationSaga',
-                    aggregateId: saga.userId,
-                    eventType: 'SYNC_DOSE_HISTORY_COMMAND',
-                    payload: {
-                        userId: saga.userId,
-                        hospitalUrl: initialEvent.hospitalUrl,
+                const now = new Date().toISOString();
+                const saga = sagaRepo.create({
+                    userId,
+                    status: UserRegistrationSagaStatus.STARTED,
+                    context: {
+                        initialEvent: event,
+                        timestamps: { startedAt: now, lastUpdatedAt: now },
+                        errors: [],
+                        auditTrail: [],
                     },
-                    exchange: ExchangeName.COMMANDS,
-                    routingKey: RoutingKey.SYNC_DOSE_HISTORY_COMMAND,
-                    status: OutboxStatus.PENDING,
                 });
-                await outboxRepo.save(outbox);
+                await sagaRepo.save(saga);
+                this.logger.log(`[CREATED] Saga created for userId=${userId}`);
 
-
-                saga.status = UserRegistrationSagaStatus.AWAITING_DOSE_SYNC;
-                this.logger.log(`[STEP] Identity created userId=${payload.userId} identityId=${payload.identityId}`);
-                this.logger.log(`[COMMAND] Queued SYNC_DOSE_HISTORY_COMMAND userId=${saga.userId}`,);
-
-                return saga;
-            },
-        );
+                await this._queueNextCommand(saga, manager);
+            });
+        } catch (err: any) {
+            if (this._isUniqueViolation(err)) {
+                this.logger.warn(`[RACE] Concurrently created saga for userId=${userId}. My attempt was ignored.`);
+                return;
+            }
+            this.logger.error(`[FATAL] Error during saga start transaction for userId=${userId}`, err.stack);
+            throw err;
+        }
     }
 
-    async handleIdentityCreatedFailure(payload: { userId: string; error: string }) {
-        await this._markSagaFailed(
-            payload.userId,
-            `Identity creation failed: ${payload.error}`,
-        );
+    async handleEvent(userId: string, eventType: string, payload: any): Promise<void> {
+        await this._updateSaga(userId, async (saga, em) => {
+            const currentStep = UserRegistrationWorkflow.find((s) => s.step === saga.status);
+            if (!currentStep) {
+                this.logger.warn(`[SKIP] No workflow step defined for saga status=${saga.status} on userId=${userId}`);
+                return null;
+            }
+
+            let nextStatus: UserRegistrationSagaStatus | null = null;
+            let isFailure = false;
+
+            if (eventType === currentStep.expectedSuccessEvent) {
+                nextStatus = currentStep.onSuccess as UserRegistrationSagaStatus;
+            } else if (eventType === currentStep.expectedFailureEvent) {
+                nextStatus = UserRegistrationSagaStatus.FAILED;
+                isFailure = true;
+            } else {
+                this.logger.debug(`[IGNORE] Event ${eventType} is not expected for saga status=${saga.status}. UserId=${userId}`);
+                return null; 
+            }
+
+            const fromStatus = saga.status;
+            saga.status = nextStatus;
+            saga.context.timestamps.lastUpdatedAt = new Date().toISOString();
+            saga.context.auditTrail.push({
+                timestamp: new Date().toISOString(),
+                fromStatus,
+                toStatus: saga.status,
+                eventType,
+            });
+
+            if (isFailure) {
+                const errorMessage = payload?.error ?? 'Unknown failure reason';
+                saga.lastErrorMessage = errorMessage;
+                saga.context.errors.push({ timestamp: new Date().toISOString(), message: errorMessage, eventType });
+                this.logger.error(`[FAILED] Saga failed for userId=${userId}. Reason: ${errorMessage}`);
+            } else {
+                 this.logger.log(`[TRANSITION] Saga for userId=${userId}: ${fromStatus} -> ${saga.status}`);
+            }
+            
+            if (saga.status !== UserRegistrationSagaStatus.COMPLETED && saga.status !== UserRegistrationSagaStatus.FAILED) {
+                await this._queueNextCommand(saga, em, payload);
+            }
+             
+            if (saga.status === UserRegistrationSagaStatus.COMPLETED) {
+                 this.logger.log(`[COMPLETE] Saga completed for userId=${userId}`);
+            }
+
+            return saga;
+        });
     }
 
-    async handleDoseHistorySyncedSuccess(payload: {
-        userId: string;
-        result: { created: number; deleted: number; notificationsScheduled: number };
-    }) {
-        await this._updateSaga(
-            payload.userId,
-            async (saga: UserRegistrationSaga) => {
-                if (saga.status !== UserRegistrationSagaStatus.AWAITING_DOSE_SYNC) {
-                    this.logger.warn(`[SKIP] DoseHistorySyncedSuccess in wrong state userId=${payload.userId} status=${saga.status}`);
-                    return null;
-                }
+    private async _queueNextCommand(saga: UserRegistrationSaga, em: EntityManager, triggerPayload: any = {}) {
+        const stepDef = UserRegistrationWorkflow.find((s) => s.step === saga.status);
+        if (!stepDef?.command) return;
 
-                saga.status = UserRegistrationSagaStatus.COMPLETED;
-                saga.context.syncResult = payload.result;
-                saga.context.timestamps.lastUpdatedAt = new Date().toISOString();
+        const { type, routingKey, payloadMapper } = stepDef.command;
+        const commandPayload = payloadMapper(saga, triggerPayload);
 
-                this.logger.log(`[COMPLETE] Saga completed userId=${payload.userId} doses=${JSON.stringify(payload.result)}`);
-                return saga;
-            },
-        );
+        const outboxRepo = em.getRepository(OutboxEntity);
+        await outboxRepo.save(outboxRepo.create({
+            aggregateType: 'UserRegistrationSaga',
+            aggregateId: saga.userId,
+            eventType: type,
+            payload: commandPayload,
+            exchange: ExchangeName.COMMANDS,
+            routingKey,
+            status: OutboxStatus.PENDING,
+        }));
+
+        this.logger.log(`[COMMAND] Queued ${type} for userId=${saga.userId}`);
     }
-
-    async handleDoseHistorySyncedFailure(payload: {
-        userId: string;
-        error: string;
-    }) {
-        await this._markSagaFailed(
-            payload.userId,
-            `Dose history sync failed: ${payload.error}`,
-        );
-    }
-
-    /*** PRIVATE HELPERS ***/
 
     private async _updateSaga(
         userId: string,
-        updateFn: (
-            saga: UserRegistrationSaga,
-            em: EntityManager,
-        ) => Promise<UserRegistrationSaga | null> | (UserRegistrationSaga | null),
-        retryCount = 3,
+        updateFn: (saga: UserRegistrationSaga, em: EntityManager) => Promise<UserRegistrationSaga | null>,
+        retryCount = 3
     ): Promise<void> {
         if (retryCount <= 0) {
             this.logger.error(`[FATAL] Saga update failed for userId=${userId} after multiple retries.`);
@@ -166,53 +141,30 @@ export class UserRegistrationService {
         try {
             await this.dataSource.transaction(async (manager) => {
                 const sagaRepo = manager.getRepository(UserRegistrationSaga);
-                const saga = await sagaRepo.findOneBy({ userId });
+                const saga = await sagaRepo.findOne({ where: { userId }, lock: { mode: 'pessimistic_write' } }); 
 
                 if (!saga) {
-                    this.logger.warn(`[WARN] Saga not found for userId=${userId}`);
+                    this.logger.warn(`[WARN] Saga not found for userId=${userId} during update.`);
                     return;
                 }
 
-                const updated = await Promise.resolve(updateFn(saga, manager));
+                const updated = await updateFn(saga, manager);
                 if (updated) {
                     await sagaRepo.save(updated);
                 }
             });
         } catch (error) {
             if (error instanceof OptimisticLockVersionMismatchError) {
-                this.logger.warn(`[RACE] Optimistic lock failed for userId=${userId}. Retrying... (${retryCount - 1} left)`);
-
-                await new Promise((r) =>
-                    setTimeout(r, Math.random() * 50 + 50),
-                );
+                this.logger.warn(`[RACE] Lock failed for userId=${userId}. Retrying... (${retryCount - 1} left)`);
+                await new Promise((r) => setTimeout(r, Math.random() * 50 + 50));
                 return this._updateSaga(userId, updateFn, retryCount - 1);
             }
-            this.logger.error(
-                `[ERROR] Unhandled error during saga update for userId=${userId}`,
-                error,
-            );
+            this.logger.error(`[ERROR] Unhandled error during saga update for userId=${userId}`, error);
             throw error;
         }
     }
 
-    private async _markSagaFailed(userId: string, errorMessage: string) {
-        await this.dataSource.transaction(async (manager) => {
-            const sagaRepo = manager.getRepository(UserRegistrationSaga);
-            const saga = await sagaRepo.findOneBy({ userId });
-            if (!saga) {
-                this.logger.error(`[ERROR] Saga not found userId=${userId}`);
-                return;
-            }
-
-            saga.status = UserRegistrationSagaStatus.FAILED;
-            saga.lastErrorMessage = errorMessage;
-
-            saga.context.errors = saga.context.errors || [];
-            saga.context.errors.push(errorMessage);
-            saga.context.timestamps.lastUpdatedAt = new Date().toISOString();
-
-            await sagaRepo.save(saga);
-            this.logger.error(`[FAILED] Saga failed userId=${userId} reason=${errorMessage}`);
-        });
+    private _isUniqueViolation(err: any): boolean {
+        return err?.code === '23505';
     }
 }
