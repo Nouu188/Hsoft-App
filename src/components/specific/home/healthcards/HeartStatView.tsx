@@ -5,6 +5,9 @@ import InitialLayout from './components/InitialLayout';
 import GridLayout from './components/GridLayout';
 import StatPickerModal from './components/StatPickerModal';
 import GoalInputModal from './components/GoalInputModal';
+import { useThemeStore } from '@/store/useThemeStore';
+import { COLORS } from '@/constants/theme';
+import { DARK_COLORS } from '@/constants/theme';
 
 // 2 card mặc định ban đầu (bắt buộc có)
 const initialStats: Stat[] = [
@@ -12,15 +15,15 @@ const initialStats: Stat[] = [
     key: 'heart',
     title: 'Nhịp tim',
     icon: { name: 'heart-outline', bg: '#FEEEEE', color: '#F38384' },
-    getValue: (props) => `${props.heartRate}`, // hiển thị nhịp tim
+    getValue: (props) => `${props.heartRate}`,
   },
   {
     key: 'steps',
     title: 'Số bước',
     icon: { name: 'walk-outline', bg: '#ECEAFF', color: '#8862E0' },
     getValue: (props) =>
-      `${props.steps.toLocaleString()} / ${props.stepsGoal.toLocaleString()}`, // số bước / mục tiêu
-    progress: (props) => props.steps / props.stepsGoal, // tiến độ % số bước
+      `${props.steps.toLocaleString()} / ${props.stepsGoal.toLocaleString()}`,
+    progress: (props) => props.steps / props.stepsGoal,
   },
 ];
 
@@ -51,7 +54,9 @@ const availableStats: Stat[] = [
 ];
 
 const HealthStatsView = () => {
-  // Dữ liệu sức khỏe hiện tại
+  const { isDarkMode } = useThemeStore();
+  const theme = isDarkMode ? DARK_COLORS : COLORS;
+
   const [healthProps, setHealthProps] = useState<HealthStatsProps>({
     heartRate: 120,
     steps: 5540,
@@ -61,50 +66,36 @@ const HealthStatsView = () => {
     water: 500,
   });
 
-  // Danh sách các card stat đang hiển thị
   const [stats, setStats] = useState<Stat[]>(initialStats);
-
-  // Trạng thái hiển thị modal chọn stat
   const [showPicker, setShowPicker] = useState(false);
-
-  // Stat đang chờ thêm (chưa xác nhận mục tiêu)
   const [pendingStat, setPendingStat] = useState<Stat | null>(null);
-
-  // Giá trị mục tiêu mà user nhập
   const [goalValue, setGoalValue] = useState<string>('');
 
-  // Xác nhận thêm stat kèm mục tiêu
   const confirmAddWithGoal = () => {
     if (!pendingStat) return;
     const goalKey = (pendingStat.key + 'Goal') as keyof HealthStatsProps;
     const valueKey = pendingStat.key as keyof HealthStatsProps;
 
-    // Cập nhật healthProps kèm mục tiêu
     setHealthProps((prev) => ({
       ...prev,
       [goalKey]: Number(goalValue),
       [valueKey]: (prev[valueKey] as number) || 0,
     }));
 
-    // Thêm stat vào danh sách hiển thị
     setStats((prev) => [...prev, pendingStat]);
-
-    // Reset state
     setPendingStat(null);
     setGoalValue('');
   };
 
-  // Xóa stat (chỉ cho phép xóa stat thêm sau, không xóa 2 card gốc)
   const handleDelete = (key: string) => {
     if (initialStats.some((s) => s.key === key)) return;
     setStats((prev) => prev.filter((s) => s.key !== key));
   };
 
-  // Kiểm tra xem chỉ có 2 card gốc hay đã có thêm stat
   const isInitial = stats.length === initialStats.length;
 
   return (
-    <ScrollView style={styles.screen}>
+    <ScrollView style={[styles.screen, { backgroundColor: theme.background }]}>
       {isInitial ? (
         <InitialLayout
           initialStats={initialStats}
@@ -141,10 +132,11 @@ const HealthStatsView = () => {
       />
     </ScrollView>
   );
+
 };
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F7F8FC' },
+  screen: { flex: 1 },
 });
 
 export default HealthStatsView;

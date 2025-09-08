@@ -1,54 +1,51 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons'; 
-import { SIZES, COLORS } from '@/constants/theme';       
-import { GridItemProps } from '../types';           
+import { SIZES,COLORS } from '@/constants/theme';       
+import { GridItemProps } from '../types';
+import { useThemeStore } from '@/store/useThemeStore'; // 👈 import store
 
-// Component GridItem: hiển thị một ô trong lưới (icon + tên)
-// Dùng React.memo để tránh re-render khi props không đổi
 const GridItem: React.FC<GridItemProps> = React.memo(({ item, itemSize }) => {
+  const { theme } = useThemeStore(); // lấy theme hiện tại
+
   return (
     <TouchableOpacity
-      onPress={item.onPress} // sự kiện khi bấm vào ô
-      style={[styles.itemContainer, { width: itemSize }]} // set chiều rộng động
+      onPress={item.onPress}
+      style={[styles.itemContainer, { width: itemSize }]}
     >
-      {/* Vùng icon */}
-      <View style={[styles.iconWrapper, { backgroundColor: COLORS.primary }]}>
+      <View style={[styles.iconWrapper, { backgroundColor: theme.primary }]}>
         <Ionicons
-          name={item.iconName}               // tên icon (vd: "home-outline")
-          size={28}                          // kích thước icon
-          color={item.iconColor || COLORS.white} // màu icon, mặc định trắng
+          name={item.iconName}
+          size={28}
+          color={COLORS.white} 
         />
       </View>
 
-      {/* Tên hiển thị dưới icon */}
-      <Text style={styles.itemName} numberOfLines={2}>
+      <Text style={[styles.itemName, { color: theme.text }]} numberOfLines={2}>
         {item.name}
       </Text>
     </TouchableOpacity>
   );
 });
 
-// Style cho component
 const styles = StyleSheet.create({
   itemContainer: {
-    alignItems: 'center',              // căn giữa icon + text theo chiều ngang
-    marginBottom: SIZES.padding * 1.5, // khoảng cách giữa các hàng
+    alignItems: 'center',
+    marginBottom: SIZES.padding * 1.5,
   },
   iconWrapper: {
     width: 56,
     height: 56,
-    borderRadius: 18,                  // bo tròn icon nền
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SIZES.base,          // khoảng cách giữa icon và text
+    marginBottom: SIZES.base,
   },
   itemName: {
-    fontSize: 12,                      // cỡ chữ nhỏ
-    color: COLORS.text,                // màu chữ từ theme
-    textAlign: 'center',               // căn giữa chữ
-    height: 30,                        // giữ chiều cao đồng đều để lưới thẳng hàng
+    fontSize: 12,
+    textAlign: 'center',
+    height: 30,
   },
 });
 
-export default GridItem; // xuất component để dùng nơi khác
+export default GridItem;

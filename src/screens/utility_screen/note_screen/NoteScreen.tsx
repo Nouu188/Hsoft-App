@@ -1,4 +1,3 @@
-// NoteScreen.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   SafeAreaView,
@@ -13,7 +12,9 @@ import {
 } from "react-native";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import Animated from "react-native-reanimated";
-import { COLORS, SHADOWS, SIZES } from "@/constants/theme";
+
+import { SIZES, SHADOWS, COLORS } from "@/constants/theme";
+import { useThemeStore } from "@/store/useThemeStore";
 
 import CreateNoteScreen from "./CreateNoteScreen";
 import Header from "@/components/specific/home/note/NoteHeader";
@@ -29,7 +30,9 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
   const isPortrait = height >= width;
   const isSmallDevice = width < 360;
 
-  // FAB config responsive
+  // ✅ Lấy theme từ zustand
+  const { theme, isDarkMode } = useThemeStore();
+
   const FAB_CONFIG = {
     size: isSmallDevice ? 50 : 60,
     bottom:
@@ -45,19 +48,17 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
   const [activeNote, setActiveNote] = useState<Note | null>(null);
 
   const {
-    isExpanded,
-    animationProgress,
-    handleToggleNoteView,
-    morphingStyle,
-    iconStyle,
-  } = useMorphingAnimation(FAB_CONFIG);
+  isExpanded,
+  animationProgress,
+  handleToggleNoteView,
+  morphingStyle,
+  iconStyle,
+} = useMorphingAnimation({ ...FAB_CONFIG, isDarkMode });
 
-  // fetch notes on mount
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
 
-  // search filter
   const filteredNotes = useMemo(() => {
     if (!searchQuery) return notes;
     const q = searchQuery.toLowerCase();
@@ -68,12 +69,7 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
     );
   }, [notes, searchQuery]);
 
-  // CRUD handlers
-  const handleAddNote = async (payload: {
-    title: string;
-    content: string;
-    metadata?: object;
-  }) => {
+  const handleAddNote = async (payload: { title: string; content: string; metadata?: object }) => {
     await addNote(payload);
     setActiveNote(null);
     handleToggleNoteView();
@@ -99,17 +95,19 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
   const editorMode: "create" | "edit" = activeNote ? "edit" : "create";
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.lightGray} />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={theme.background}
+      />
 
       {/* Header */}
       <Header
         onBackPress={() => navigation.goBack()}
         onSettingsPress={() => {}}
+        theme={theme}
       />
 
-      {/* Portrait: search trên, list dưới 
-          Landscape: search bên trái, list bên phải */}
       <View
         style={[
           styles.contentWrapper,
@@ -117,23 +115,23 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
         ]}
       >
         <View style={[styles.searchWrapper, !isPortrait && { flex: 0.4 }]}>
-          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+          <SearchBar value={searchQuery} onChangeText={setSearchQuery} theme={theme} />
         </View>
 
         <View style={[styles.mainContent, !isPortrait && { flex: 0.6 }]}>
           {loading ? (
-            <ActivityIndicator size="large" color={COLORS.primary} />
+            <ActivityIndicator size="large" color={theme.primary} />
           ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: theme.accent }]}>{error}</Text>
           ) : filteredNotes.length === 0 ? (
-            <EmptyState />
+            <EmptyState theme={theme} />
           ) : (
-            <NoteList notes={filteredNotes} onNotePress={handleNotePress} />
+            <NoteList notes={filteredNotes} onNotePress={handleNotePress} theme={theme} />
           )}
         </View>
       </View>
 
-      {/* Morphing FAB */}
+      {/* Morphing FAB chính */}
       <View
         style={[
           styles.morphingContainer,
@@ -156,7 +154,13 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
           }}
           disabled={isExpanded}
         >
-          <Animated.View style={[morphingStyle, SHADOWS.medium]}>
+          <Animated.View
+            style={[
+              morphingStyle,
+              SHADOWS.medium,
+              { backgroundColor: theme.primary },
+            ]}
+          >
             {isExpanded ? (
               <CreateNoteScreen
                 isVisibleProgress={animationProgress}
@@ -165,25 +169,24 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
                   handleToggleNoteView();
                 }}
                 onSave={(payload) => {
-                  if (editorMode === "create") {
-                    handleAddNote(payload);
-                  } else if (editorMode === "edit" && activeNote) {
+                  if (editorMode === "create") handleAddNote(payload);
+                  else if (editorMode === "edit" && activeNote)
                     handleUpdateNote({
                       ...activeNote,
                       ...payload,
                       updatedAt: new Date().toISOString(),
                     });
-                  }
                 }}
                 onDelete={(noteId) => {
                   if (editorMode === "edit") handleDeleteNote(noteId);
                 }}
                 note={activeNote ?? undefined}
                 mode={editorMode}
+                theme={theme}
               />
             ) : (
               <Animated.View style={[styles.fabIconContainer, iconStyle]}>
-                <Ionicons name="add-outline" size={28} color={COLORS.primary} />
+                <Ionicons name="add-outline" size={28} color={COLORS.white} />
               </Animated.View>
             )}
           </Animated.View>
@@ -194,17 +197,13 @@ const NoteScreen = ({ navigation }: { navigation: any }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.lightGray },
+  container: { flex: 1 },
   contentWrapper: { flex: 1 },
   searchWrapper: { paddingHorizontal: 10, paddingTop: 5 },
   mainContent: { flex: 1 },
   morphingContainer: { position: "absolute" },
-  fabIconContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorText: { color: "red", textAlign: "center", marginTop: 10 },
+  fabIconContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  errorText: { textAlign: "center", marginTop: 10 },
 });
 
 export default NoteScreen;

@@ -1,86 +1,111 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES, SHADOWS } from '@/constants/theme';
+import { SIZES, SHADOWS, COLORS } from '@/constants/theme';
 import { NextScheduleItemProps } from '../types';
+import { useThemeStore } from '@/store/useThemeStore';
 
-// 🟢 Component hiển thị một lịch hẹn/lịch trình sắp tới
 const NextScheduleItem: React.FC<NextScheduleItemProps> = ({
-  iconName,      // tên icon Ionicons (ví dụ: "calendar", "medkit", ...)
-  iconBgColor,   // màu nền của vòng tròn chứa icon
-  title,         // tiêu đề chính (ví dụ: "Khám sức khỏe tổng quát")
-  subtitle,      // tiêu đề phụ (ví dụ: "Thứ 3, 15/09/2025 - 9:00 AM")
-  onPress,       // callback khi nhấn vào item
+  iconName,
+  iconBgColor,
+  title,
+  subtitle,
+  onPress,
 }) => {
+  const { theme, isDarkMode } = useThemeStore();
+
   return (
     <View style={styles.wrapper}>
-      <TouchableOpacity 
-        style={styles.container} 
-        onPress={onPress} 
-        activeOpacity={0.7}   
+      <TouchableOpacity
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDarkMode ? theme.lightBlack : theme.white, 
+            shadowColor: isDarkMode ? COLORS.border : theme.placeholderColor, 
+          },
+        ]}
+        onPress={onPress}
+        activeOpacity={0.7}
       >
-
-        <View style={[styles.iconWrapper, { backgroundColor: iconBgColor }]}>
-          <Ionicons name={iconName} size={24} color={COLORS.primary} />
+        {/* Icon */}
+        <View
+          style={[
+            styles.iconWrapper,
+            { backgroundColor:isDarkMode ? theme.secondary : theme.lightGray },
+          ]}
+        >
+          <Ionicons
+            name={iconName}
+            size={24}
+            color={iconBgColor ? theme.primary : theme.textOnPrimary}
+          />
         </View>
 
-
+        {/* Text */}
         <View style={styles.textContainer}>
-          <Text style={styles.titleText} numberOfLines={1}>
+          <Text
+            style={[
+              styles.titleText,
+              { color: isDarkMode ? COLORS.white : theme.textDark }, // 🔥 đổi text khi dark
+            ]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
-          <Text style={styles.subtitleText} numberOfLines={1}>
+          <Text
+            style={[
+              styles.subtitleText,
+              { color: isDarkMode ? COLORS.introduction : theme.textLight }, // 🔥 subtitle đổi theo mode
+            ]}
+            numberOfLines={1}
+          >
             {subtitle}
           </Text>
         </View>
-        
 
-        <Ionicons 
-          name="chevron-forward-outline" 
-          size={24} 
-          color={COLORS.primary} 
+        {/* Chevron */}
+        <Ionicons
+          name="chevron-forward-outline"
+          size={24}
+          color={isDarkMode ? COLORS.white : theme.secondary} // 🔥 đổi màu icon theo mode
         />
       </TouchableOpacity>
     </View>
   );
 };
 
-// 🎨 StyleSheet cho component
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: SIZES.padding,         // padding ngang theo theme
-    marginBottom: SIZES.padding / 4,          // khoảng cách dưới
+    paddingHorizontal: SIZES.padding,
+    marginBottom: SIZES.padding / 4,
   },
   container: {
-    flexDirection: 'row',                     // sắp xếp con theo hàng ngang
-    alignItems: 'center',                     // căn giữa theo trục dọc
+    flexDirection: 'row',
+    alignItems: 'center',
     height: 60,
-    backgroundColor: COLORS.white,            // nền trắng
-    borderRadius: SIZES.radius,               // bo góc
+    borderRadius: SIZES.radius,
     padding: SIZES.padding * 0.8,
-    ...SHADOWS.medium,                        // đổ bóng vừa
+    ...SHADOWS.medium,
   },
   iconWrapper: {
     width: 44,
     height: 44,
-    borderRadius: 22,                         // bo tròn thành hình tròn
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: SIZES.padding * 0.8,         // cách chữ
+    marginRight: SIZES.padding * 0.8,
   },
   textContainer: {
-    flex: 1,                                  // chiếm toàn bộ chiều ngang còn lại
+    flex: 1,
     justifyContent: 'center',
   },
   titleText: {
     fontSize: SIZES.font,
-    fontWeight: '600',                        // chữ đậm
-    color: COLORS.textDark,
+    fontWeight: '600',
   },
   subtitleText: {
     fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 2,                             // cách tiêu đề 1 chút
+    marginTop: 2,
   },
 });
 

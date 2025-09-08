@@ -40,6 +40,42 @@ export const COLORS = {
   // Màu trong suốt
   transparent: 'transparent',
 };
+export const DARK_COLORS = {
+  // Màu chủ đạo
+  primary: '#1C1C1E',      // Xanh dương y tế (nút/điểm nhấn)
+  primaryLight: '#1E1E1E', // Card tối hơn nền chính một chút
+
+  // Màu phụ trợ
+  secondary: '#8E8E93',    // Xám nhạt cho icon/text phụ
+  accent: '#FF453A',       // Đỏ cảnh báo (nhịp tim)
+
+  // Màu trạng thái
+  success: '#34C759',      // Xanh lá iOS
+  warning: '#FFD60A',      // Vàng sáng
+  danger: '#FF453A',       // Đỏ y tế
+
+  // Màu văn bản (Text)
+  textDark: '#FFFFFF',     // Text chính
+  text: '#E5E5E7',         // Text phụ
+  textLight: '#A1A1AA',    // Placeholder
+  textOnPrimary: '#000000', // Chữ trên nền primary (nút xanh)
+
+  // Màu nền (Background)
+  background: '#000000',   // Nền chính (đen)
+  white: '#1C1C1E',        // Card nền
+  lightGray: '#2C2C2E',    // Input / divider
+  border: '#3A3A3C',       // Viền
+
+  // Khác
+  placeholderColor: '#8E8E93',
+  introduction: '#000000', // Intro/Login nền đen
+  lightBlue: '#0A84FF',    // Xanh dương nhấn mạnh
+  screenBackGround: '#000000',
+  placeHolderIcon: '#8E8E93',
+  lightBlack: '#1C1C1E',
+
+  transparent: 'transparent',
+};
 
 // --- KÍCH THƯỚC (SIZING & SPACING) ---
 // Sử dụng một hệ thống khoảng cách dựa trên bội số của 8 (8-point grid system)

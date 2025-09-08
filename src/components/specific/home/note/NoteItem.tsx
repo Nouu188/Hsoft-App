@@ -1,48 +1,57 @@
-import { COLORS, SHADOWS, SIZES } from '@/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { SHADOWS, SIZES, COLORS } from '@/constants/theme';
+import { Note } from '@/store/useNotesStore';
 import { NoteItemProps } from './types';
 
-const NoteItem: React.FC<NoteItemProps> = ({ note, onPress }) => {
+const NoteItem: React.FC<NoteItemProps> = ({ note, onPress, theme }) => {
+  // Kiểm tra createdAt hợp lệ, fallback nếu không hợp lệ
+  const formattedDate = note.createdAt
+    ? (() => {
+        const d = new Date(note.createdAt);
+        return isNaN(d.getTime()) ? 'Không xác định' : d.toLocaleDateString();
+      })()
+    : 'Không xác định';
+
   return (
-    <TouchableOpacity style={styles.noteItem} onPress={onPress}>
-      <Text style={styles.noteTitle} numberOfLines={1}>
+    <TouchableOpacity
+      style={[styles.noteItem, { backgroundColor: theme.white }]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <Text style={[styles.noteTitle, { color: theme.textDark }]} numberOfLines={1}>
         {note.title || 'Không có tiêu đề'}
       </Text>
 
-      <Text style={styles.noteContent} numberOfLines={2}>
-        {note.content}
+      <Text style={[styles.noteContent, { color: theme.text }]} numberOfLines={2}>
+        {note.content || 'Không có nội dung'}
       </Text>
 
-      <Text style={styles.noteTimestamp}>
-        {new Date(note.createdAt).toLocaleDateString()}
+      <Text style={[styles.noteTimestamp, { color: theme.secondary }]}>
+        {formattedDate}
       </Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  noteItem: { 
-    backgroundColor: COLORS.white, 
-    borderRadius: SIZES.radius, 
-    padding: SIZES.padding, 
-    marginBottom: SIZES.base, 
-    ...SHADOWS.light 
+  noteItem: {
+    borderRadius: SIZES.radius,
+    padding: SIZES.padding,
+    marginBottom: SIZES.base,
+    ...SHADOWS.light,
   },
-  noteTitle: { 
-    fontSize: SIZES.h2, 
-    fontWeight: 'bold', 
-    color: COLORS.text 
+  noteTitle: {
+    fontSize: SIZES.h2,
+    fontWeight: 'bold',
   },
-  noteContent: { 
-    fontSize: SIZES.body4, 
-    color: COLORS.secondary, 
-    marginVertical: SIZES.base 
+  noteContent: {
+    fontSize: SIZES.body4,
+    marginVertical: SIZES.base,
   },
-  noteTimestamp: { 
-    fontSize: SIZES.body5, 
-    color: COLORS.secondary, 
-    textAlign: 'right' 
+  noteTimestamp: {
+    fontSize: SIZES.body5,
+    textAlign: 'right',
   },
 });
 

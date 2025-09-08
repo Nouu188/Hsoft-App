@@ -1,28 +1,36 @@
-import { COLORS, FONTS, SIZES } from "@/constants/theme";
+import { FONTS, SIZES } from "@/constants/theme";
 import { ProfileStackParamList } from "../../../navigation/types";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { StyleSheet, Text } from "react-native";
-import { TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useThemeStore } from "@/store/useThemeStore";
 
-type ProfileScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Profile'>;
+type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  ProfileStackParamList,
+  "Profile"
+>;
 
-const ProfileHeader = () => {
+const ProfileHeader: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const { theme } = useThemeStore(); // ✅ lấy theme từ store
 
   return (
-    <View style={styles.header}>
-      <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color={COLORS.text} /> 
-      </TouchableOpacity>
-      <Text style={styles.headerTitle}>Profile</Text>
-      
-      <TouchableOpacity 
-        style={styles.headerButton} 
-        // onPress={() => handleShare()} // You might want to implement a share function here
+    <View style={[styles.header, { backgroundColor: theme.primary }]}>
+      {/* Back button */}
+      <TouchableOpacity
+        style={styles.headerButton}
+        onPress={() => navigation.goBack()}
       >
-        <Ionicons name="share-outline" size={24} color={COLORS.text} />
+        <Ionicons name="arrow-back" size={24} color={theme.text} />
+      </TouchableOpacity>
+
+      {/* Title */}
+      <Text style={[styles.headerTitle, { color: theme.text }]}>Profile</Text>
+
+      {/* Share button */}
+      <TouchableOpacity style={styles.headerButton}>
+        <Ionicons name="share-outline" size={24} color={theme.text} />
       </TouchableOpacity>
     </View>
   );
@@ -30,25 +38,21 @@ const ProfileHeader = () => {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: SIZES.padding,
-    // Reduced vertical padding to match the image's tighter spacing
-    paddingVertical: SIZES.base, 
-    backgroundColor: COLORS.primary,
-    // Added padding top to account for status bar, making it align within SafeAreaView
-    paddingTop: SIZES.padding * 0.5, 
-    borderBottomWidth:0.2,
-    height:150
+    paddingVertical: SIZES.base,
+    paddingTop: SIZES.padding * 0.5,
+    borderBottomWidth: 0.2,
+    height: 150,
   },
   headerButton: {
     padding: SIZES.base,
   },
   headerTitle: {
     ...FONTS.h2,
-    fontWeight: 'bold',
-    color: COLORS.text,
+    fontWeight: "bold",
   },
 });
 

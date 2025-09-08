@@ -1,26 +1,28 @@
+import { SIZES, SHADOWS } from '@/constants/theme';
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS, SIZES, SHADOWS } from '@/constants/theme';
-import { SearchBarProps } from './types';
+import { SearchBarProps, ThemedSearchBarProps } from './types';
 
-const SearchBar: React.FC<SearchBarProps> = ({ value, onChangeText }) => {
+
+const SearchBar: React.FC<ThemedSearchBarProps> = ({ value, onChangeText, theme }) => {
   return (
     <View style={styles.searchContainer}>
-      <View style={styles.searchBar}>
+      <View style={[styles.searchBar, { backgroundColor: theme.white }]}>
         <Ionicons
           name="search-outline"
           size={22}
-          color={COLORS.secondary}
+          color={theme.secondary}
           style={styles.searchIcon}
         />
-
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: theme.text }]}
           placeholder="Tìm kiếm ghi chú..."
-          placeholderTextColor={COLORS.secondary}
+          placeholderTextColor={theme.secondary}
           value={value}
           onChangeText={onChangeText}
+          returnKeyType="search"
+          underlineColorAndroid="transparent"
         />
       </View>
     </View>
@@ -35,7 +37,6 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
     borderRadius: SIZES.radius,
     paddingHorizontal: SIZES.padding,
     height: 50,
@@ -47,8 +48,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: SIZES.body3,
-    color: COLORS.text,
   },
 });
 
-export default SearchBar; 
+export default SearchBar;

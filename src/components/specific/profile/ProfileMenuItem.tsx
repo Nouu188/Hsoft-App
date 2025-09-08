@@ -1,45 +1,88 @@
-import { COLORS, FONTS, SHADOWS, SIZES } from "@/constants/theme";
+import { FONTS, SHADOWS, SIZES } from "@/constants/theme";
 import Ionicons from "@react-native-vector-icons/ionicons";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import {ProfileMenuItemProps} from './types'
+import { StyleSheet, Text, TouchableOpacity, View, Switch } from "react-native";
+import { ProfileMenuItemProps } from "./types";
+import { useThemeStore } from "@/store/useThemeStore";
 
-// Component hiển thị một mục trong menu profile
-const ProfileMenuItem: React.FC<ProfileMenuItemProps> = ({ icon, text, onPress }) => (
-  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-    <View style={styles.menuItemIconContainer}>
-      <Ionicons name={icon as any} size={22} color={COLORS.textDark} />
-    </View>
+const ProfileMenuItem: React.FC<ProfileMenuItemProps & { 
+  isSwitch?: boolean; 
+  switchValue?: boolean; 
+  onSwitchChange?: (value: boolean) => void; 
+}> = ({
+  icon,
+  text,
+  onPress,
+  isSwitch = false,
+  switchValue = false,
+  onSwitchChange,
+}) => {
+  const { theme } = useThemeStore(); // ✅ lấy theme từ store
 
-    <Text style={styles.menuItemText}>{text}</Text>
+  return (
+    <TouchableOpacity
+      style={[
+        styles.menuItem,
+        { backgroundColor: theme.white, shadowColor: theme.textDark },
+      ]}
+      onPress={isSwitch ? undefined : onPress}
+      activeOpacity={isSwitch ? 1 : 0.2}
+    >
+      {/* Icon trái */}
+      {icon && (
+        <View
+          style={[
+            styles.menuItemIconContainer,
+            { backgroundColor: theme.primaryLight },
+          ]}
+        >
+          <Ionicons name={icon as any} size={22} color={theme.textDark} />
+        </View>
+      )}
 
-    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textLight} />
-  </TouchableOpacity>
-);
+      {/* Text */}
+      <Text style={[styles.menuItemText, { color: theme.text }]}>{text}</Text>
+
+      {/* Switch hoặc mũi tên */}
+      {isSwitch ? (
+        <Switch
+          trackColor={{ false: theme.border, true: theme.introduction }}
+          thumbColor={switchValue ? theme.lightBlue : theme.white}
+          ios_backgroundColor={theme.border}
+          onValueChange={onSwitchChange}
+          value={switchValue}
+        />
+      ) : (
+        <Ionicons
+          name="chevron-forward-outline"
+          size={22}
+          color={theme.textLight}
+        />
+      )}
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   menuItem: {
-    flexDirection: 'row',           // Sắp xếp icon, text, mũi tên theo hàng ngang
-    alignItems: 'center',           // Căn giữa theo chiều dọc
-    backgroundColor: COLORS.white,  // Nền trắng
-    borderRadius: SIZES.radius,     // Bo góc
-    padding: SIZES.base * 1.5,      // Padding xung quanh
-    marginBottom: SIZES.base * 1.5, // Khoảng cách giữa các mục menu
-    ...SHADOWS.light,               // Hiệu ứng shadow nhẹ
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: SIZES.radius,
+    padding: SIZES.base * 1.5,
+    marginBottom: SIZES.base * 1.5,
+    ...SHADOWS.light,
   },
   menuItemIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,                 // Bo tròn để tạo hình tròn
-    backgroundColor: COLORS.primaryLight,
-    justifyContent: 'center',         // Căn icon giữa theo chiều dọc
-    alignItems: 'center',             // Căn icon giữa theo chiều ngang
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   menuItemText: {
     ...FONTS.body3,
-    flex: 1,                          // Chiếm không gian còn lại giữa icon và mũi tên
-    marginLeft: SIZES.padding,        // Khoảng cách với icon bên trái
-    fontWeight: '600',
-    color: COLORS.textLight,          // Màu chữ nhẹ nhàng
+    flex: 1,
+    marginLeft: SIZES.padding,
+    fontWeight: "600",
   },
 });
 

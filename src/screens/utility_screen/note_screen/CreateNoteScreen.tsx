@@ -1,4 +1,3 @@
-// CreateNoteScreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -8,13 +7,9 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { COLORS, SIZES } from '@/constants/theme';
+import { SIZES, COLORS } from '@/constants/theme';
 import dayjs from 'dayjs';
-import Animated, {
-  useAnimatedStyle,
-  interpolate,
-  SharedValue,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, interpolate, SharedValue } from 'react-native-reanimated';
 import CreateNoteHeader from '@/components/specific/home/note/CreateNoteHeader';
 import { Note } from '@/store/useNotesStore';
 
@@ -25,6 +20,7 @@ interface CreateNoteScreenProps {
   onDelete?: (noteId: string) => void;
   note?: Note;
   mode?: 'create' | 'edit';
+  theme?: typeof COLORS; // thêm prop theme
 }
 
 const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({
@@ -34,6 +30,7 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({
   onDelete,
   note,
   mode = 'create',
+  theme = COLORS,
 }) => {
   const [title, setTitle] = useState(note?.title ?? '');
   const [content, setContent] = useState(note?.content ?? '');
@@ -64,30 +61,41 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <Animated.View style={[styles.contentWrapper, contentAnimatedStyle]}>
+        {/* Header */}
         <CreateNoteHeader
           onClose={onClose}
           onSave={handleSave}
           onDelete={mode === 'edit' ? handleDelete : undefined}
           mode={mode}
+          theme={theme}
         />
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 80 }} keyboardShouldPersistTaps="handled">
+        {/* Scrollable content */}
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 80 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Tiêu đề */}
           <TextInput
-            style={styles.titleInput}
+            style={[styles.titleInput, { color: theme.text }]}
             placeholder="Tiêu đề"
-            placeholderTextColor={COLORS.placeholderColor}
+            placeholderTextColor={theme.placeholderColor}
             value={title}
             onChangeText={setTitle}
           />
-          <Text style={styles.metaText}>
+
+          {/* Meta info */}
+          <Text style={[styles.metaText, { color: theme.secondary }]}>
             {dayjs().format('DD [tháng] M HH:mm')}  |  {content.length} ký tự
           </Text>
+
+          {/* Nội dung */}
           <TextInput
-            style={styles.contentInput}
+            style={[styles.contentInput, { color: theme.text, backgroundColor: theme.background }]}
             placeholder="Bắt đầu soạn..."
-            placeholderTextColor={COLORS.placeholderColor}
+            placeholderTextColor={theme.placeholderColor}
             multiline
             autoFocus={true}
             value={content}
@@ -100,11 +108,27 @@ const CreateNoteScreen: React.FC<CreateNoteScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1 },
   contentWrapper: { flex: 1 },
-  titleInput: { fontSize: SIZES.h2, paddingHorizontal: SIZES.padding, color: COLORS.text },
-  metaText: { fontSize: SIZES.body4, color: COLORS.secondary, paddingHorizontal: SIZES.padding, marginVertical: SIZES.base, },
-  contentInput: { flex: 1, fontSize: SIZES.body3, paddingHorizontal: SIZES.padding, textAlignVertical: 'top', color: COLORS.text, minHeight: 200, },
+  titleInput: {
+    fontSize: SIZES.h2,
+    paddingHorizontal: SIZES.padding,
+    paddingVertical: 8,
+    fontWeight: '600',
+  },
+  metaText: {
+    fontSize: SIZES.body4,
+    paddingHorizontal: SIZES.padding,
+    marginVertical: SIZES.base,
+  },
+  contentInput: {
+    flex: 1,
+    fontSize: SIZES.body3,
+    paddingHorizontal: SIZES.padding,
+    paddingVertical: 10,
+    textAlignVertical: 'top',
+    minHeight: 200,
+  },
 });
 
 export default CreateNoteScreen;

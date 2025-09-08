@@ -1,4 +1,4 @@
-import { COLORS } from '@/constants/theme';
+import { COLORS, DARK_COLORS } from '@/constants/theme';
 import { useState, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
 import Animated, {
@@ -10,14 +10,15 @@ import Animated, {
   SharedValue,
 } from 'react-native-reanimated';
 
-// Định nghĩa cấu hình cho nút FAB để hook có thể tái sử dụng
+// Cấu hình FAB
 interface FabConfig {
   size: number;
   bottom: number;
   right: number;
+  isDarkMode: boolean; // bắt buộc phải truyền isDarkMode
 }
 
-// Định nghĩa kiểu dữ liệu trả về của hook để code dễ đọc và an toàn hơn
+// Kiểu dữ liệu trả về của hook
 interface MorphingHookResult {
   isExpanded: boolean;
   animationProgress: SharedValue<number>;
@@ -27,38 +28,32 @@ interface MorphingHookResult {
 }
 
 export const useMorphingAnimation = (config: FabConfig): MorphingHookResult => {
-  const { size, bottom, right } = config;
+  const { size, bottom, right, isDarkMode } = config;
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const animationProgress = useSharedValue(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Dùng ref để quản lý và xóa timers, tránh memory leak
   const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleToggleNoteView = () => {
     const opening = !isExpanded;
 
-    // Xóa các timer cũ để tránh các hành vi không mong muốn khi người dùng nhấn liên tục
     if (openTimerRef.current) clearTimeout(openTimerRef.current);
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
 
     if (opening) {
-      // Bắt đầu animation trước
       animationProgress.value = withTiming(1, {
         duration: 400,
         easing: Easing.out(Easing.cubic),
       });
-      // Mount component con sau một khoảng trễ ngắn để animation mở được mượt mà
       openTimerRef.current = setTimeout(() => setIsExpanded(true), 120);
     } else {
-      // Bắt đầu animation đóng
       animationProgress.value = withTiming(0, {
         duration: 400,
         easing: Easing.out(Easing.cubic),
       });
-      // Unmount component con sau khi animation đã kết thúc
       closeTimerRef.current = setTimeout(() => setIsExpanded(false), 420);
     }
   };
@@ -74,7 +69,7 @@ export const useMorphingAnimation = (config: FabConfig): MorphingHookResult => {
       width,
       height,
       borderRadius,
-      backgroundColor:COLORS.white, // Giả sử màu trắng
+      backgroundColor: isDarkMode ? DARK_COLORS.white : COLORS.primary, 
       transform: [{ translateX }, { translateY }],
       elevation: interpolate(animationProgress.value, [0, 1], [5, 0]),
     };
@@ -84,7 +79,6 @@ export const useMorphingAnimation = (config: FabConfig): MorphingHookResult => {
     opacity: interpolate(animationProgress.value, [0, 0.2], [1, 0]),
   }));
 
-  // Trả về tất cả các giá trị và hàm mà component cần sử dụng
   return {
     isExpanded,
     animationProgress,
