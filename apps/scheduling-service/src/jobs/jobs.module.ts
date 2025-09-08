@@ -11,6 +11,7 @@ import { DoseHistorySyncConsumer } from './consumers/dose-history-sync.consumer.
 import { SyncConsumer } from './consumers/doses-sync.consumer';
 import { DoseStatusTransitionService } from './services/dose-status-transition.service';
 import { DosesSyncService } from './services/doses-sync.service';
+import { OutboxModule } from '@app/outbox';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { DosesSyncService } from './services/doses-sync.service';
     TypeOrmModule.forFeature([Dose]),
     ApiClientsModule,
     AppRabbitMQModule,
+    OutboxModule,
   ],
   providers: [
     DosesSyncService,

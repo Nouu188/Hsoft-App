@@ -2,11 +2,12 @@ import { AccountApiClientService } from '@app/api-clients/account/account-api-cl
 import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
 import { QueueName } from '@app/common/rabbitmq/queues';
 import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
-import { AmqpConnection, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { OutboxService } from '@app/outbox';
+import { AmqpConnection, Nack, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { Injectable, Logger } from '@nestjs/common';
 
-const BATCH_SIZE = 200; // Mỗi batch xử lý 100 user
-const BATCH_DELAY_MINUTES = 5; 
+const BATCH_SIZE = 200;
+const BATCH_DELAY_MINUTES = 5;
 
 @Injectable()
 export class BatchCreationConsumer {
@@ -15,41 +16,51 @@ export class BatchCreationConsumer {
     constructor(
         private readonly accountApiClient: AccountApiClientService,
         private readonly amqpConnection: AmqpConnection,
-    ) {}
+        private readonly outboxService: OutboxService,
+    ) { }
 
     @RabbitSubscribe({
         exchange: ExchangeName.DOSES_EVENTS,
         routingKey: RoutingKey.DOSES_BATCH_SYNC_STARTED,
         queue: QueueName.SCHEDULING_DOSES_BATCH_CREATION,
     })
-    public async handleStartFullSync(): Promise<void> {
-        this.logger.log('Received request to start full sync. Fetching all users...');
-        
-        const usersToSync = await this.accountApiClient.fetchAllUser();
+    public async handleStartFullSync(): Promise<void | Nack> {
+        try {
+            this.logger.log('Received request to start full sync. Fetching all users...');
 
-        if (usersToSync.length === 0) {
-            this.logger.log('No users found to create batches.');
-            return;
-        }
+            const usersToSync = await this.accountApiClient.fetchAllUser();
+            if (usersToSync.length === 0) {
+                this.logger.log('No users found to create batches.');
+                return;
+            }
 
-        this.logger.log(`Found ${usersToSync.length} users. Creating batches of ${BATCH_SIZE}...`);
+            this.logger.log(`Found ${usersToSync.length} users. Creating batches of ${BATCH_SIZE}...`);
 
-        const userIds = usersToSync.map(u => u.id);
-        let batchIndex = 0;
+            const userIds = usersToSync.map(u => u.id);
+            let batchIndex = 0;
 
-        for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
-            const batch = userIds.slice(i, i + BATCH_SIZE);
-            const delay = batchIndex * BATCH_DELAY_MINUTES * 60 * 1000; // Delay tính bằng ms
+            for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+                const batch = userIds.slice(i, i + BATCH_SIZE);
+                const delay = batchIndex * BATCH_DELAY_MINUTES * 60 * 1000;
 
-            this.amqpConnection.publish(
-                ExchangeName.DOSES_EVENTS,
-                RoutingKey.DOSES_BATCH_SYNC_PROCESSED,
-                { userIds: batch },
-                { headers: { 'x-delay': delay } }
-            );
-            
-            this.logger.log(`Published batch #${batchIndex + 1} with ${batch.length} users, scheduled with a delay of ${delay / 60000} minutes.`);
-            batchIndex++;
+                await this.outboxService.createOutboxMessage({
+                    aggregateType: 'doses',
+                    aggregateId: 'batch-' + batchIndex,
+                    eventType: 'BatchSyncProcessed',
+                    payload: { userIds: batch },
+                    exchange: ExchangeName.DOSES_EVENTS,
+                    routingKey: RoutingKey.DOSES_BATCH_SYNC_PROCESSED,
+                });
+
+                this.logger.log(
+                    `Queued batch #${batchIndex + 1} with ${batch.length} users to Outbox, scheduled in ${delay / 60000} minutes.`,
+                );
+                batchIndex++;
+            }
+        } catch (error) {
+            this.logger.error(`Error processing batch creation: ${error.message}`, error.stack);
+
+            return new Nack(true);
         }
     }
 }

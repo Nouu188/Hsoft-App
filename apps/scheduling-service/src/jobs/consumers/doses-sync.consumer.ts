@@ -1,11 +1,10 @@
-import { RabbitSubscribe, Nack } from '@golevelup/nestjs-rabbitmq';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { DosesSyncService } from '../services/doses-sync.service';
 import { AccountApiClientService } from '@app/api-clients/account/account-api-client.service';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
-import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
-import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
 import { QueueName } from '@app/common/rabbitmq/queues';
+import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
+import { Nack, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { DosesSyncService } from '../services/doses-sync.service';
 
 interface SyncRequestPayload {
   phoneNumber: string;
@@ -19,7 +18,7 @@ export class SyncConsumer {
   constructor(
     private readonly dosesSyncService: DosesSyncService,
     private readonly accountApiClient: AccountApiClientService,
-  ) {}
+  ) { }
 
   @RabbitSubscribe({
     exchange: ExchangeName.DOSES_EVENTS_DELAY,
@@ -29,7 +28,6 @@ export class SyncConsumer {
   public async handleSyncRequest(payload: SyncRequestPayload): Promise<void | Nack> {
     const { phoneNumber, hospitalUrl } = payload;
 
-    // Validate payload
     if (!phoneNumber) {
       this.logger.error(`[SyncConsumer] Payload missing 'identity' or 'phoneNumber': ${JSON.stringify(payload)}`);
       return new Nack(false);
@@ -40,7 +38,6 @@ export class SyncConsumer {
       return new Nack(false);
     }
 
-    // Fetch user from account service
     let user;
     try {
       user = await this.accountApiClient.fetchUserByPhoneNumber(phoneNumber);
@@ -53,10 +50,9 @@ export class SyncConsumer {
       return new Nack(false);
     }
 
-    // Perform sync
     try {
       this.logger.log(`[SyncConsumer] Starting dose sync for user ${user.id} (${phoneNumber})`);
-      
+
       await this.dosesSyncService.syncDosesInFuture(user, hospitalUrl);
 
       this.logger.log(`[SyncConsumer] Completed dose sync for user ${user.id}`);
