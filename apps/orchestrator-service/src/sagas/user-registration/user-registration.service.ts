@@ -57,9 +57,14 @@ export class UserRegistrationService {
 
     async handleEvent(userId: string, eventType: string, payload: any): Promise<void> {
         await this._updateSaga(userId, async (saga, em) => {
+            if (saga.status === UserRegistrationSagaStatus.COMPLETED || saga.status === UserRegistrationSagaStatus.FAILED) {
+                this.logger.debug(`[IGNORE] Saga for userId=${userId} is already in a terminal state (${saga.status}). Ignoring event ${eventType}.`);
+                return null; 
+            }
+
             const currentStep = UserRegistrationWorkflow.find((s) => s.step === saga.status);
             if (!currentStep) {
-                this.logger.warn(`[SKIP] No workflow step defined for saga status=${saga.status} on userId=${userId}`);
+                this.logger.error(`[CRITICAL] No workflow step defined for an active saga status=${saga.status} on userId=${userId}`);
                 return null;
             }
 
