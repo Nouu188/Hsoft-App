@@ -3,7 +3,6 @@ import { MetricName } from '@app/common/metrics/contracts/metrics.contracts';
 import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
 import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
 import { OutboxService } from '@app/outbox';
-import { MailerService } from '@nestjs-modules/mailer';
 import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
@@ -33,7 +32,6 @@ export class AuthService {
 
         @Inject(GOOGLE_OAUTH2_CLIENT) private readonly googleClient: OAuth2Client,
 
-        private readonly mailerService: MailerService,
         private readonly tenantApiClient: TenantApiClientService,
 
         private readonly outboxService: OutboxService,
@@ -238,13 +236,28 @@ export class AuthService {
                 registerInput,
             );
 
-            await this.mailerService.sendMail({
+            const commandPayload = {
                 to: email,
                 subject: `[MedPlusApp] Mã xác thực của bạn là ${otp}`,
-                template: './verification',
+                template: 'verification',
                 context: { otp },
+                history: {
+                    type: 'EMAIL_VERIFICATION_OTP', 
+                    title: 'Xác thực email đăng ký',
+                    body: `Mã OTP của bạn là: ${otp}`,
+                }
+            };
+            
+            await this.outboxService.createOutboxMessage({
+                aggregateType: 'auth',
+                aggregateId: email, 
+                eventType: 'SEND_TRANSACTIONAL_EMAIL_COMMAND', 
+                payload: commandPayload,
+                exchange: ExchangeName.COMMANDS,
+                routingKey: RoutingKey.SEND_TRANSACTIONAL_EMAIL_COMMAND, 
             });
-            this.logger.log(`Sent verification OTP to ${email} successfully`);
+
+            this.logger.log(`Queued SEND_TRANSACTIONAL_EMAIL_COMMAND for ${email} via Outbox`);
 
             this.otpSentCounter.inc({ otp_channel: 'email', status: 'success' });
             return { success: true, message: 'OTP đã được gửi thành công.' };

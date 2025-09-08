@@ -14,5 +14,7 @@ export const QueueName = {
   SCHEDULING_DOSES_BATCH_CREATION: 'scheduling.doses.batch.creation.queue',
   SCHEDULING_DOSES_BATCH_SYNC: 'scheduling.doses.batch.sync.queue',
   APPOINTMENT_BOOKED: 'appointments.booked.queue',
+
   NOTIFICATION_SCHEDULER: 'notification.scheduler.queue',
+  NOTIFICATION_SEND_EMAIL: 'notification.send.email'
 };

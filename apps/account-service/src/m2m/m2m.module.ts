@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { M2mResolver } from './m2m.resolver';
 import { M2mService } from './m2m.service';
 import { ServiceClient } from '../auth/entities/service-client.entity';
+import { M2mController } from './m2m.controller';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ServiceClient } from '../auth/entities/service-client.entity';
     }),
   ],
   providers: [M2mService, M2mResolver],
+  controllers: [M2mController],
   exports: [M2mService], 
 })
 export class M2mModule {}

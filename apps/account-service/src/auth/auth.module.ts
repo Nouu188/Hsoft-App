@@ -1,26 +1,24 @@
+import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
+import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
 import { AuthLibModule } from '@app/auth';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
+import { OutboxModule } from '@app/outbox';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Logger, Module, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
-import { join } from 'path';
+import { OtpModule } from '../otp/otp.module';
+import { TokensModule } from '../tokens/tokens.module';
+import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { ServiceClient } from './entities/service-client.entity';
 import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
 import { GoogleModule } from './strategies/google/google.module';
-import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
-import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
-import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
-import { RefreshToken } from '../users/entities/refresh-token.entity';
-import { OutboxModule } from '@app/outbox';
-import { OtpModule } from '../otp/otp.module';
-import { TokensModule } from '../tokens/tokens.module';
+import { M2mModule } from '../m2m/m2m.module';
 
 
 @Module({
@@ -60,30 +58,6 @@ import { TokensModule } from '../tokens/tokens.module';
         }
       },
     }),
-    MailerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('SMTP_HOST'),
-          port: configService.get<number>('SMTP_PORT'),
-          secure: false,
-          auth: {
-            user: configService.get<string>('SMTP_USER'),
-            pass: configService.get<string>('SMTP_PASS'),
-          },
-        },
-        defaults: {
-          from: `"MedPlusApp" <${configService.get<string>('SMTP_FROM')}>`,
-        },
-        template: {
-          dir: join(process.cwd(), 'apps/account-service/src/auth/templates'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-      }),
-    }),
     OutboxModule.forRoot('authConnection'),
     forwardRef(() => UsersModule),
     ConfigModule,
@@ -93,7 +67,8 @@ import { TokensModule } from '../tokens/tokens.module';
     HospitalApiClientModule,
     TenantApiClientModule,
     OtpModule,
-    TokensModule
+    TokensModule,
+    M2mModule
   ],
   providers: [
     AuthService,

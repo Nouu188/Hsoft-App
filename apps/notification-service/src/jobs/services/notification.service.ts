@@ -6,7 +6,6 @@ import { DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.enti
 import { DataSource } from 'typeorm';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { NotificationStatus, NotificationType } from '../../notification-history/entities/notification-history.entity';
-import { HistoryService } from '../../notification-history/notification-history.service';
 
 interface GroupedNotificationPayload {
   userId: string;
@@ -21,7 +20,7 @@ export class NotificationService {
     private readonly doseApiClient: DoseApiClientService,
     private readonly accountApiClient: AccountApiClientService,
     private readonly firebaseService: FirebaseService,
-    private readonly historyService: HistoryService,
+    private readonly historyService: Notification,
     @InjectDataSource('notificationConnection') private readonly dataSource: DataSource, 
   ) {}
 

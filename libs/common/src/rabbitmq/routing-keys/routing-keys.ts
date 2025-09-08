@@ -1,7 +1,7 @@
 export const RoutingKey = {
   // 1. Event khởi tạo Saga từ Account Service
   USER_FIRST_LOGIN_SAGA_INITIATED: 'user.saga.initiated',
-  
+
   // 2. Command từ Orchestrator đến Identity Service
   CREATE_IDENTITY_COMMAND: 'identity.command.create',
 
@@ -19,13 +19,16 @@ export const RoutingKey = {
   DOSE_HISTORY_SYNCED_FAILURE: 'dose-history.synced.failure',
 
   USER_CREATE_COMMAND: 'user.create.command',
-  
+
   // === Các Events hiện có ===
   USER_PROFILE_UPDATED: 'user.profile.updated',
   DOSES_SYNC_REQUESTED: 'doses.sync.requested',
   DOSES_BATCH_SYNC_STARTED: 'doses.batch-sync.started',
   DOSES_BATCH_SYNC_PROCESSED: 'doses.batch-sync.processed',
+
   NOTIFICATION_SCHEDULED: 'notification.scheduled',
+  SEND_TRANSACTIONAL_EMAIL_COMMAND: 'send_transactional_email_command',
+
   APPOINTMENT_CANCELLED: 'appointment.cancelled',
   APPOINTMENT_BOOKED: 'appointment.booked',
 };
