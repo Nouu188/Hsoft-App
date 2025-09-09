@@ -1,5 +1,4 @@
 // src/features/booking-wizard/BookingWizard.tsx
-
 import React, { useState } from 'react';
 import { View, StyleSheet, useWindowDimensions, Text, TouchableOpacity, Alert } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -9,21 +8,18 @@ import { COLORS, SIZES } from '@/constants/theme';
 
 // Import các component con cho từng bước
 import WizardStepper from './WizardStepper';
-import Step1_PatientInfo from './steps/Step1_PatientInfo';
+import Step1_SelectHospital from './steps/step_1/Step1_PatientInfo';
+
 // import Step2_SelectSchedule from './steps/Step2_SelectSchedule';
 // import Step3_Confirmation from './steps/Step3_Confirmation';
 
-const STEPS = ['Thông tin', 'Chọn lịch', 'Xác nhận'];
+const STEPS = ['Chọn bệnh viện', 'Chọn lịch', 'Xác nhận'];
 
 const BookingWizard = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const { width: screenWidth } = useWindowDimensions();
 
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-
-  // Dữ liệu form sẽ được quản lý bởi Zustand store
-  // const bookingData = useBookingStore(state => state.data);
-  // const updateBookingData = useBookingStore(state => state.updateData);
 
   const contentAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -47,19 +43,16 @@ const BookingWizard = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     } else {
-      // Quay lại màn hình trước đó
       // navigation.goBack();
     }
   };
 
   const goToStep = (stepIndex: number) => {
-    // Chỉ được đi đến bước tiếp theo nếu bước hiện tại đã hoàn thành
     if (stepIndex > currentStep && !completedSteps.includes(currentStep)) {
       Alert.alert("Thông báo", "Vui lòng hoàn tất bước hiện tại.");
       return;
     }
 
-    // Nếu quay lại một bước đã hoàn thành
     if (stepIndex < currentStep && completedSteps.includes(stepIndex)) {
       Alert.alert(
         "Xác nhận quay lại",
@@ -69,7 +62,6 @@ const BookingWizard = () => {
           { 
             text: "Đồng ý", 
             onPress: () => {
-              // Xóa các bước đã hoàn thành sau bước này
               setCompletedSteps(prev => prev.filter(s => s < stepIndex));
               setCurrentStep(stepIndex);
             },
@@ -97,13 +89,18 @@ const BookingWizard = () => {
 
       <View style={styles.contentWrapper}>
         <Animated.View style={[styles.contentSlider, contentAnimatedStyle]}>
+          {/* Step 1: Select Hospital */}
           <View style={{ width: screenWidth }}>
-            <Step1_PatientInfo onNext={handleNext} />
+            <Step1_SelectHospital onNext={handleNext} />
           </View>
+
+          {/* Step 2 */}
           {/* <View style={{ width: screenWidth }}>
             <Step2_SelectSchedule onNext={handleNext} onBack={handleBack} />
-          </View>
-          <View style={{ width: screenWidth }}>
+          </View> */}
+
+          {/* Step 3 */}
+          {/* <View style={{ width: screenWidth }}>
             <Step3_Confirmation onConfirm={handleNext} onBack={handleBack} />
           </View> */}
         </Animated.View>

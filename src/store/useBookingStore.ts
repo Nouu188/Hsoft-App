@@ -1,15 +1,13 @@
-// src/store/useBookingStore.ts
+// src/store/useBookingStore.ts (SỬA ĐỔI - Tùy chọn 2)
 
 import { Clinic } from '@/types/dtos/clinic/clinic.dto';
 import { Doctor } from '@/types/dtos/doctor/doctor.dto';
 import { Hospital } from '@/types/dtos/tenant/hospital.dto';
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware'; // Import devtools để debug
+import { devtools } from 'zustand/middleware';
 
-// Định nghĩa kiểu cho loại hình đặt lịch
 export type BookingType = 'CLINIC' | 'DOCTOR';
 
-// Định nghĩa state cho toàn bộ luồng đặt lịch
 interface BookingStateData {
   hospital: Hospital | null;
   bookingType: BookingType | null;
@@ -27,6 +25,7 @@ interface BookingState {
   setDoctor: (doctor: Doctor | null) => void;
   setAppointmentTime: (time: Date | null) => void;
   setNotes: (notes: string) => void;
+  // isStepValid chỉ kiểm tra các trường không liên quan đến input của HospitalInput
   isStepValid: (step: number) => boolean;
   resetBooking: () => void;
 }
@@ -41,22 +40,16 @@ const initialState: BookingStateData = {
 };
 
 export const useBookingStore = create<BookingState>()(
-  // Sử dụng devtools để dễ dàng debug state với Redux DevTools Extension
   devtools(
     (set, get) => ({
       data: initialState,
 
-      // ===================================================================
-      // ACTIONS - Các hàm setter tường minh
-      // ===================================================================
-      
       setHospital: (hospital) => {
         console.log('[BookingStore] Setting hospital:', hospital?.name);
         set(state => ({
-          data: { 
-            ...state.data, 
+          data: {
+            ...state.data,
             hospital,
-            // Reset các lựa chọn phụ thuộc khi đổi bệnh viện
             clinic: null,
             doctor: null,
             appointmentTime: null,
@@ -67,10 +60,9 @@ export const useBookingStore = create<BookingState>()(
       setBookingType: (type) => {
         console.log('[BookingStore] Setting booking type:', type);
         set(state => ({
-          data: { 
-            ...state.data, 
+          data: {
+            ...state.data,
             bookingType: type,
-            // Reset các lựa chọn không liên quan
             clinic: type === 'DOCTOR' ? null : state.data.clinic,
             doctor: type === 'CLINIC' ? null : state.data.doctor,
           }
@@ -91,20 +83,16 @@ export const useBookingStore = create<BookingState>()(
         console.log('[BookingStore] Setting appointment time:', time);
         set(state => ({ data: { ...state.data, appointmentTime: time } }), false, 'setAppointmentTime');
       },
-      
+
       setNotes: (notes) => {
         set(state => ({ data: { ...state.data, notes } }), false, 'setNotes');
       },
 
-      // ===================================================================
-      // GETTERS - Các hàm tiện ích
-      // ===================================================================
-
       isStepValid: (step) => {
         const data = get().data;
         switch (step) {
-          case 0: // Bước 1: Chọn bệnh viện và loại hình
-            return !!data.hospital && !!data.bookingType;
+          case 0: // Bước 1: Chỉ kiểm tra bookingType, vì hospital sẽ được kiểm tra ở component
+            return !!data.bookingType;
           case 1: // Bước 2: Chọn chi tiết và thời gian
             if (data.bookingType === 'CLINIC') {
               return !!data.clinic && !!data.appointmentTime;
@@ -114,7 +102,6 @@ export const useBookingStore = create<BookingState>()(
             }
             return false;
           case 2: // Bước 3: Xác nhận
-            // Bước cuối luôn hợp lệ nếu các bước trước đã qua
             return true;
           default:
             return false;
@@ -126,6 +113,6 @@ export const useBookingStore = create<BookingState>()(
         set({ data: initialState }, false, 'resetBooking');
       },
     }),
-    { name: 'BookingStore' } // Tên cho Redux DevTools
+    { name: 'BookingStore' }
   )
 );

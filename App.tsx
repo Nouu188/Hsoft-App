@@ -14,9 +14,9 @@ import {
   NavigationContainerRef,
 } from '@react-navigation/native';
 
-import RootNavigator, { RootStackParamList } from './src/navigation/RootNavigator';
+import RootNavigator from './src/navigation/RootNavigator';
 import { useAppInitializer } from './src/hooks/useAppInitializer';
-
+import { RootStackParamList } from '../Hsoft-App/src/navigation/types';
 const App: React.FC = () => {
   // Tạo một `ref` để có thể truy cập vào các hàm của `NavigationContainer` từ bên ngoài.
   // `ref` này sẽ được truyền vào custom hook để nó có thể thực hiện việc điều hướng.

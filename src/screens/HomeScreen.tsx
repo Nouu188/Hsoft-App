@@ -24,12 +24,13 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import HealthCardsView from '../components/specific/home/healthcards/HeartStatView';
-import NewsCarouselView from '../components/specific/home/news_carousel/NewsCarouselView';
+import NewsCarouselView from '../components/specific/home/news_carousel/CarouselView';
 import UtilitiesView from '../components/specific/home/utilities_grid/UtilitiesView';
 import { UtilityItemProps } from '../components/specific/home/utilities_grid/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- ĐỊNH NGHĨA KIỂU DỮ LIỆU ---
+interface TipItem { id: string; title: string; content: string; }
 interface ScreenSection {
   type: 'medical_text' | 'carousel_tips' | 'utility_grid' | 'footer_spacer';
   id: string;
@@ -150,7 +151,15 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </View>
         );
       case 'carousel_tips':
-        return <NewsCarouselView data={carouselData} renderItem={(tip) => <TipCard title={tip.title} content={tip.content} />} />;
+        return <NewsCarouselView<TipItem>
+  data={carouselData}
+  renderItem={(tip) => (
+    <View style={{ padding: 20, backgroundColor: theme.white, borderRadius: 16 }}>
+      <Text>{tip.title}</Text>
+      <Text>{tip.content}</Text>
+    </View>
+  )}
+/>
       case 'utility_grid':
         return <UtilitiesView title="Tiện ích sức khỏe" services={healthServices} />;
       case 'footer_spacer':

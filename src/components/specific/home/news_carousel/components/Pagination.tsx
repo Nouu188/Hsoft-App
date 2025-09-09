@@ -15,7 +15,7 @@ const Pagination: React.FC<PaginationProps> = React.memo(({ dataLength, activeIn
                     key={index} 
                     style={[
                         styles.paginationDot,
-                        { opacity: index === activeIndex ? 1 : 0.3 }, 
+                        { opacity: index === activeIndex ? 1 : 0.3, borderRadius: 4 }, 
                     ]}
                 />
             ))}
@@ -27,16 +27,15 @@ const Pagination: React.FC<PaginationProps> = React.memo(({ dataLength, activeIn
 const styles = StyleSheet.create({
     paginationContainer: {
         position: 'absolute',    // Cố định vị trí (thường đặt dưới cùng slider)
-        bottom: 15,              // Cách mép dưới 15px
+        bottom: 0,              // Cách mép dưới 15px
         left: 0,
         right: 0,
         flexDirection: 'row',    // Sắp xếp các dot theo hàng ngang
         justifyContent: 'center' // Canh giữa
     },
     paginationDot: {
-        width: 8,                // Chiều rộng dot
-        height: 8,               // Chiều cao dot
-        borderRadius: 4,         // Bo tròn (tạo hình tròn)
+        width: 11,                // Chiều rộng dot
+        height: 11,               // Chiều cao dot
         marginHorizontal: 4,     // Khoảng cách ngang giữa các dot
         backgroundColor: COLORS.primary, // Màu dot (theo theme)
     },
