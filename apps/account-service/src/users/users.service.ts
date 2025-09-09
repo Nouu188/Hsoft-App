@@ -3,7 +3,8 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  Logger
+  Logger,
+  NotFoundException
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
@@ -23,9 +24,7 @@ export class UsersService {
     @InjectDataSource('accountConnection') private readonly dataSource: DataSource,
   ) { }
 
-  // ===================================================================
-  // READ METHODS
-  // ===================================================================
+  // --- READ METHODS ---
 
   async findOne(criteria: FindOptionsWhere<User>): Promise<User | null> {
     return this.usersRepository.findOneBy(criteria);
@@ -59,9 +58,7 @@ export class UsersService {
     });
   }
 
-  // ===================================================================
-  // CREATE / UPDATE METHODS
-  // ===================================================================
+  // --- CREATE / UPDATE METHODS ---
 
   async createUserByEmail(input: CreateUserInput): Promise<UserPayload> {
     const { email, password, googleId, phoneNumber } = input;
@@ -153,9 +150,29 @@ export class UsersService {
     });
   }
 
-  // ===================================================================
-  // DEVICE TOKEN MANAGEMENT
-  // ===================================================================
+  async updatePassword(email: string, newPassword: string): Promise<UserPayload> {
+    const user = await this.usersRepository.findOneBy({ email });
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found.`);
+    }
+
+    user.password = newPassword;
+    const savedUser = await this.usersRepository.save(user);
+    return this.mapToPayload(savedUser);
+  }
+
+  async updatePasswordByUserId(userId: string, newPassword: string): Promise<UserPayload> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(`User with userId ${userId} not found.`);
+    }
+
+    user.password = newPassword;
+    const savedUser = await this.usersRepository.save(user);
+    return this.mapToPayload(savedUser);
+  }
+
+  // --- DEVICE TOKEN MANAGEMENT ---
 
   async addDeviceToken(
     userId: string,

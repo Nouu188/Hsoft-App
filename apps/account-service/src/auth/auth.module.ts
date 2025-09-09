@@ -9,6 +9,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as redisStore from 'cache-manager-redis-store';
+import { OAuth2Client } from 'google-auth-library';
+import { M2mModule } from '../m2m/m2m.module';
 import { OtpModule } from '../otp/otp.module';
 import { TokensModule } from '../tokens/tokens.module';
 import { RefreshToken } from '../users/entities/refresh-token.entity';
@@ -16,10 +18,11 @@ import { UsersModule } from '../users/users.module';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { ServiceClient } from './entities/service-client.entity';
-import { ClientCredentialsStrategy } from './strategies/client-credentials.strategy';
-import { GoogleModule } from './strategies/google/google.module';
-import { M2mModule } from '../m2m/m2m.module';
-
+import { EmailAuthenticationProvider } from './strategies/authenticators/login/email-authentication.provider';
+import { GoogleAuthenticationProvider } from './strategies/authenticators/login/google-authentication.provider';
+import { PhoneNumberAuthenticationProvider } from './strategies/authenticators/login/phone-authentication.provider';
+import { EmailRegistrationProvider } from './strategies/authenticators/registeration/email-registration.provider';
+import { PasswordResetProvider } from './strategies/authenticators/registeration/password-reset.provider';
 
 @Module({
   imports: [
@@ -63,7 +66,6 @@ import { M2mModule } from '../m2m/m2m.module';
     ConfigModule,
     AppRabbitMQModule,
     AuthLibModule,
-    GoogleModule,
     HospitalApiClientModule,
     TenantApiClientModule,
     OtpModule,
@@ -73,7 +75,21 @@ import { M2mModule } from '../m2m/m2m.module';
   providers: [
     AuthService,
     AuthResolver,
-    ClientCredentialsStrategy,
+    EmailAuthenticationProvider,
+    GoogleAuthenticationProvider,
+    PhoneNumberAuthenticationProvider,
+    EmailRegistrationProvider,
+    PasswordResetProvider,
+    {
+      provide: 'GOOGLE_OAUTH2_CLIENT',
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return new OAuth2Client({
+          clientId: configService.get<string>('GOOGLE_CLIENT_ID'),
+          clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
+        });
+      },
+    },
   ],
   exports: [
     AuthService,

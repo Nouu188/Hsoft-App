@@ -1,41 +1,34 @@
-import { TenantApiClientService } from '@app/api-clients/tenant/tenant-api-client.service';
 import { MetricName } from '@app/common/metrics/contracts/metrics.contracts';
-import { ExchangeName } from '@app/common/rabbitmq/exchanges/exchanges';
-import { RoutingKey } from '@app/common/rabbitmq/routing-keys';
-import { OutboxService } from '@app/outbox';
-import { BadRequestException, ConflictException, Inject, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import * as bcrypt from 'bcrypt';
-import { OAuth2Client } from 'google-auth-library';
 import { Counter } from 'prom-client';
-import { OtpContext } from '../otp/enums/otp-context.enum';
-import { OtpService } from '../otp/otp.service';
 import { TokenService } from '../tokens/tokens.service';
-import { UsersService } from '../users/users.service';
-import { GoogleLoginInput } from './dto/google-login.input';
-import { LoginInputByEmail, LoginInputByPhoneNumber } from './dto/login.input';
-import { LoginResponse } from './dto/login.response';
-import { RegisterByEmailInput } from './dto/register.input';
+import { GoogleLoginInput } from './dto/login/google-login.input';
+import { LoginInputByEmail, LoginInputByPhoneNumber } from './dto/login/login.input';
+import { RegisterByEmailInput } from './dto/registration/register.input';
 import { RequestOtpResponse } from './dto/request-otp-response.dto';
-import { VerifyEmailInput } from './dto/verify-email.input';
-import { GOOGLE_OAUTH2_CLIENT } from './strategies/google/google.module';
+import { VerifyEmailInput } from './dto/registration/verify-email.input';
+import { EmailAuthenticationProvider } from './strategies/authenticators/login/email-authentication.provider';
+import { EmailRegistrationProvider } from './strategies/authenticators/registeration/email-registration.provider';
+import { GoogleAuthenticationProvider } from './strategies/authenticators/login/google-authentication.provider';
+import { ILoginStrategy } from './strategies/authenticators/interfaces/authentication.provider';
+import { PhoneNumberAuthenticationProvider } from './strategies/authenticators/login/phone-authentication.provider';
+import { ConfirmPasswordResetInput, RequestPasswordResetInput, VerifyPasswordResetInput } from './dto/password-reset/password-reset.input';
+import { RequestPasswordResetResponse, VerifyPasswordResetResponse } from './dto/password-reset/password-reset.response';
+import { PasswordResetProvider } from './strategies/authenticators/registeration/password-reset.provider';
+import { LoginResponse } from './dto/login/login.response';
 
 @Injectable()
 export class AuthService {
     private readonly logger = new Logger(AuthService.name);
 
     constructor(
-        private usersService: UsersService,
+        private readonly emailAuthenticationProvider: EmailAuthenticationProvider,
+        private readonly googleAuthenticationProvider: GoogleAuthenticationProvider,
+        private readonly phoneNumberAuthenticationProvider: PhoneNumberAuthenticationProvider,
+        private readonly emailRegistrationProvider: EmailRegistrationProvider,
+        private readonly passwordResetProvider: PasswordResetProvider,
 
-        private readonly configService: ConfigService,
-
-        @Inject(GOOGLE_OAUTH2_CLIENT) private readonly googleClient: OAuth2Client,
-
-        private readonly tenantApiClient: TenantApiClientService,
-
-        private readonly outboxService: OutboxService,
-        private readonly otpService: OtpService,
         private readonly tokenService: TokenService,
 
         @InjectMetric(MetricName.AUTH_LOGIN_ATTEMPTS_TOTAL)
@@ -48,259 +41,99 @@ export class AuthService {
         private readonly otpSentCounter: Counter<string>,
     ) { }
 
+    // --- Login Handler ---
+
     async loginByPhoneNumber(loginInput: LoginInputByPhoneNumber): Promise<LoginResponse> {
-        const { phoneNumber, password, externalHospitalCode } = loginInput;
-        if (!phoneNumber && !password) {
-            throw new ConflictException("Invalid input");
-        }
-
-        try {
-            let user = await this.usersService.findByPhoneNumber(phoneNumber);
-            if (user) {
-                if (!user.password) {
-                    throw new UnauthorizedException('Password not set for this user.');
-                }
-
-                const isPasswordMatching = await bcrypt.compare(password!, user.password);
-                if (isPasswordMatching) {
-                    this.logger.log(`User ${user.phoneNumber} logged in from internal DB.`);
-
-                    const tokenPair = await this.tokenService.generateTokenPair(user);
-                    return { user, ...tokenPair };
-                }
-
-                throw new UnauthorizedException("Invalid credentials");
-            }
-
-            this.logger.log(`User with phoneNumber "${phoneNumber}" not found. Attempting to fetch from hospital API...`);
-
-            const hospital = await this.tenantApiClient.getHospitalByCode(externalHospitalCode);
-
-            const identity = await this.tenantApiClient.fetchIdentityFromHospital(phoneNumber, externalHospitalCode);
-            if (!identity) {
-                throw new UnauthorizedException('Patient information not found in hospital system.');
-            }
-
-            const birthYear = identity.birthYear;
-            if (!birthYear) {
-                throw new UnauthorizedException('Birth year not set for this user.');
-            }
-
-            if (loginInput.password !== birthYear.toString()) {
-                throw new UnauthorizedException('Invalid credentials.');
-            }
-
-            this.logger.log(`First-time login successful for phone ${identity.phoneNumber}. Creating local user...`);
-            const userPayload = await this.usersService.createUserFromHospital(identity);
-
-            this.logger.log(`Publishing 'user.first_login' event for user ${identity.phoneNumber}`);
-            await this.outboxService.createOutboxMessage({
-                aggregateType: 'auth',
-                aggregateId: userPayload.id,
-                eventType: 'UserFirstLoginSagaInitiated',
-                payload: { identity, userId: userPayload.id, externalHospitalCode, hospitalUrl: hospital.graphqlEndpoint },
-                exchange: ExchangeName.USER_EVENTS,
-                routingKey: RoutingKey.USER_FIRST_LOGIN_SAGA_INITIATED,
-            });
-
-            this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'success' });
-
-            const tokenPair = await this.tokenService.generateTokenPair(userPayload);
-            return { user: userPayload, ...tokenPair };
-        } catch (error) {
-            this.loginAttemptsCounter.inc({ login_method: 'phone', status: 'failure' });
-
-            this.logger.error(
-                `[LoginByPhoneNumber] Failed login attempt`,
-                {
-                    phoneNumber,
-                    externalHospitalCode,
-                    reason: error instanceof Error ? error.message : 'Unknown error',
-                    stack: error instanceof Error ? error.stack : undefined,
-                },
-            );
-
-            throw error;
-        }
+        return this._loginWithStrategy(this.phoneNumberAuthenticationProvider, loginInput, 'phone');
     }
 
     async loginByEmail(loginInput: LoginInputByEmail): Promise<LoginResponse> {
-        const { email, password } = loginInput;
-        if (!email && !password) {
-            this.logger.warn('Login attempt with missing email or password');
-            throw new ConflictException('Email and password are required');
-        }
-
-        this.logger.debug(`Login attempt for email: ${email}`);
-
-        try {
-            const user = await this.usersService.findByEmail(email);
-            if (!user) {
-                this.logger.warn(`Login failed: User with email ${email} not found`);
-                throw new UnauthorizedException('Invalid email or password');
-            }
-
-            if (!user.password) {
-                throw new UnauthorizedException('Password not set for this user.');
-            }
-
-            const isPasswordValid = await bcrypt.compare(password as string, user.password);
-            if (!isPasswordValid) {
-                this.logger.warn(`Login failed: Invalid password for email ${email}`);
-                throw new UnauthorizedException('Invalid email or password');
-            }
-
-            this.logger.log(`Login successful for email: ${email}`);
-
-            this.loginAttemptsCounter.inc({ login_method: 'email', status: 'success' });
-
-            const tokenPair = await this.tokenService.generateTokenPair(user);
-            return { user, ...tokenPair };
-        } catch (error) {
-            this.loginAttemptsCounter.inc({ login_method: 'email', status: 'failure' });
-
-            this.logger.error(
-                `[LoginByEmail] Login failed`,
-                {
-                    email,
-                    reason: error instanceof Error ? error.message : 'Unknown error',
-                    stack: error instanceof Error ? error.stack : undefined,
-                },
-            );
-
-            throw error;
-        }
+        return this._loginWithStrategy(this.emailAuthenticationProvider, loginInput, 'email');
     }
 
-    async loginWithGoogle(googleLoginInput: GoogleLoginInput): Promise<LoginResponse> {
-        const { idToken } = googleLoginInput;
-        this.logger.log('Attempting to log in with Google ID Token.');
-
-        try {
-            const ticket = await this.googleClient.verifyIdToken({
-                idToken: idToken,
-                audience: this.configService.get<string>('GOOGLE_CLIENT_ID'),
-            });
-
-            const payload = ticket.getPayload();
-            if (!payload || !payload.email) {
-                throw new UnauthorizedException('Invalid Google token or email not provided.');
-            }
-
-            const { email, name, picture, sub: googleId } = payload;
-            this.logger.log(`Google token verified for email: ${email}`);
-
-            const user = await this.usersService.findOrCreateFromGoogle({
-                email,
-                fullName: name,
-                avatarUrl: picture,
-                googleId,
-            });
-            this.logger.log(`Successfully authenticated user ${user.id} via Google.`);
-
-            this.loginAttemptsCounter.inc({ login_method: 'google', status: 'success' });
-
-            const tokenPair = await this.tokenService.generateTokenPair(user);
-            return { user, ...tokenPair };
-        } catch (error) {
-            this.otpSentCounter.inc({ otp_channel: 'email', status: 'failure' });
-
-            this.logger.error(
-                `[LoginWithGoogle] Google authentication failed`,
-                {
-                    reason: error instanceof Error ? error.message : 'Unknown error',
-                    stack: error instanceof Error ? error.stack : undefined,
-                },
-            );
-
-            if (error instanceof UnauthorizedException) {
-                throw error;
-            }
-            throw new InternalServerErrorException('An error occurred during Google authentication.');
-        }
+    async loginWithGoogle(loginInput: GoogleLoginInput): Promise<LoginResponse> {
+        return this._loginWithStrategy(this.googleAuthenticationProvider, loginInput, 'google');
     }
 
-    async registerByEmail(registerInput: RegisterByEmailInput): Promise<RequestOtpResponse> {
-        const { email } = registerInput;
-        this.logger.log(`Processing email verification request for: ${email}`);
+    // --- PASSWORD RESET METHODS ---
 
-        const existingUser = await this.usersService.findByEmail(email);
-        if (existingUser) {
-            throw new ConflictException('Email này đã được sử dụng.');
-        }
+    async requestPasswordReset(input: RequestPasswordResetInput): Promise<RequestPasswordResetResponse> {
+        return this.passwordResetProvider.request(input);
+    }
 
+    async verifyPasswordReset(input: VerifyPasswordResetInput): Promise<VerifyPasswordResetResponse> {
+        return this.passwordResetProvider.verify(input);
+    }
+
+    async confirmNewPassword(input: ConfirmPasswordResetInput): Promise<LoginResponse> {
+        return this.passwordResetProvider.confirm(input);
+    }
+
+    // --- Email Registration ---
+
+    async initiateEmailRegistration(registerInput: RegisterByEmailInput): Promise<RequestOtpResponse> {
         try {
-            const otp = await this.otpService.generateAndStoreOtp(
-                OtpContext.EMAIL_VERIFICATION,
-                email,
-                registerInput,
-            );
-
-            const commandPayload = {
-                to: email,
-                subject: `[MedPlusApp] Mã xác thực của bạn là ${otp}`,
-                template: 'verification',
-                context: { otp },
-                history: {
-                    type: 'EMAIL_VERIFICATION_OTP', 
-                    title: 'Xác thực email đăng ký',
-                    body: `Mã OTP của bạn là: ${otp}`,
-                }
-            };
-            
-            await this.outboxService.createOutboxMessage({
-                aggregateType: 'auth',
-                aggregateId: email, 
-                eventType: 'SEND_TRANSACTIONAL_EMAIL_COMMAND', 
-                payload: commandPayload,
-                exchange: ExchangeName.COMMANDS,
-                routingKey: RoutingKey.SEND_TRANSACTIONAL_EMAIL_COMMAND, 
-            });
-
-            this.logger.log(`Queued SEND_TRANSACTIONAL_EMAIL_COMMAND for ${email} via Outbox`);
+            const response = await this.emailRegistrationProvider.initiate(registerInput);
 
             this.otpSentCounter.inc({ otp_channel: 'email', status: 'success' });
-            return { success: true, message: 'OTP đã được gửi thành công.' };
+            return response;
         } catch (error) {
             this.otpSentCounter.inc({ otp_channel: 'email', status: 'failure' });
-            this.logger.error(`Failed to send OTP for ${email}`, error.stack);
+            this.logger.error(`Failed to initiate email registration for ${registerInput.email}`, error.stack);
 
-            if (error instanceof BadRequestException) throw error;
-
-            return { success: false, message: 'Không thể gửi OTP. Vui lòng thử lại sau.' };
+            if (error instanceof BadRequestException || error instanceof ConflictException) throw error;
+            throw new InternalServerErrorException('Could not initiate registration.');
         }
     }
 
-    async verifyEmailAndRegister(verifyInput: VerifyEmailInput): Promise<LoginResponse> {
-        const { email, otp } = verifyInput;
-        this.logger.log(`Verifying OTP for email registration: ${email}`);
-
+    async completeEmailRegistration(verifyInput: VerifyEmailInput): Promise<LoginResponse> {
         try {
-            const registerInput = await this.otpService.verifyOtp<RegisterByEmailInput>(
-                OtpContext.EMAIL_VERIFICATION,
-                email,
-                otp,
-            );
+            const response = await this.emailRegistrationProvider.complete(verifyInput);
 
-            const newUser = await this.usersService.createUserByEmail({
-                email: registerInput.email,
-                password: registerInput.password,
-            });
             this.registrationsCounter.inc({ login_method: 'email', status: 'success' });
-
-            await this.otpService.invalidateOtp(OtpContext.EMAIL_VERIFICATION, email);
-
-            const tokenPair = await this.tokenService.generateTokenPair(newUser);
-            return { user: newUser, ...tokenPair };
+            return response;
         } catch (error) {
             this.registrationsCounter.inc({ login_method: 'email', status: 'failure' });
-            this.logger.error(`Failed to verify OTP or register user for ${email}`, error.stack);
+            this.logger.error(`Failed to complete email registration for ${verifyInput.email}`, error.stack);
+
             throw error;
         }
     }
-    
+
+    // --- LogOut ---
+
     async logout(refreshToken: string): Promise<void> {
         await this.tokenService.revokeRefreshToken(refreshToken);
         this.logger.log(`User logged out, refresh token revoked.`);
+    }
+
+    // --- PRIVATE-HELPER ---
+
+    private async _loginWithStrategy<T>(
+        strategy: ILoginStrategy<T>,
+        input: T,
+        method: 'phone' | 'email' | 'google'
+    ): Promise<LoginResponse> {
+        try {
+            this.logger.debug(`Attempting login via ${method} strategy.`);
+            const user = await strategy.authenticate(input);
+
+            const tokenPair = await this.tokenService.generateTokenPair(user);
+
+            this.loginAttemptsCounter.inc({ login_method: method, status: 'success' });
+            this.logger.log(`Login successful for user ${user.id} via ${method}.`);
+
+            return { user, ...tokenPair };
+        } catch (error) {
+            this.loginAttemptsCounter.inc({ login_method: method, status: 'failure' });
+
+            if (error instanceof UnauthorizedException) {
+                this.logger.warn(`Login failed via ${method}: ${error.message}`);
+            } else {
+                this.logger.error(`An unexpected error occurred during ${method} login`, error.stack);
+            }
+
+            throw error;
+        }
     }
 }

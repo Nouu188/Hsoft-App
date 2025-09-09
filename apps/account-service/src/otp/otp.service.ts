@@ -6,7 +6,7 @@ import { OtpContext } from './enums/otp-context.enum';
 interface OtpCacheData {
     otp: string;
     attempts: number;
-    payload: any; // Dữ liệu đi kèm, ví dụ như registerInput
+    payload: any; 
 }
 
 @Injectable()
@@ -68,6 +68,45 @@ export class OtpService {
         this.logger.log(`[OTP] Invalidated OTP data for ${context}:${identifier}`);
     }
 
+    async generateOneTimeToken<T>(
+        context: OtpContext,
+        identifier: string,
+        payload: T,
+        ttl = 600000,
+    ): Promise<string> {
+        const token = crypto.randomBytes(32).toString('hex');
+        const key = this._getOneTimeTokenKey(context, identifier);
+        
+        await this.cacheManager.set(key, JSON.stringify({ token, payload }), ttl);
+        this.logger.log(`[Token] Stored one-time token for ${context}:${identifier}`);
+        
+        return token;
+    }
+
+    async verifyAndConsumeOneTimeToken<T>(
+        context: OtpContext,
+        identifier: string,
+        token: string,
+    ): Promise<T> {
+        const key = this._getOneTimeTokenKey(context, identifier);
+        const storedDataString = await this.cacheManager.get<string>(key);
+
+        if (!storedDataString) {
+            throw new BadRequestException('Token không hợp lệ hoặc đã hết hạn.');
+        }
+
+        const storedData = JSON.parse(storedDataString);
+
+        if (storedData.token !== token) {
+            throw new BadRequestException('Token không hợp lệ hoặc đã hết hạn.');
+        }
+
+        await this.cacheManager.del(key);
+        
+        this.logger.log(`[Token] Consumed one-time token for ${context}:${identifier}`);
+        return storedData.payload as T;
+    }
+
     // --- Private helper ---
 
     private async checkRequestLimit(context: OtpContext, identifier: string): Promise<void> {
@@ -96,5 +135,9 @@ export class OtpService {
         }
 
         return 300000;
+    }
+
+    private _getOneTimeTokenKey(context: OtpContext, identifier: string): string {
+        return `one-time-token:${context}:${identifier}`;
     }
 }

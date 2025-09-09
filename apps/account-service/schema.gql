@@ -14,6 +14,12 @@ type Clinic {
   updatedAt: DateTime!
 }
 
+input ConfirmPasswordResetInput {
+  email: String!
+  newPassword: String!
+  resetToken: String!
+}
+
 input CreateServiceClientInput {
   client_id: String!
   client_secret: String!
@@ -155,13 +161,16 @@ type LoginResponse {
 
 type Mutation {
   admin_createServiceClient(input: CreateServiceClientInput!): ServiceClient!
+  completeEmailRegistration(verifyInput: VerifyEmailInput!): LoginResponse!
+  confirmNewPassword(input: ConfirmPasswordResetInput!): LoginResponse!
+  initiateEmailRegistration(registerInput: RegisterByEmailInput!): RequestOtpResponse!
   loginByEmail(loginInput: LoginInputByEmail!): LoginResponse!
   loginByPhoneNumber(loginInput: LoginInputByPhoneNumber!): LoginResponse!
   loginWithGoogle(googleLoginInput: GoogleLoginInput!): LoginResponse!
   registerFcmToken(fcm_token: String!): Boolean!
   removeFcmTokens(tokens: [String!]!, userId: ID!): Boolean!
-  requestEmailVerification(registerInput: RegisterByEmailInput!): RequestOtpResponse!
-  verifyEmailAndRegister(verifyInput: VerifyEmailInput!): LoginResponse!
+  requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetResponse!
+  verifyPasswordReset(input: VerifyPasswordResetInput!): VerifyPasswordResetResponse!
 }
 
 type Query {
@@ -177,6 +186,15 @@ input RegisterByEmailInput {
 }
 
 type RequestOtpResponse {
+  message: String!
+  success: Boolean!
+}
+
+input RequestPasswordResetInput {
+  email: String!
+}
+
+type RequestPasswordResetResponse {
   message: String!
   success: Boolean!
 }
@@ -256,4 +274,15 @@ type UserPayload {
 input VerifyEmailInput {
   email: String!
   otp: String!
+}
+
+input VerifyPasswordResetInput {
+  email: String!
+  otp: String!
+}
+
+type VerifyPasswordResetResponse {
+  """Token tạm thời để xác nhận mật khẩu mới"""
+  resetToken: String!
+  success: Boolean!
 }
