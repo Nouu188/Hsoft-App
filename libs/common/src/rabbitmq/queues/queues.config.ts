@@ -10,8 +10,8 @@ export const Queues = [
     options: {
       durable: true,
       arguments: {
-        'x-dead-letter-exchange': DeadLetterExchangeName.USER_EVENTS_DL, // Sử dụng DLX của user events
-        'x-dead-letter-routing-key': 'user.saga.initiated.failed', // DL routing key mới
+        'x-dead-letter-exchange': DeadLetterExchangeName.USER_EVENTS_DL, 
+        'x-dead-letter-routing-key': DeadLetterRoutingKey.USER_SAGA_INITIATED_FAILED, 
       },
     },
   },
@@ -24,7 +24,7 @@ export const Queues = [
       durable: true,
       arguments: {
         'x-dead-letter-exchange': DeadLetterExchangeName.USER_EVENTS_DL,
-        'x-dead-letter-routing-key': 'identity.created.reply.failed', // DL routing key mới
+        'x-dead-letter-routing-key': DeadLetterRoutingKey.IDENTITY_CREATED_REPLY_FAILED, 
       },
     },
   },
@@ -32,18 +32,19 @@ export const Queues = [
     name: `${QueueName.ORCHESTRATOR_IDENTITY_REPLY}.dlq`,
     options: { durable: true }
   },
+
   // Queue cho Identity Service lắng nghe command từ Orchestrator
   {
     name: QueueName.IDENTITY_CREATE_COMMAND,
     options: {
       durable: true,
       arguments: {
-        'x-dead-letter-exchange': DeadLetterExchangeName.COMMANDS_DL, // Nên có DLX riêng cho commands
-        'x-dead-letter-routing-key': 'identity.command.create.failed', // DL routing key mới
+        'x-dead-letter-exchange': DeadLetterExchangeName.COMMANDS_DL, 
+        'x-dead-letter-routing-key': DeadLetterRoutingKey.IDENTITY_COMMAND_CREATE_FAILED,
       },
     },
   },
-  { name: `${QueueName.IDENTITY_CREATE_COMMAND}.dlq`, options: { durable: true } },
+  { name: DeadLetterQueueName.IDENTITY_CREATE_COMMAND_QUEUE_DLQ, options: { durable: true } },
   { name: DeadLetterQueueName.SCHEDULING_USER_FIRST_LOGIN_DLQ, options: { durable: true } },
 
   // === DOSES EVENTS ===
@@ -95,6 +96,18 @@ export const Queues = [
     },
   },
   { name: DeadLetterQueueName.NOTIFICATION_SCHEDULER_DLQ, options: { durable: true } },
+
+  {
+    name: QueueName.NOTIFICATION_SEND_EMAIL,
+    options: {
+      durable: true,
+      arguments: {
+        'x-dead-letter-exchange': DeadLetterExchangeName.NOTIFICATION_DL,
+        'x-dead-letter-routing-key': DeadLetterRoutingKey.NOTIFICATION_SEND_EMAIL_FAILED,
+      },
+    },
+  },
+  { name: DeadLetterQueueName.NOTIFICATION_SEND_EMAIL_DLQ, options: { durable: true } },
 
   // === APPOINTMENT ===
   {

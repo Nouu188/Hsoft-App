@@ -10,5 +10,8 @@ export const DeadLetterQueueName = {
 
   APPOINTMENT_BOOKED_DLQ: 'appointment.booked.dlq',
 
+  IDENTITY_CREATE_COMMAND_QUEUE_DLQ: 'identity.create-command.queue.dlq',
+
   NOTIFICATION_SCHEDULER_DLQ: 'notification.scheduler.dlq',
+  NOTIFICATION_SEND_EMAIL_DLQ: 'notification.send.email.dlq',
 };

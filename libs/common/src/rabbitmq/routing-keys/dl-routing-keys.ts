@@ -3,6 +3,7 @@ export const DeadLetterRoutingKey = {
   USER_FIRST_LOGIN_SCHEDULING_FAILED: 'user.first-login.scheduling.failed',
   USER_FIRST_LOGIN_IDENTITY_FAILED: 'user.first-login.identity.failed',
   USER_PROFILE_UPDATED_FAILED: 'user.profile.updated.failed',
+  USER_SAGA_INITIATED_FAILED: 'user.saga.initiated.failed',
 
   // Doses Sync Events
   DOSES_SYNC_REQUESTED_FAILED: 'doses.sync.requested.failed',
@@ -13,8 +14,13 @@ export const DeadLetterRoutingKey = {
 
   // Notification Events
   NOTIFICATION_SCHEDULED_FAILED: 'notification.scheduled.failed',
+  NOTIFICATION_SEND_EMAIL_FAILED: 'notification.send.email.failed',
 
   // Appointment Events
   APPOINTMENT_CANCELLED_FAILED: 'appointment.cancelled.failed',
   APPOINTMENT_BOOKED_FAILED: 'appointment.booked.failed',
+
+  // Identity
+  IDENTITY_COMMAND_CREATE_FAILED: 'identity.command.create.failed',
+  IDENTITY_CREATED_REPLY_FAILED: 'identity.created.reply.failed',
 };
