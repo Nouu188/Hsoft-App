@@ -178,48 +178,13 @@ const Step1_Screen: React.FC<Step1_SelectHospitalProps> = ({ onNext }) => {
     <>
       <Animated.FlatList
         data={sections}
+        style={{ flex: 1 }}
         keyExtractor={item => item.key}
         renderItem={({ item }) => item.render()}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
-      />
-      {/* Popup chi tiết bệnh viện - Giữ nguyên */}
-      <Modal
-        visible={!!selectedHospital}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSelectedHospital(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{selectedHospital?.name}</Text>
-            <Text style={styles.modalText}>Mã: {selectedHospital?.externalCode}</Text>
-            {selectedHospital?.address && <Text style={styles.modalText}>Địa chỉ: {selectedHospital.address}</Text>}
-            {selectedHospital?.phone && <Text style={styles.modalText}>Điện thoại: {selectedHospital.phone}</Text>}
-            {selectedHospital?.description && <Text style={styles.modalText}>{selectedHospital.description}</Text>}
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.modalButton, { backgroundColor: COLORS.danger }]} onPress={() => setSelectedHospital(null)}>
-                <Text style={styles.modalButtonText}>Hủy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: COLORS.lightBlue }]}
-                onPress={() => {
-                  if (selectedHospital) {
-                    setHospital(selectedHospital); // cập nhật store
-                    setIsHospitalInputValid(true);
-                  }
-                  setSelectedHospital(null);
-                }}
-              >
-                <Text style={styles.modalButtonText}>Chọn</Text>
-              </TouchableOpacity>
-
-            </View>
-          </View>
-        </View>
-      </Modal>
+      />      
     </>
   );
 };

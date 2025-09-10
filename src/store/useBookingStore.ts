@@ -52,7 +52,11 @@ const initialData: BookingStateData = {
 };
 
 const initialUI: BookingStateUI = {
-  sectionExpanded: { hospital: true, bookingType: false },
+  sectionExpanded: {
+    hospital: true,
+    bookingType: false,
+    patientInfo: true, // 👈 thêm cho Step 3, mở mặc định
+  },
   dropdownVisible: false,
   hospitalSelected: false,
 };
@@ -142,10 +146,18 @@ export const useBookingStore = create<BookingState>()(
         ),
 
       setDropdownVisible: (visible) =>
-        set((state) => ({ ui: { ...state.ui, dropdownVisible: visible } }), false, 'setDropdownVisible'),
+        set(
+          (state) => ({ ui: { ...state.ui, dropdownVisible: visible } }),
+          false,
+          'setDropdownVisible'
+        ),
 
       setHospitalSelected: (selected) =>
-        set((state) => ({ ui: { ...state.ui, hospitalSelected: selected } }), false, 'setHospitalSelected'),
+        set(
+          (state) => ({ ui: { ...state.ui, hospitalSelected: selected } }),
+          false,
+          'setHospitalSelected'
+        ),
     }),
     { name: 'BookingStore' }
   )

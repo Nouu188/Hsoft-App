@@ -1,5 +1,6 @@
+// src/features/booking-wizard/WizardStepper.tsx
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, SIZES } from '@/constants/theme';
 
 interface StepProps {
@@ -8,28 +9,35 @@ interface StepProps {
   isActive: boolean;
   isCompleted: boolean;
   isLast: boolean;
+  onPress?: () => void; // <-- để click quay lại step
 }
 
 interface WizardStepperProps {
-    steps: string[],
-    currentStep: number,
+  steps: string[];
+  currentStep: number;
+  goToStep?: (stepIndex: number) => void;
 }
 
-const Step: React.FC<StepProps> = ({ index, label, isActive, isCompleted, isLast }) => (
+const Step: React.FC<StepProps> = ({ index, label, isActive, isCompleted, isLast, onPress }) => (
   <React.Fragment>
-    <View style={styles.stepContainer}>
+    <TouchableOpacity
+      disabled={!onPress}
+      onPress={onPress}
+      style={styles.stepContainer}
+      activeOpacity={0.7}
+    >
       <View style={[styles.circle, (isActive || isCompleted) && styles.circleActive]}>
         <Text style={[styles.stepNumber, (isActive || isCompleted) && styles.stepNumberActive]}>
           {isCompleted ? '✓' : index + 1}
         </Text>
       </View>
       <Text style={[styles.stepLabel, isActive && styles.stepLabelActive]}>{label}</Text>
-    </View>
+    </TouchableOpacity>
     {!isLast && <View style={[styles.line, isCompleted && styles.lineActive]} />}
   </React.Fragment>
 );
 
-const WizardStepper: React.FC<WizardStepperProps> = ({ steps = [], currentStep = 0 }) => (
+const WizardStepper: React.FC<WizardStepperProps> = ({ steps = [], currentStep = 0, goToStep }) => (
   <View style={styles.container}>
     {steps.map((step, index) => (
       <Step
@@ -39,6 +47,7 @@ const WizardStepper: React.FC<WizardStepperProps> = ({ steps = [], currentStep =
         isActive={index === currentStep}
         isCompleted={index < currentStep}
         isLast={index === steps.length - 1}
+        onPress={() => goToStep && goToStep(index)} // <-- cho phép nhấn quay lại
       />
     ))}
   </View>

@@ -16,7 +16,14 @@ const TabNavigator = () => {
     >
       <Tab.Screen name="Home" component={HomeScreenNavigator} />
       <Tab.Screen name="Schedule" component={ScheduleScreen} />
-      <Tab.Screen name="Booking" component={BookingWizard} />
+      <Tab.Screen
+        name="BookingWizard"
+        component={BookingWizard}
+        options={{
+          tabBarStyle: { display: 'none' }, // ẩn tabbar
+        }}
+      />
+
       <Tab.Screen name="ProfileStack" component={ProfileStackNavigator} />
     </Tab.Navigator>
   );

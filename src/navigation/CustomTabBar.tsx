@@ -7,77 +7,60 @@ import {
 } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { COLORS } from '../constants/theme';
 import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import { COLORS } from '../constants/theme';
 import { useUIStore } from '@/store/useUIStore';
 
 const { width } = Dimensions.get('window');
 
+const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
+  Home: { active: 'home', inactive: 'home-outline' },
+  Schedule: { active: 'ellipse', inactive: 'ellipse-outline' },
+  BookingWizard: { active: 'clipboard', inactive: 'clipboard-outline' },
+  ProfileStack: { active: 'person', inactive: 'person-outline' },
+};
+
 const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
-  // Lắng nghe state từ store
   const isBottomSheetVisible = useUIStore(state => state.isBottomSheetVisible);
 
-  // Tạo style động cho wrapper
-  const animatedWrapperStyle = useAnimatedStyle(() => {
-    return {
-      // Trượt xuống dưới màn hình khi modal mở, trượt lên lại khi đóng
-      transform: [
-        {
-          translateY: withTiming(isBottomSheetVisible ? 100 : 0, {
-            duration: 250,
-            easing: Easing.out(Easing.quad)
-          })
-        }
-      ],
-      // Mờ đi khi ẩn
-      opacity: withTiming(isBottomSheetVisible ? 0 : 1, { duration: 200 }),
-    };
-  });
+  // Lấy tên route hiện tại để ẩn TabBar khi cần
+  const currentRouteName = state.routes[state.index].name;
+  const isTabBarHidden = currentRouteName === 'BookingWizard' || isBottomSheetVisible;
+
+  const animatedWrapperStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: withTiming(isTabBarHidden ? 100 : 0, { duration: 250, easing: Easing.out(Easing.quad) }) },
+    ],
+    opacity: withTiming(isTabBarHidden ? 0 : 1, { duration: 200 }),
+  }));
+
   return (
     <Animated.View style={[styles.wrapper, animatedWrapperStyle]}>
       <View style={styles.container}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
           const isFocused = state.index === index;
+          const { name } = route;
+
+          const iconName = TAB_ICONS[name]?.[isFocused ? 'active' : 'inactive'] || 'ellipse-outline';
+
           const onPress = () => {
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
-
             if (!isFocused && !event.defaultPrevented) {
               navigation.navigate(route.name);
             }
           };
 
-          let iconName = 'ellipse-outline';
-
-          switch (route.name) {
-            case 'Home':
-              iconName = isFocused ? 'home' : 'home-outline';
-              break;
-            case 'Schedule':
-              iconName = isFocused ? 'ellipse' : 'ellipse-outline';
-              break;
-            case 'Booking':
-              iconName = isFocused ? 'clipboard' : 'clipboard-outline';
-              break;
-            case 'ProfileStack':
-              iconName = isFocused ? 'person' : 'person-outline';
-              break;
-          }
           return (
             <TouchableOpacity
-              key={index}
+              key={route.key}
               onPress={onPress}
               style={[styles.tabItem, isFocused && styles.activeIconContainer]}
             >
-              <Ionicons
-                name={iconName as any}
-                size={24}
-                color={isFocused ? COLORS.white : COLORS.textLight}
-              />
+              <Ionicons name={iconName as any} size={24} color={isFocused ? COLORS.white : COLORS.textLight} />
             </TouchableOpacity>
           );
         })}
@@ -90,8 +73,9 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     bottom: 25,
-    width: width,
+    width,
     alignItems: 'center',
+    zIndex: 10,
   },
   container: {
     flexDirection: 'row',
@@ -110,7 +94,7 @@ const styles = StyleSheet.create({
   tabItem: {
     width: 40,
     height: 40,
-    borderRadius: 25, // Nửa chiều rộng/cao để luôn là hình tròn
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },

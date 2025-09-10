@@ -10,7 +10,7 @@ interface CollapsibleSectionProps {
   title: string;
   subTitle?: React.ReactNode;
   children: React.ReactNode;
-  sectionKey: 'hospital' | 'bookingType';
+  sectionKey: 'hospital' | 'bookingType' | 'patientInfo' | 'hospitalInfo';
 }
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -54,10 +54,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: SIZES.radius,
   },
   sectionDisabled: {
-    opacity: 0.6, // giảm thêm để nhìn rõ disabled
+    opacity: 0.6, 
   },
 });
 
