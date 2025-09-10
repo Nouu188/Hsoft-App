@@ -1,7 +1,8 @@
+// File tổng của HospitalInput
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import type { Hospital } from '@/types/dtos/tenant/hospital.dto';
-import { useHospitalUIStore } from '@/store/useHospitalUIStore';
+import { useBookingStore } from '@/store/useBookingStore';
 import HospitalTextInput from './HospitalTextInput';
 import HospitalSuggestions from './HospitalSuggestions';
 import HospitalModal from './HospitalModal';
@@ -17,7 +18,12 @@ interface Props {
 const HospitalInput: React.FC<Props> = ({
   hospitals, value, onSelectHospital, onValidationChange, isLoading
 }) => {
-  const { dropdownVisible, setDropdownVisible, setSectionExpanded } = useHospitalUIStore();
+  // lấy từ store
+  const dropdownVisible = useBookingStore((state) => state.ui.dropdownVisible);
+  const setDropdownVisible = useBookingStore((state) => state.setDropdownVisible);
+  const setSectionExpanded = useBookingStore((state) => state.setSectionExpanded);
+  const setHospitalSelected = useBookingStore((state) => state.setHospitalSelected);
+
   const [inputText, setInputText] = useState('');
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
   const [isInputValid, setIsInputValid] = useState(false);
@@ -42,16 +48,33 @@ const HospitalInput: React.FC<Props> = ({
         value={inputText}
         placeholder="Chọn bệnh viện"
         isLoading={isLoading}
-        onChangeText={text => { setInputText(text); setDropdownVisible(true); setSectionExpanded('hospital', true); }}
-        onFocus={() => { setDropdownVisible(true); setSectionExpanded('hospital', true); }}
+        onChangeText={text => { 
+          setInputText(text); 
+          setDropdownVisible(true); 
+          setSectionExpanded('hospital', true); 
+        }}
+        onFocus={() => { 
+          setDropdownVisible(true); 
+          setSectionExpanded('hospital', true); 
+        }}
         dropdownVisible={dropdownVisible}
         toggleDropdown={() => setDropdownVisible(!dropdownVisible)}
         isInputValid={isInputValid}
       />
-      {!isInputValid && inputText.length > 0 && <Text style={{color:'red', marginTop:5}}>Bệnh viện không hợp lệ.</Text>}
-      {dropdownVisible && filteredHospitals.length>0 &&
-        <HospitalSuggestions suggestions={filteredHospitals} onSelect={setSelectedHospital} />
-      }
+      
+      {!isInputValid && inputText.length > 0 && (
+        <Text style={{color:'red', marginTop:5}}>
+          Bệnh viện không hợp lệ.
+        </Text>
+      )}
+      
+      {dropdownVisible && filteredHospitals.length > 0 && (
+        <HospitalSuggestions 
+          suggestions={filteredHospitals} 
+          onSelect={setSelectedHospital} 
+        />
+      )}
+      
       <HospitalModal
         hospital={selectedHospital}
         onCancel={() => setSelectedHospital(null)}
@@ -63,7 +86,7 @@ const HospitalInput: React.FC<Props> = ({
           onSelectHospital?.(hospital);
           setSectionExpanded('hospital', false);
           setDropdownVisible(false);
-          useHospitalUIStore.getState().setHospitalSelected(true); // mở bookingType
+          setHospitalSelected(true); 
         }}
       />
     </View>

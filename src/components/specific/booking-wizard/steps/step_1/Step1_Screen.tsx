@@ -3,12 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Ani
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Ionicons from '@react-native-vector-icons/ionicons';
-
 import { useIdentityStore } from '@/store/useIdentityStore';
 import { useBookingStore } from '@/store/useBookingStore';
 import { useHospitalStore } from '@/store/useHospitalsStore';
-import { useHospitalUIStore } from '@/store/useHospitalUIStore';
-
 import { SIZES, COLORS, FONTS } from '@/constants/theme';
 import CollapsibleSection from './collapsible_section/CollapsibleSection';
 import HospitalInput from './hospital_input/HospitalInput';
@@ -21,15 +18,15 @@ interface Step1_SelectHospitalProps {
   onNext: () => void;
 }
 
-const Step1_SelectHospital: React.FC<Step1_SelectHospitalProps> = ({ onNext }) => {
+const Step1_Screen: React.FC<Step1_SelectHospitalProps> = ({ onNext }) => {
   const navigation = useNavigation<Step1NavigationProp>();
   const { identity, isLoading: isIdentityLoading, fetchIdentity } = useIdentityStore();
   const { data: bookingData, setHospital, setBookingType } = useBookingStore();
   const { hospitals, isLoading: areHospitalsLoading, error: hospitalsError, fetchHospitals } = useHospitalStore();
   const scrollY = useRef(new Animated.Value(0)).current;
-  
+
   // Zustand store cho CollapsibleSection
-  const { setSectionExpanded } = useHospitalUIStore();
+  const { setSectionExpanded } = useBookingStore();
 
   // popup state
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
@@ -41,16 +38,16 @@ const Step1_SelectHospital: React.FC<Step1_SelectHospitalProps> = ({ onNext }) =
 
   // Hàm kiểm tra tính hợp lệ của bước 1
   const isStep1Valid = () => {
-  // Bệnh viện phải được chọn (bookingData.hospital không null) VÀ HospitalInput phải hợp lệ
-  const isHospitalSelectedAndValid = !!bookingData.hospital && isHospitalInputValid;
-  const isBookingTypeSelected = !!bookingData.bookingType;
-  return isHospitalSelectedAndValid && isBookingTypeSelected;
-};
+    // Bệnh viện phải được chọn (bookingData.hospital không null) VÀ HospitalInput phải hợp lệ
+    const isHospitalSelectedAndValid = !!bookingData.hospital && isHospitalInputValid;
+    const isBookingTypeSelected = !!bookingData.bookingType;
+    return isHospitalSelectedAndValid && isBookingTypeSelected;
+  };
 
   const handleNextPress = () => {
-  if (isStep1Valid()) onNext(); // Sử dụng hàm kiểm tra mới
-  else Alert.alert("Thông tin chưa đầy đủ", "Vui lòng chọn bệnh viện hợp lệ và hình thức khám.");
-};
+    if (isStep1Valid()) onNext(); // Sử dụng hàm kiểm tra mới
+    else Alert.alert("Thông tin chưa đầy đủ", "Vui lòng chọn bệnh viện hợp lệ và hình thức khám.");
+  };
 
   const renderHospitalSelector = () => {
     if (areHospitalsLoading) return <ActivityIndicator color={COLORS.primary} style={{ marginVertical: 20 }} />;
@@ -65,7 +62,7 @@ const Step1_SelectHospital: React.FC<Step1_SelectHospitalProps> = ({ onNext }) =
           setHospital(hospital);
           setIsHospitalInputValid(true);
         }}
-        onValidationChange={setIsHospitalInputValid} 
+        onValidationChange={setIsHospitalInputValid}
       />
     );
   };
@@ -75,43 +72,105 @@ const Step1_SelectHospital: React.FC<Step1_SelectHospitalProps> = ({ onNext }) =
   }
 
   const sections = [
-    { key: 'hospital', render: () => (
-      <CollapsibleSection
-        sectionKey="hospital"
-        title="Chọn bệnh viện"
-        subTitle={bookingData.hospital ? `${bookingData.hospital.name} - ${bookingData.hospital.address}` : undefined} 
-      >
-        {renderHospitalSelector()}
-      </CollapsibleSection>
-    )},
-    { key: 'bookingType', render: () => (
-      <CollapsibleSection sectionKey="bookingType" title="Chọn hình thức khám" >
-        <View style={styles.bookingTypeContainer}>
-          <TouchableOpacity
-            style={[styles.bookingTypeButton, bookingData.bookingType === 'CLINIC' && styles.optionButtonActive]}
-            onPress={() => setBookingType(bookingData.bookingType === 'CLINIC' ? undefined as any : 'CLINIC')}
-          >
-            <Ionicons name="business-outline" size={24} color={bookingData.bookingType === 'CLINIC' ? COLORS.primary : COLORS.textDark} />
-            <Text style={[styles.optionText, bookingData.bookingType === 'CLINIC' && styles.optionTextActive]}>Theo phòng khám</Text>
+    {
+      key: 'hospital', render: () => (
+        <CollapsibleSection
+          sectionKey="hospital"
+          title="Chọn bệnh viện"
+          subTitle={bookingData.hospital ? `${bookingData.hospital.name} - ${bookingData.hospital.address}` : undefined}
+        >
+          {renderHospitalSelector()}
+        </CollapsibleSection>
+      )
+    },
+    {
+      key: 'bookingType', render: () => (
+        <CollapsibleSection
+          sectionKey="bookingType"
+          title="Chọn hình thức khám"
+          subTitle={
+            bookingData.bookingType === 'CLINIC'
+              ? 'Theo phòng khám'
+              : bookingData.bookingType === 'DOCTOR'
+                ? 'Theo bác sỹ'
+                : undefined
+          }
+        >
+          <View style={styles.bookingTypeContainer}>
+            <TouchableOpacity
+              style={[
+                styles.bookingTypeButton,
+                bookingData.bookingType === 'CLINIC' && styles.optionButtonActive,
+              ]}
+              onPress={() =>
+                setBookingType(
+                  bookingData.bookingType === 'CLINIC' ? (undefined as any) : 'CLINIC',
+                )
+              }
+            >
+              <Ionicons
+                name="business-outline"
+                size={24}
+                color={
+                  bookingData.bookingType === 'CLINIC'
+                    ? COLORS.primary
+                    : COLORS.textDark
+                }
+              />
+              <Text
+                style={[
+                  styles.optionText,
+                  bookingData.bookingType === 'CLINIC' && styles.optionTextActive,
+                ]}
+              >
+                Theo phòng khám
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.bookingTypeButton,
+                bookingData.bookingType === 'DOCTOR' && styles.optionButtonActive,
+              ]}
+              onPress={() =>
+                setBookingType(
+                  bookingData.bookingType === 'DOCTOR' ? (undefined as any) : 'DOCTOR',
+                )
+              }
+            >
+              <Ionicons
+                name="medical-outline"
+                size={24}
+                color={
+                  bookingData.bookingType === 'DOCTOR'
+                    ? COLORS.primary
+                    : COLORS.textDark
+                }
+              />
+              <Text
+                style={[
+                  styles.optionText,
+                  bookingData.bookingType === 'DOCTOR' && styles.optionTextActive,
+                ]}
+              >
+                Theo bác sỹ
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </CollapsibleSection>
+      )
+    },
+
+    {
+      key: 'nextBtn', render: () => {
+        const disabled = !isStep1Valid(); // Sử dụng hàm kiểm tra mới
+        return (
+          <TouchableOpacity style={[styles.nextButton, disabled && styles.nextButtonDisabled]} onPress={handleNextPress} disabled={disabled}>
+            <Text style={styles.nextButtonText}>Tiếp tục</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bookingTypeButton, bookingData.bookingType === 'DOCTOR' && styles.optionButtonActive]}
-            onPress={() => setBookingType(bookingData.bookingType === 'DOCTOR' ? undefined as any : 'DOCTOR')}
-          >
-            <Ionicons name="medical-outline" size={24} color={bookingData.bookingType === 'DOCTOR' ? COLORS.primary : COLORS.textDark} />
-            <Text style={[styles.optionText, bookingData.bookingType === 'DOCTOR' && styles.optionTextActive]}>Theo bác sỹ</Text>
-          </TouchableOpacity>
-        </View>
-      </CollapsibleSection>
-    )},
-    { key: 'nextBtn', render: () => {
-      const disabled = !isStep1Valid(); // Sử dụng hàm kiểm tra mới
-      return (
-        <TouchableOpacity style={[styles.nextButton, disabled && styles.nextButtonDisabled]} onPress={handleNextPress} disabled={disabled}>
-          <Text style={styles.nextButtonText}>Tiếp tục</Text>
-        </TouchableOpacity>
-      );
-    }},
+        );
+      }
+    },
     { key: 'footer_spacer', render: () => <View style={{ height: 100 }} /> }
   ];
 
@@ -145,17 +204,17 @@ const Step1_SelectHospital: React.FC<Step1_SelectHospitalProps> = ({ onNext }) =
                 <Text style={styles.modalButtonText}>Hủy</Text>
               </TouchableOpacity>
               <TouchableOpacity
-  style={[styles.modalButton, { backgroundColor: COLORS.lightBlue }]}
-  onPress={() => {
-    if (selectedHospital) {
-      setHospital(selectedHospital); // cập nhật store
-      setIsHospitalInputValid(true);
-    }
-    setSelectedHospital(null);
-  }}
->
-  <Text style={styles.modalButtonText}>Chọn</Text>
-</TouchableOpacity>
+                style={[styles.modalButton, { backgroundColor: COLORS.lightBlue }]}
+                onPress={() => {
+                  if (selectedHospital) {
+                    setHospital(selectedHospital); // cập nhật store
+                    setIsHospitalInputValid(true);
+                  }
+                  setSelectedHospital(null);
+                }}
+              >
+                <Text style={styles.modalButtonText}>Chọn</Text>
+              </TouchableOpacity>
 
             </View>
           </View>
@@ -188,4 +247,4 @@ const styles = StyleSheet.create({
   modalButtonText: { color: COLORS.white, fontWeight: 'bold' },
 });
 
-export default Step1_SelectHospital;
+export default Step1_Screen;

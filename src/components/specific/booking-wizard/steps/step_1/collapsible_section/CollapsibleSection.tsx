@@ -1,7 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+// File tổng của CollapsibleSection
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
 import { SIZES, COLORS } from '@/constants/theme';
-import { useHospitalUIStore } from '@/store/useHospitalUIStore';
+import { useBookingStore } from '@/store/useBookingStore';
 import SectionHeader from './SectionHeader';
 import AnimatedContent from './AnimatedContent';
 
@@ -18,18 +19,19 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   children,
   sectionKey,
 }) => {
-  const expanded = useHospitalUIStore(
-    (state) => state.sectionExpanded[sectionKey] || false,
+  // lấy trực tiếp từ store (đã gộp UI vào data)
+  const expanded = useBookingStore(
+    (state) => state.ui.sectionExpanded[sectionKey] || false
   );
-  const setSectionExpanded = useHospitalUIStore(
-    (state) => state.setSectionExpanded,
-  );
-  const hospitalSelected = useHospitalUIStore((state) => state.hospitalSelected);
+  const setSectionExpanded = useBookingStore((state) => state.setSectionExpanded);
+  const hospitalSelected = useBookingStore((state) => state.ui.hospitalSelected);
 
   const disabled = sectionKey === 'bookingType' && !hospitalSelected;
 
   const toggleExpanded = () => {
-    if (!disabled) setSectionExpanded(sectionKey, !expanded);
+    if (!disabled) {
+      setSectionExpanded(sectionKey, !expanded);
+    }
   };
 
   return (
@@ -55,7 +57,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radius,
   },
   sectionDisabled: {
-    opacity: 0.9,
+    opacity: 0.6, // giảm thêm để nhìn rõ disabled
   },
 });
 
