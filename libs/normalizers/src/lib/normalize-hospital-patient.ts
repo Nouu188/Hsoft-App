@@ -1,7 +1,7 @@
 import { HospitalPatient } from "@app/common/types";
-import { Hospital } from "apps/tenant-management-service/src/hospitals/entities/hospital.entity";
-import { CreateIdentityInput } from "apps/tenant-management-service/src/identities/dtos/create-identity-input.dto";
-import { Gender } from "apps/tenant-management-service/src/identities/entities/identity.entity";
+import { Hospital } from "apps/tenant-management-service/src/domain/hospitals/entities";
+import { CreateIdentityInput } from "apps/tenant-management-service/src/domain/identities/dtos";
+import { Gender } from "apps/tenant-management-service/src/domain/identities/entities";
 
 export function normalizeHospitalPatient(
   patient: HospitalPatient,

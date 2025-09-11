@@ -76,11 +76,11 @@ export class AuthApiClientService implements OnModuleInit {
     }
 
     private async authenticate(): Promise<string> {
-        const url = `${this.authServiceUrl}/auth/token`;
+        const url = `${this.authServiceUrl}/auth/m2m`;
         const data = qs.stringify({
             grant_type: 'client_credentials',
-            client_id: this.clientId,
-            client_secret: this.clientSecret,
+            clientId: this.clientId,
+            clientSecret: this.clientSecret,
         });
 
         this.logger.debug(`Attempting to authenticate M2M client. URL: ${url}, ClientID: ${this.clientId}`);

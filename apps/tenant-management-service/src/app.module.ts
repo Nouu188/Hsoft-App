@@ -1,19 +1,86 @@
+import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
+import { AuthLibModule } from '@app/auth';
+import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
+import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
+import { MetricsModule } from '@app/common/metrics/metrics.module';
+import { OutboxModule } from '@app/outbox';
 import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CqrsModule } from '@nestjs/cqrs';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { ClinicsModule } from './clinics/clinics.module';
-import { Clinic } from './clinics/entities/clinic.entity';
-import { DoctorsModule } from './doctors/doctors.module';
-import { Doctor } from './doctors/entities/doctor.entity';
-import { Hospital } from './hospitals/entities/hospital.entity';
-import { HospitalsModule } from './hospitals/hospitals.module';
-import { Identity } from './identities/entities/identity.entity';
-import { IdentitiesModule } from './identities/identities.module';
-import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
+import { CreateHospitalHandler, GetIdentityByIdQueryHandler, GetIdentityByUserIdQueryHandler, GetIdentityFromHospitalHandler, GetManyIdentitiesQueryHandler, RemoveHospitalHandler, UpdateHospitalHandler } from './application';
+import { UpsertClinicsHandler } from './application/clinics';
+import { GetActiveClinicsHandler } from './application/clinics/queries/handlers';
+import { GetAllDoctorsHandler, GetAvailableDoctorsHandler, GetDoctorByIdHandler } from './application/doctors/queries/handlers';
+import { CreateIdentityHandler } from './application/identities/commands/handlers';
+import { IDoctorRepository, IIdentityRepository } from './domain';
+import { Clinic, IClinicRepository } from './domain/clinics';
+import { Doctor } from './domain/doctors/entities';
+import { Hospital } from './domain/hospitals/entities';
+import { IHospitalRepository } from './domain/hospitals/interfaces';
+import { Identity } from './domain/identities/entities';
+import { ClinicRepository } from './infrastructure/clinics/repositories';
+import { ClinicTransactionService, DoctorTransactionService, HospitalTransactionService, IdentityTransactionService, OutboxTransactionService } from './infrastructure/common/services/transaction.service';
+import { DoctorRepository } from './infrastructure/doctors';
+import { HospitalRepository } from './infrastructure/hospitals/repositories';
+import { IdentityRepository } from './infrastructure/identities/repositories';
+import { ClinicsResolver, HospitalsResolver, IdentitiesResolver } from './presentation/graphql/resolvers';
+import { DoctorsResolver } from './presentation/graphql/resolvers/doctors';
+import { IdentityCreatedConsumer } from './presentation/messaging/consumers';
+
+export const CommandHandlers = [
+  GetActiveClinicsHandler,
+  GetActiveClinicsHandler,
+  UpsertClinicsHandler,
+
+  GetDoctorByIdHandler,
+  GetAllDoctorsHandler,
+  GetAvailableDoctorsHandler,
+
+  CreateHospitalHandler,
+  RemoveHospitalHandler,
+  UpdateHospitalHandler,
+
+  CreateIdentityHandler,
+  GetIdentityByIdQueryHandler,
+  GetIdentityByUserIdQueryHandler,
+  GetManyIdentitiesQueryHandler,
+  GetIdentityFromHospitalHandler
+];
+
+export const Repositories = [
+  { provide: IClinicRepository, useClass: ClinicRepository },
+  { provide: IDoctorRepository, useClass: DoctorRepository },
+  { provide: IHospitalRepository, useClass: HospitalRepository },
+  { provide: IIdentityRepository, useClass: IdentityRepository },
+];
+export const InfrastructureServices = [
+  ClinicTransactionService,
+  DoctorTransactionService,
+  HospitalTransactionService,
+  IdentityTransactionService,
+  OutboxTransactionService,
+];
+export const Resolvers = [
+  DoctorsResolver,
+  ClinicsResolver,
+  HospitalsResolver,
+  IdentitiesResolver,
+];
+export const Controllers = [
+
+];
+export const Strategies = [
+
+];
+export const Consumers = [
+  IdentityCreatedConsumer
+];
 
 @Module({
   imports: [
@@ -23,10 +90,12 @@ import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.modul
       sortSchema: true,
       playground: true,
     }),
+
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/tenant-management-service/.env.local',
     }),
+
     TypeOrmModule.forRootAsync({
       name: 'tenantConnection',
       imports: [ConfigModule],
@@ -38,15 +107,38 @@ import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.modul
         username: configService.get<string>('TENANT_MANAGEMENT_DB_USER'),
         password: configService.get<string>('TENANT_MANAGEMENT_DB_PASS'),
         database: configService.get<string>('TENANT_MANAGEMENT_DB_NAME'),
-        entities: [ Hospital, Clinic, Doctor, Identity, OutboxEntity ],
+        entities: [Hospital, Clinic, Doctor, Identity, OutboxEntity],
         synchronize: true,
       }),
     }),
-    HospitalsModule,
-    IdentitiesModule,
-    DoctorsModule,
-    ClinicsModule,
-    AuthApiClientModule
+    TypeOrmModule.forFeature([Hospital, Clinic, Doctor, Identity, OutboxEntity], 'tenantConnection'),
+
+    OutboxModule.forRoot('tenantConnection'),
+    MetricsModule,
+    AuthLibModule,
+    HospitalApiClientModule,
+
+    CqrsModule,
   ],
+  controllers: [
+    ...Controllers,
+  ],
+  providers: [
+    ...CommandHandlers,
+    ...Repositories,
+    ...InfrastructureServices,
+    ...Resolvers,
+    ...Strategies,
+    ...Consumers,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    },
+  ],
+  exports: [ConfigModule],
 })
-export class TenantManagementServiceModule {}
+export class TenantManagementServiceModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

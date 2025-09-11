@@ -6,30 +6,26 @@ import { OutboxEntity } from './entities/outbox.entity';
 import { Repository } from 'typeorm';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AppRabbitMQModule } from '@app/common/rabbitmq/rabbitmq.module';
 
-@Module({ })
+@Module({})
 export class OutboxModule {
-  static forRoot(connectionName?: string): DynamicModule {
-    const outboxProcessorProvider: Provider = {
-      provide: OutboxProcessor,
-      useFactory: (
-        outboxRepository: Repository<OutboxEntity>,
-        amqpConnection: AmqpConnection,
-      ) => {
-        return new OutboxProcessor(outboxRepository, amqpConnection);
-      },
-      inject: [
-        getRepositoryToken(OutboxEntity, connectionName),
-        AmqpConnection,
-      ],
-    };
+  static forRoot(connectionName: string): DynamicModule {
+    const serviceToken = `OutboxService_${connectionName}`;
+    const processorToken = `OutboxProcessor_${connectionName}`;
 
     const outboxServiceProvider: Provider = {
-      provide: OutboxService,
-      useFactory: (outboxRepository: Repository<OutboxEntity>) => {
-        return new OutboxService(outboxRepository);
-      },
+      provide: serviceToken,
+      useFactory: (repo: Repository<OutboxEntity>) =>
+        new OutboxService(repo),
       inject: [getRepositoryToken(OutboxEntity, connectionName)],
+    };
+
+    const outboxProcessorProvider: Provider = {
+      provide: processorToken,
+      useFactory: (repo: Repository<OutboxEntity>, amqp: AmqpConnection) =>
+        new OutboxProcessor(repo, amqp),
+      inject: [getRepositoryToken(OutboxEntity, connectionName), AmqpConnection],
     };
 
     return {
@@ -37,12 +33,10 @@ export class OutboxModule {
       imports: [
         TypeOrmModule.forFeature([OutboxEntity], connectionName),
         ScheduleModule.forRoot(),
+        AppRabbitMQModule
       ],
-      providers: [
-        outboxServiceProvider,
-        outboxProcessorProvider
-      ],
-      exports: [OutboxService],
+      providers: [outboxServiceProvider, outboxProcessorProvider],
+      exports: [outboxServiceProvider],
     };
   }
 }

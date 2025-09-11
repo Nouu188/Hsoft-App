@@ -73,7 +73,7 @@ type DoctorObjectType {
   name: String!
 }
 
-enum Gender {
+enum GenderPayload {
   FEMALE
   MALE
   OTHER
@@ -122,7 +122,7 @@ type Identity {
 
   """Họ và tên đầy đủ"""
   fullName: String!
-  gender: Gender
+  gender: GenderPayload
 
   """Số thẻ BHYT"""
   healthInsuranceNumber: String
@@ -156,18 +156,22 @@ type Query {
   Lấy danh sách tất cả các phòng khám đang hoạt động để người dùng có thể đặt lịch.
   """
   activeClinics: [ClinicObjectType!]!
-  activeHospitals: [Hospital!]!
+
+  """Lấy danh sách tất cả bác sĩ"""
+  allDoctors: [DoctorObjectType!]!
 
   """Lấy thông tin chi tiết một phòng khám theo ID."""
   clinicById(clinicId: String!): ClinicObjectType!
+
+  """Lấy thông tin lịch trống của bác sĩ"""
   doctorAvailability(input: DoctorAvailabilityInput!): DoctorAvailability!
 
-  """Lấy bác sĩ theo ID"""
-  doctors(doctorId: ID!): DoctorObjectType!
+  """Lấy thông tin bác sĩ theo ID"""
+  doctorById(doctorId: ID!): DoctorObjectType!
   fetchIdentityFromHospital(externalCode: String!, phoneNumber: String!): Identity
   hospital(id: ID!): Hospital!
   hospitalByExternalCode(externalCode: String!): HospitalPayload!
-  hospitals(isActive: Boolean): [HospitalPayload!]!
+  hospitals: [HospitalPayload!]!
   identitiesByIds(ids: [ID!]!): [Identity!]!
   identity(id: ID!): Identity
   identityByUserId(userId: ID): Identity

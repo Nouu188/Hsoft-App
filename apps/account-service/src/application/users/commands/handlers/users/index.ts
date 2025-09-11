@@ -1,0 +1,1 @@
+export * from "./fcmToken-registeration.command.handler"

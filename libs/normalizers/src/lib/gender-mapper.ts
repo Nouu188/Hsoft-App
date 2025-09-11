@@ -1,4 +1,4 @@
-import { Gender } from "apps/tenant-management-service/src/identities/entities/identity.entity";
+import { Gender } from "apps/tenant-management-service/src/domain";
 
 export function mapHospitalGender(input?: string | null): Gender | undefined {
   if (!input) return undefined;

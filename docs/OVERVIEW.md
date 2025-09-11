@@ -85,7 +85,7 @@ graph TD
 -   **Trách nhiệm:**
     -   Quản lý danh tính người dùng (`User` entity: email, password, mabn, roles).
     -   Xử lý xác thực người dùng (đăng ký, đăng nhập) qua **GraphQL**.
-    -   Cung cấp endpoint **REST** (`/auth/token`) để xác thực M2M cho các service khác.
+    -   Cung cấp endpoint **REST** (`/auth/m2m`) để xác thực M2M cho các service khác.
     -   Quản lý token thông báo đẩy (`fcmTokens`).
     -   Cung cấp API nội bộ để các service khác truy vấn thông tin user.
 

@@ -56,10 +56,6 @@ enum GenderPayload {
   OTHER
 }
 
-input GoogleLoginInput {
-  idToken: String!
-}
-
 type Hospital {
   clinics: [Clinic!]
   createdAt: DateTime!
@@ -161,23 +157,18 @@ type LoginResponse {
 
 type Mutation {
   admin_createServiceClient(input: CreateServiceClientInput!): ServiceClient!
-  completeEmailRegistration(verifyInput: VerifyEmailInput!): LoginResponse!
+  completeEmailRegistration(input: VerifyEmailInput!): LoginResponse!
   confirmNewPassword(input: ConfirmPasswordResetInput!): LoginResponse!
-  initiateEmailRegistration(registerInput: RegisterByEmailInput!): RequestOtpResponse!
+  initiateEmailRegistration(input: RegisterByEmailInput!): RequestOtpResponse!
   loginByEmail(loginInput: LoginInputByEmail!): LoginResponse!
   loginByPhoneNumber(loginInput: LoginInputByPhoneNumber!): LoginResponse!
-  loginWithGoogle(googleLoginInput: GoogleLoginInput!): LoginResponse!
-  registerFcmToken(fcm_token: String!): Boolean!
-  removeFcmTokens(tokens: [String!]!, userId: ID!): Boolean!
+  loginWithGoogle: LoginResponse!
   requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetResponse!
   verifyPasswordReset(input: VerifyPasswordResetInput!): VerifyPasswordResetResponse!
 }
 
 type Query {
-  findAllUsers: User!
-  findById(userId: String!): User
-  findByPhoneNumber(phoneNumber: String!): User
-  me: User!
+  healthCheck: String!
 }
 
 input RegisterByEmailInput {
@@ -207,33 +198,16 @@ enum Role {
 
 type ServiceClient {
   """ID duy nhất của service, ví dụ: scheduling-service"""
-  client_id: ID!
+  clientId: ID!
+
+  """Secret đã được hash"""
+  clientSecret: String!
 
   """Tên của service"""
   name: String!
 
   """Các quyền hạn được cấp"""
   scopes: [String!]!
-}
-
-type User {
-  """URL ảnh đại diện"""
-  avatarUrl: String
-  createdAt: DateTime!
-
-  """Danh sách token thiết bị"""
-  deviceTokens: [DeviceToken!]
-
-  """Địa chỉ email (duy nhất)"""
-  email: String
-  googleId: String
-  id: ID!
-
-  """Flag indicating whether email is verified"""
-  isEmailVerified: Boolean!
-  phoneNumber: String
-  roles: [Role!]!
-  updatedAt: DateTime!
 }
 
 type UserPayload {
