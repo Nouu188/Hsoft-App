@@ -4,7 +4,7 @@ import ScheduleScreen from '../screens/schedule/ScheduleScreen';
 import CustomTabBar from './CustomTabBar';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import HomeScreenNavigator from './HomeScreenNavigator';
-import BookingWizard from '@/components/specific/booking-wizard/BookingWizard';
+import BookingWizardNavigator from './BookingWizardNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,9 +18,9 @@ const TabNavigator = () => {
       <Tab.Screen name="Schedule" component={ScheduleScreen} />
       <Tab.Screen
         name="BookingWizard"
-        component={BookingWizard}
+        component={BookingWizardNavigator}
         options={{
-          tabBarStyle: { display: 'none' }, // ẩn tabbar
+          tabBarStyle: { display: 'none' }, // ẩn tabbar khi ở BookingWizard
         }}
       />
 

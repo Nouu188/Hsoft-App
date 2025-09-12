@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
+import { TimeSlot } from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard'; // Import TimeSlot
 
 // 1. Định nghĩa các màn hình và tham số cho từng Stack
 
@@ -17,7 +18,8 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabsParamList>; // Lồng Tab Navigator vào
   // Thêm các màn hình modal toàn cục ở đây nếu có
   Settings: undefined;
-  BookingWizard: undefined;
+  BookingWizard: undefined; // Đây sẽ là BookingWizardNavigator
+  // AppointmentTimeSelection: undefined; // Không còn ở RootStack nữa, đã chuyển vào BookingStack
 };
 
 // Các Tab ở dưới cùng
@@ -75,7 +77,7 @@ export type HomeStackParamList = {
 export type ProfileStackParamList = {
   Profile: undefined;
   Languages: undefined;
-  RingTone: {
+  Ringtone: {
     newRingtone?: {
       id: string;
       name: string;
@@ -84,8 +86,15 @@ export type ProfileStackParamList = {
       uri: string;
     }
   } | undefined;
-  AddRingTone: { onSelect?: (newRingtone: Ringtone) => void };
+  AddRingtone: { onSelect?: (newRingtone: Ringtone) => void };
 };
+
+//Stack cho BookingWizard
+export type BookingStackParamList = {
+  BookingWizardMain: { step?: number; prefilledDoctors?: { doctorId: string; selectedTime: string }[]; };
+  AppointmentBooking: { doctorId: string; doctorName: string; availableTimes: TimeSlot[] };
+};
+
 // Các type helper để sử dụng trong các component
 
 // Props cho các màn hình trong RootStack

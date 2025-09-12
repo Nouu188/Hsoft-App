@@ -3,11 +3,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import AuthNavigator from './AuthNavigator';
-import TabNavigator from './TabNavigator'; 
+import TabNavigator from './TabNavigator';
 import OTPScreen from '@/screens/otp/OTPScreen';
 import ForgotPasswordScreen from '@/screens/otp/ForgotPasswordScreen';
 import type { RootStackParamList } from './types'
 import ResetPasswordSCreen from '@/screens/otp/ResetPasswordScreen';
+// import AppointmentTimeSelectionScreen from '@/components/specific/booking-wizard/steps/step_2/AppointmentTimeSelectionScreen'; // <--- Không cần import ở đây nữa
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

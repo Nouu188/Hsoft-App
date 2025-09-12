@@ -1,59 +1,40 @@
 import React from 'react';
-// 1. Import thêm các kiểu và component cần thiết
-import { FlatList, StyleSheet, ListRenderItemInfo, FlatListProps } from 'react-native';
-import Animated from 'react-native-reanimated'; // Cần cho animation
-import { COLORS, SIZES } from '@/constants/theme';
+import { View, FlatList, StyleSheet } from 'react-native';
 import DoctorCard, { Doctor } from './DoctorCard';
 
-// Dữ liệu mẫu (giữ nguyên)
-const DOCTORS: Doctor[] = [
-  { id: '1', name: 'Dr. John Smith', specialty: 'Cardiologist', hospital: 'City Hospital', gender: 'male', availableTimes: ['10:15 am', '11:00 am', '11:45 am', '2:00 pm', '2:45 pm'] },
-  { id: '2', name: 'Dr. Jane Doe', specialty: 'Cardiologist', hospital: 'General Hospital', gender: 'female', availableTimes: ['9:00 am', '9:45 am', '10:30 am', '1:00 pm', '1:45 pm'] },
-  { id: '3', name: 'Dr. Emily White', specialty: 'Dermatologist', hospital: 'Medical Center', gender: 'female', availableTimes: ['11:15 am', '12:00 pm', '2:30 pm', '3:15 pm', '4:00 pm'] },
-  { id: '4', name: 'Dr. Emily qwer', specialty: 'Dermatologist', hospital: 'Medal Center', gender: 'female', availableTimes: ['11:15 am', '12:00 pm', '2:30 pm', '3:15 pm', '4:00 pm'] },
-  { id: '5', name: 'Dr. dasd White', specialty: 'matologist', hospital: 'dical Center', gender: 'male', availableTimes: ['11:15 am', '12:00 pm', '2:30 pm', '3:15 pm', '4:00 pm'] },
-  { id: '6', name: 'Dr. Ben White', specialty: 'Dermatologist', hospital: 'Medical Centre', gender: 'male', availableTimes: ['11:15 am', '12:00 pm', '2:30 pm', '3:15 pm', '4:00 pm'] },
-];
+interface DoctorListProps {
+  doctors: Doctor[];
+  selectedDoctors: Doctor[];
+  onSelectDoctor: (doctor: Doctor) => void; // callback mở màn hình chọn giờ
+}
 
-// 2. SỬA LỖI: Bỏ đi kiểu generic <FlatList<Doctor>> ở đây
-const TypedAnimatedFlatList = Animated.createAnimatedComponent(FlatList) as React.ComponentType<Animated.AnimateProps<FlatListProps<Doctor>>>;
-// 3. Định nghĩa props mới cho DoctorList
-interface DoctorListProps extends Omit<FlatListProps<Doctor>, 'data' | 'renderItem'> {}
-
-// --- Component ---
-const DoctorList: React.FC<DoctorListProps> = (props) => {
-  // Hàm render (không đổi)
-  const renderItem = ({ item }: ListRenderItemInfo<Doctor>) => (
-    <DoctorCard
-      name={item.name}
-      specialty={item.specialty}
-      hospital={item.hospital}
-      gender={item.gender}
-      availableTimes={item.availableTimes}
-    />
-  );
-
-  // Lấy các props từ bên ngoài (không đổi)
-  const { contentContainerStyle, ...rest } = props;
+const DoctorList: React.FC<DoctorListProps> = ({ doctors, selectedDoctors, onSelectDoctor }) => {
+  const renderItem = ({ item }: { item: Doctor }) => {
+    const isSelected = !!selectedDoctors.find(d => d.id === item.id);
+    return (
+      <DoctorCard
+        {...item}
+        selected={isSelected}
+        onSelectDoctor={onSelectDoctor}
+      />
+    );
+  };
 
   return (
-    // 4. SỬA LỖI: Thêm kiểu generic <Doctor> vào lúc sử dụng component
-    <TypedAnimatedFlatList
-      data={DOCTORS}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={[styles.listContentContainer, contentContainerStyle]}
-      {...rest}
-    />
+    <View style={styles.container}>
+      <FlatList
+        data={doctors}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+      />
+    </View>
   );
 };
 
-// --- Styles ---
 const styles = StyleSheet.create({
-  listContentContainer: {
-    padding: SIZES.base * 1.25,
-    backgroundColor: COLORS.white,
-  },
+  container: { flex: 1 },
+  listContent: { paddingHorizontal: 15, paddingVertical: 10 },
 });
 
 export default DoctorList;

@@ -45,7 +45,7 @@ const Step1_Screen: React.FC<Step1_SelectHospitalProps> = ({ onNext }) => {
   };
 
   const handleNextPress = () => {
-    if (isStep1Valid()) onNext(); // Sử dụng hàm kiểm tra mới
+    if (isStep1Valid()) onNext(); 
     else Alert.alert("Thông tin chưa đầy đủ", "Vui lòng chọn bệnh viện hợp lệ và hình thức khám.");
   };
 

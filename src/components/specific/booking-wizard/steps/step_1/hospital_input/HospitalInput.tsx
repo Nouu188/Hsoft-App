@@ -5,7 +5,7 @@ import type { Hospital } from '@/types/dtos/tenant/hospital.dto';
 import { useBookingStore } from '@/store/useBookingStore';
 import HospitalTextInput from './HospitalTextInput';
 import HospitalSuggestions from './HospitalSuggestions';
-import HospitalModal from './HospitalModal';
+import EntityModal from './EntityModal';
 
 interface Props {
   hospitals: Hospital[];
@@ -48,35 +48,36 @@ const HospitalInput: React.FC<Props> = ({
         value={inputText}
         placeholder="Chọn bệnh viện"
         isLoading={isLoading}
-        onChangeText={text => { 
-          setInputText(text); 
-          setDropdownVisible(true); 
-          setSectionExpanded('hospital', true); 
+        onChangeText={text => {
+          setInputText(text);
+          setDropdownVisible(true);
+          setSectionExpanded('hospital', true);
         }}
-        onFocus={() => { 
-          setDropdownVisible(true); 
-          setSectionExpanded('hospital', true); 
+        onFocus={() => {
+          setDropdownVisible(true);
+          setSectionExpanded('hospital', true);
         }}
         dropdownVisible={dropdownVisible}
         toggleDropdown={() => setDropdownVisible(!dropdownVisible)}
         isInputValid={isInputValid}
       />
-      
+
       {!isInputValid && inputText.length > 0 && (
-        <Text style={{color:'red', marginTop:5}}>
+        <Text style={{ color: 'red', marginTop: 5 }}>
           Bệnh viện không hợp lệ.
         </Text>
       )}
-      
+
       {dropdownVisible && filteredHospitals.length > 0 && (
-        <HospitalSuggestions 
-          suggestions={filteredHospitals} 
-          onSelect={setSelectedHospital} 
+        <HospitalSuggestions
+          suggestions={filteredHospitals}
+          onSelect={setSelectedHospital}
         />
       )}
-      
-      <HospitalModal
-        hospital={selectedHospital}
+
+      <EntityModal
+        type="hospital"
+        item={selectedHospital}
         onCancel={() => setSelectedHospital(null)}
         onSelect={(hospital) => {
           setSelectedHospital(null);
@@ -86,9 +87,10 @@ const HospitalInput: React.FC<Props> = ({
           onSelectHospital?.(hospital);
           setSectionExpanded('hospital', false);
           setDropdownVisible(false);
-          setHospitalSelected(true); 
+          setHospitalSelected(true);
         }}
       />
+
     </View>
   );
 };

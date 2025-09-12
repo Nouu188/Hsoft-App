@@ -32,6 +32,22 @@ const InfoRow = ({ label, value, icon }: InfoRowProps) => (
   </View>
 );
 
+type InfoRowPairProps = {
+  left: InfoRowProps;
+  right: InfoRowProps;
+};
+
+const InfoRowPair = ({ left, right }: InfoRowPairProps) => (
+  <View style={styles.infoRowPair}>
+    <View style={styles.infoRowItem}>
+      <InfoRow {...left} />
+    </View>
+    <View style={styles.infoRowItem}>
+      <InfoRow {...right} />
+    </View>
+  </View>
+);
+
 interface PatientInfoCardProps {
   identity: Identity | null;
   onEdit: () => void;
@@ -41,35 +57,39 @@ export const PatientInfoCard = ({ identity, onEdit }: PatientInfoCardProps) => {
   if (!identity) return null;
 
   return (
-    <View style={styles.card}>
-      {/* Edit Button */}
+    <View style={styles.cardContainer}>
+      {/* Nút chỉnh sửa nằm góc phải trên */}
       <TouchableOpacity style={styles.editButton} onPress={onEdit}>
         <Ionicons name="create-outline" size={22} color={COLORS.primary} />
       </TouchableOpacity>
 
-      {/* Section: Personal */}
-      <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
       <InfoRow label="Họ và tên" value={identity.fullName} icon="person-outline" />
-      <InfoRow label="Ngày sinh" value={identity.birthYear} icon="calendar-outline" />
-      <InfoRow label="Giới tính" value={formatGender(identity.gender)} icon="male-female-outline" />
 
-      {/* Section: Liên hệ */}
-      <Text style={styles.sectionTitle}>Liên hệ</Text>
+      <InfoRowPair
+        left={{ label: "Ngày sinh", value: identity.birthYear, icon: "calendar-outline" }}
+        right={{ label: "Giới tính", value: formatGender(identity.gender), icon: "male-female-outline" }}
+      />
+
       <InfoRow label="Số điện thoại" value={identity.phoneNumber} icon="call-outline" />
       <InfoRow label="Địa chỉ" value={identity.address} icon="home-outline" />
 
-      {/* Section: Hành chính */}
-      <Text style={styles.sectionTitle}>Hành chính</Text>
-      <InfoRow label="Mã bệnh nhân" value={identity.externalPatientCode} icon="id-card-outline" />
-      <InfoRow label="Số CMND/CCCD" value={identity.nationalId} icon="card-outline" />
+      <InfoRowPair
+        left={{ label: "Mã bệnh nhân", value: identity.externalPatientCode, icon: "id-card-outline" }}
+        right={{ label: "Số CMND/CCCD", value: identity.nationalId, icon: "card-outline" }}
+      />
+
       <InfoRow label="Số BHYT" value={identity.healthInsuranceNumber} icon="medkit-outline" />
 
-      {/* Section: Bệnh viện liên kết */}
       {identity.hospitals && identity.hospitals.length > 0 && (
         <>
           <Text style={styles.sectionTitle}>Bệnh viện liên kết</Text>
           {identity.hospitals.map(h => (
-            <InfoRow key={h.id} label={h.name} value={h.graphqlEndpoint} icon="business-outline" />
+            <InfoRow
+              key={h.id}
+              label={h.name}
+              value={h.graphqlEndpoint}
+              icon="business-outline"
+            />
           ))}
         </>
       )}
@@ -78,15 +98,8 @@ export const PatientInfoCard = ({ identity, onEdit }: PatientInfoCardProps) => {
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius * 2,
-    padding: SIZES.padding * 1.5,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
+  cardContainer: {
+    position: 'relative',
   },
   sectionTitle: {
     ...FONTS.h4,
@@ -98,7 +111,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: SIZES.padding*0.4,
+    marginBottom: SIZES.padding * 0.4,
   },
   infoIcon: {
     marginRight: SIZES.base,
@@ -117,10 +130,19 @@ const styles = StyleSheet.create({
     color: COLORS.textDark,
     fontWeight: '600',
   },
+  infoRowPair: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: SIZES.padding * 0.4,
+  },
+  infoRowItem: {
+    flex: 1,
+    marginRight: SIZES.base,
+  },
   editButton: {
     position: 'absolute',
-    top: SIZES.padding,
-    right: SIZES.padding,
+    top: SIZES.padding / 2,
+    right: SIZES.padding / 2,
     padding: 8,
     zIndex: 10,
   },

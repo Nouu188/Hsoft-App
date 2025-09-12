@@ -1,4 +1,3 @@
-// src/features/booking-wizard/WizardStepper.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, SIZES } from '@/constants/theme';

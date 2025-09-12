@@ -9,6 +9,7 @@ const { width: screenWidth } = Dimensions.get('window');
 // --- Kiểu base cho carousel item ---
 export interface CarouselItemBase {
   id: string | number;
+  url?: string;
 }
 
 // --- Props generic ---
