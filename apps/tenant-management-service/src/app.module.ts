@@ -24,14 +24,12 @@ import { Doctor } from './domain/doctors/entities';
 import { Hospital } from './domain/hospitals/entities';
 import { IHospitalRepository } from './domain/hospitals/interfaces';
 import { Identity } from './domain/identities/entities';
-import { ClinicRepository } from './infrastructure/clinics/repositories';
 import { ClinicTransactionService, DoctorTransactionService, HospitalTransactionService, IdentityTransactionService, OutboxTransactionService } from './infrastructure/common/services/transaction.service';
-import { DoctorRepository } from './infrastructure/doctors';
-import { HospitalRepository } from './infrastructure/hospitals/repositories';
-import { IdentityRepository } from './infrastructure/identities/repositories';
+import { DoctorRepository } from './infrastructure/repositories/doctors';
 import { ClinicsResolver, HospitalsResolver, IdentitiesResolver } from './presentation/graphql/resolvers';
 import { DoctorsResolver } from './presentation/graphql/resolvers/doctors';
-import { IdentityCreatedConsumer } from './presentation/messaging/consumers';
+import { ClinicRepository, HospitalRepository, IdentityRepository } from './infrastructure';
+import { IdentityCreatedConsumer } from './infrastructure/rabbitmq';
 
 export const CommandHandlers = [
   GetActiveClinicsHandler,
