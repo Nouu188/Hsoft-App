@@ -1,7 +1,6 @@
 import { Field, ObjectType, ID, registerEnumType, Int } from '@nestjs/graphql';
-import { AppointmentStatus, AppointmentType } from '../entities/appointment.entity';
-import { DoctorObjectType } from '../../../../tenant-management-service/src/doctors/dto/doctor.object-type'; // <-- Import Doctor
-import { ClinicObjectType } from 'apps/tenant-management-service/src/clinics/dto/clinic.object-type';
+import { AppointmentStatus, AppointmentType } from '../entities';
+import { ClinicObjectType, DoctorObjectType } from 'apps/tenant-management-service/src/domain';
 
 registerEnumType(AppointmentStatus, { name: 'AppointmentStatus' });
 registerEnumType(AppointmentType, { name: 'AppointmentType' });

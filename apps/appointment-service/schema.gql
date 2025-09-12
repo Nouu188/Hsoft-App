@@ -21,11 +21,26 @@ enum AppointmentStatus {
   CANCELLED
   COMPLETED
   CONFIRMED
+  PENDING
 }
 
 enum AppointmentType {
   CLINIC
   DOCTOR
+}
+
+input BookByClinicInput {
+  appointmentTime: String!
+  clinicId: ID!
+  hospitalId: ID!
+  notes: String
+}
+
+input BookByDoctorInput {
+  appointmentTime: String!
+  doctorId: ID!
+  hospitalId: ID!
+  notes: String
 }
 
 type Clinic {
@@ -170,10 +185,22 @@ type IdentityPayload {
 }
 
 type Mutation {
+  """Đặt lịch theo danh sách phòng khám."""
+  bookByClinic(inputs: [BookByClinicInput!]!): [Appointment!]!
+
+  """Đặt lịch theo danh sách bác sĩ."""
+  bookByDoctor(inputs: [BookByDoctorInput!]!): [Appointment!]!
+
   """Hủy một lịch hẹn đã đặt."""
   cancelAppointment(id: ID!): Boolean!
 }
 
 type Query {
   myAppointments: [Appointment!]!
+}
+
+type TimeSlot {
+  endTime: DateTime!
+  isAvailable: Boolean!
+  startTime: DateTime!
 }
