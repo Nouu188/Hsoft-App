@@ -14,6 +14,14 @@ type Clinic {
   updatedAt: DateTime!
 }
 
+type ClinicObjectType {
+  """Mã khoa phòng từ hệ thống bệnh viện"""
+  externalCode: String!
+
+  """ID nội bộ của phòng khám"""
+  id: ID!
+}
+
 input ConfirmPasswordResetInput {
   email: String!
   newPassword: String!
@@ -208,6 +216,12 @@ type ServiceClient {
 
   """Các quyền hạn được cấp"""
   scopes: [String!]!
+}
+
+type TimeSlot {
+  endTime: DateTime!
+  isAvailable: Boolean!
+  startTime: DateTime!
 }
 
 type UserPayload {

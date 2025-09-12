@@ -8,12 +8,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AuthApiClientService } from '../auth/auth-api-client.service';
-import { Hospital } from 'apps/tenant-management-service/src/hospitals/entities/hospital.entity';
-import { DoctorObjectType } from 'apps/tenant-management-service/src/doctors/dto/doctor.object-type';
-import { ClinicObjectType } from 'apps/tenant-management-service/src/clinics/dto/clinic.object-type';
-import { Identity } from 'apps/tenant-management-service/src/identities/entities/identity.entity';
-import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
-import { HospitalPayload } from 'apps/tenant-management-service/src/hospitals/dto/hospital.payload';
+import { ClinicObjectType, DoctorObjectType, Hospital, HospitalPayload, Identity, IdentityPayload } from 'apps/tenant-management-service/src/domain';
 
 @Injectable()
 export class TenantApiClientService {

@@ -1,8 +1,7 @@
 import { Inject, Logger, InternalServerErrorException } from "@nestjs/common";
 import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
-import { Clinic } from "apps/tenant-management-service/src/domain/clinics/entities";
 import { GetActiveClinicsQuery } from "../impl";
-import { IClinicRepository } from "apps/tenant-management-service/src/domain";
+import { Clinic, IClinicRepository } from "apps/tenant-management-service/src/domain";
 
 @QueryHandler(GetActiveClinicsQuery)
 export class GetActiveClinicsHandler implements IQueryHandler<GetActiveClinicsQuery, Clinic[]> {

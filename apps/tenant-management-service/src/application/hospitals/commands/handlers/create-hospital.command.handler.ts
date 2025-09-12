@@ -1,7 +1,6 @@
 import { BadRequestException, Inject, InternalServerErrorException, Logger } from "@nestjs/common";
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { Hospital } from "apps/tenant-management-service/src/domain/hospitals/entities";
-import { IHospitalRepository } from "apps/tenant-management-service/src/domain/hospitals/interfaces";
+import { Hospital, IHospitalRepository } from "apps/tenant-management-service/src/domain";
 import { HospitalTransactionService } from "apps/tenant-management-service/src/infrastructure/common/services/transaction.service";
 import { CreateHospitalCommand } from "../impl";
 

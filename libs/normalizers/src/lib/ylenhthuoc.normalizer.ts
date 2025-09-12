@@ -1,5 +1,5 @@
 import { YLenhThuoc } from '@app/common/types/ylenhthuoc.interface';
-import { Dose, DoseStatus, MealRelation } from 'apps/scheduling-service/src/doses/entities/dose.entity';
+import { Dose, DoseStatus, MealRelation } from 'apps/scheduling-service copyy/src/doses/entities/dose.entity';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

@@ -2,7 +2,7 @@ import { AccountApiClientService } from '@app/api-clients/account/account-api-cl
 import { DoseApiClientService } from '@app/api-clients/doses/dose-api-client.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
+import { DoseStatus } from 'apps/scheduling-service copyy/src/doses/entities/dose.entity';
 import { DataSource } from 'typeorm';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { NotificationStatus, NotificationType } from '../../notification-history/entities/notification-history.entity';

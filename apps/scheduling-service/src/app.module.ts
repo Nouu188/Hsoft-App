@@ -1,21 +1,62 @@
-import { DateTimeScalar } from '@app/common/graphql/datetime.scalar';
+import { AccountApiClientModule } from '@app/api-clients/account/account-api-client.module';
+import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
+import { HospitalApiClientModule } from '@app/api-clients/hospital/hospital-api-client.module';
+import { TenantApiClientModule } from '@app/api-clients/tenant/tenant-api-client.module';
+import { AuthLibModule } from '@app/auth';
+import { GraphQLJSONObject } from '@app/common/graphql/json.scalar';
 import { MetricsInterceptor } from '@app/common/metrics/instrumentation/metrics.interceptor';
 import { MetricsMiddleware } from '@app/common/metrics/instrumentation/metrics.middleware';
 import { MetricsModule } from '@app/common/metrics/metrics.module';
+import { OutboxModule } from '@app/outbox';
 import { OutboxEntity } from '@app/outbox/entities/outbox.entity';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HttpModule } from '@nestjs/axios';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CqrsModule } from '@nestjs/cqrs';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { GraphQLJSONObject } from 'graphql-type-json';
 import { join } from 'path';
-import { DosesModule } from './doses/doses.module';
-import { Dose } from './doses/entities/dose.entity';
-import { JobsModule } from './jobs/jobs.module';
-import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.module';
+import { DoseStatusTransitionJobService, GetDoseByIdQueryHandler, GetDosesByDateRangeQuery, GetDosesByDateRangeQueryHandler, SyncAllDosesByUserHandler, SyncDosesInFutureHandler, UpdateDosesCommandHandler } from './application';
+import { Dose, DoseSchedulerService, DoseStatusTransitionService, IDoseRepository } from './domain';
+import { DoseRepository, DosesAllSyncConsumer, DoseTransactionService, OutboxTransactionService } from './infrastructure';
+import { DosesResolver } from './presentation/graphql/resolvers/doses';
+
+export const CommandHandlers = [
+  SyncAllDosesByUserHandler,
+  SyncDosesInFutureHandler,
+  UpdateDosesCommandHandler,
+
+  GetDoseByIdQueryHandler,
+  GetDosesByDateRangeQuery,
+  GetDosesByDateRangeQueryHandler
+];
+
+export const Repositories = [
+  { provide: IDoseRepository, useClass: DoseRepository }
+];
+export const InfrastructureServices = [
+  OutboxTransactionService,
+  DoseTransactionService
+];
+export const Resolvers = [
+  DosesResolver
+];
+export const Controllers = [
+  
+];
+export const Strategies = [
+
+];
+export const Consumers = [
+  DosesAllSyncConsumer,
+];
+export const Services = [
+  DoseSchedulerService,
+  DoseStatusTransitionJobService,
+  DoseStatusTransitionService
+];
 
 @Module({
   imports: [
@@ -31,6 +72,7 @@ import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.modul
       envFilePath: './apps/scheduling-service/.env.local',
     }),
     TypeOrmModule.forRootAsync({
+      name: 'schedulingConnection',
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -44,20 +86,36 @@ import { AuthApiClientModule } from '@app/api-clients/auth/auth-api-client.modul
         synchronize: true,
       }),
     }),
+    TypeOrmModule.forFeature([ Dose, OutboxEntity ], 'schedulingConnection'),
+
     HttpModule,
-    DosesModule,
-    JobsModule,
     MetricsModule,
     AuthApiClientModule,
+    AccountApiClientModule,
+    HospitalApiClientModule,
+    TenantApiClientModule,
+    AuthLibModule,
+    OutboxModule.forRoot('schedulingConnection'),
+
+    CqrsModule,
+  ],
+  controllers: [
+    ...Controllers,
   ],
   providers: [
-    DateTimeScalar,
-    ConfigModule,
+    ...CommandHandlers,
+    ...Repositories,
+    ...InfrastructureServices,
+    ...Resolvers,
+    ...Strategies,
+    ...Consumers,
+    ...Services,
     {
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,
-    }
+    },
   ],
+  exports: [ConfigModule],
 })
 export class SchedulingServiceModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

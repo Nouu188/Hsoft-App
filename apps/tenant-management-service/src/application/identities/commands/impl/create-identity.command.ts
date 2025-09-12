@@ -1,5 +1,5 @@
 import { ICommand } from "@nestjs/cqrs";
-import { CreateIdentityInput } from "apps/tenant-management-service/src/domain/identities/dtos";
+import { CreateIdentityInput } from "apps/tenant-management-service/src/domain";
 
 export class CreateIdentityCommand implements ICommand {
     constructor(

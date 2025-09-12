@@ -1,10 +1,10 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UserPayload } from 'apps/account-service/src/users/dto/user.payload';
-import { DeviceToken } from 'apps/account-service/src/users/entities/user.entity';
 import { firstValueFrom } from 'rxjs';
 import { AuthApiClientService } from '../auth/auth-api-client.service';
+import { UserPayload } from 'apps/account-service/src/domain/users/dtos';
+import { DeviceToken } from 'apps/account-service/src/domain/users/entities';
 
 @Injectable()
 export class AccountApiClientService {

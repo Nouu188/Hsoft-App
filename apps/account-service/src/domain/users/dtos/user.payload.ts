@@ -1,7 +1,7 @@
 import { Role } from '@app/auth/enums/role.enum';
-import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { IdentityPayload } from 'apps/tenant-management-service/src/domain';
 import { DeviceToken } from '../entities/user.entity';
-import { IdentityPayload } from 'apps/tenant-management-service/src/identities/dtos/identity.payload';
 
 @ObjectType()
 export class UserPayload {

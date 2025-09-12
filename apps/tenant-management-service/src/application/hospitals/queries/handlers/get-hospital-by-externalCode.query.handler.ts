@@ -1,8 +1,7 @@
-import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
-import { GetHospitalByExternalCodeQuery } from "../impl";
 import { Inject, Logger, NotFoundException } from "@nestjs/common";
-import { IHospitalRepository } from "apps/tenant-management-service/src/domain/hospitals/interfaces";
-import { HospitalPayload } from "apps/tenant-management-service/src/domain/hospitals/dtos";
+import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { HospitalPayload, IHospitalRepository } from "apps/tenant-management-service/src/domain";
+import { GetHospitalByExternalCodeQuery } from "../impl";
 
 @QueryHandler(GetHospitalByExternalCodeQuery)
 export class GetHospitalByExternalCodeHandler

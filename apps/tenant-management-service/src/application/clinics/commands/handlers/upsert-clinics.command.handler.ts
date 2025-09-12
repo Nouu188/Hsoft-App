@@ -2,8 +2,7 @@ import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { UpsertClinicsCommand } from "../impl";
 import { Inject, InternalServerErrorException, Logger } from "@nestjs/common";
 import { ClinicTransactionService } from "apps/tenant-management-service/src/infrastructure/common/services/transaction.service";
-import { Clinic } from "apps/tenant-management-service/src/domain/clinics/entities";
-import { IClinicRepository } from "apps/tenant-management-service/src/domain";
+import { Clinic, IClinicRepository } from "apps/tenant-management-service/src/domain";
 
 @CommandHandler(UpsertClinicsCommand)
 export class UpsertClinicsHandler implements ICommandHandler<UpsertClinicsCommand, { created: number; updated: number; deactivated: number }> {

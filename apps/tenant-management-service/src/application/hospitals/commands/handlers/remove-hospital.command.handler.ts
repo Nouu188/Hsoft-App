@@ -1,8 +1,8 @@
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { RemoveHospitalCommand } from "../impl";
 import { Inject, Logger, NotFoundException, InternalServerErrorException } from "@nestjs/common";
-import { IHospitalRepository } from "apps/tenant-management-service/src/domain/hospitals/interfaces";
 import { HospitalTransactionService } from "apps/tenant-management-service/src/infrastructure/common/services/transaction.service";
+import { IHospitalRepository } from "apps/tenant-management-service/src/domain";
 
 @CommandHandler(RemoveHospitalCommand)
 export class RemoveHospitalHandler implements ICommandHandler<RemoveHospitalCommand, boolean> {

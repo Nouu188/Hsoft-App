@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import { Dose, DoseStatus } from 'apps/scheduling-service/src/doses/entities/dose.entity';
+import { Dose, DoseStatus } from 'apps/scheduling-service copyy/src/doses/entities/dose.entity';
 
 @Injectable()
 export class DoseApiClientService {

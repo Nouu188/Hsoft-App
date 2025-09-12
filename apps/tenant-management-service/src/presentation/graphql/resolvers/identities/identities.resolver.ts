@@ -4,7 +4,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { User } from 'apps/account-service/src/domain/users/entities';
 import { GetIdentityByIdQuery, GetIdentityByUserIdQuery, GetIdentityFromHospitalQuery, GetManyIdentitiesQuery } from 'apps/tenant-management-service/src/application';
-import { Identity } from 'apps/tenant-management-service/src/domain/identities/entities';
+import { Identity } from 'apps/tenant-management-service/src/domain';
 
 @Resolver(() => Identity)
 @UseGuards(M2MJwtGuard)

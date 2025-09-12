@@ -1,8 +1,7 @@
 import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
 import { GetAllHospitalsQuery } from "../impl";
-import { Hospital } from "apps/tenant-management-service/src/domain/hospitals/entities";
 import { Inject, Logger } from "@nestjs/common";
-import { IHospitalRepository } from "apps/tenant-management-service/src/domain/hospitals/interfaces";
+import { Hospital, IHospitalRepository } from "apps/tenant-management-service/src/domain";
 
 @QueryHandler(GetAllHospitalsQuery)
 export class GetAllHospitalsHandler

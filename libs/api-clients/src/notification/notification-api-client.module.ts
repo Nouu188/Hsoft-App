@@ -10,7 +10,7 @@ import { OutboxModule } from '@app/outbox';
       timeout: 15000,
     }),
     ConfigModule,
-    OutboxModule.forRoot()
+    OutboxModule
   ],
   providers: [NotificationApiClientService],
   exports: [NotificationApiClientService],

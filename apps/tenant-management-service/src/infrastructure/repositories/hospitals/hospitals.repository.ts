@@ -1,8 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { CreateHospitalInput, UpdateHospitalInput } from "apps/tenant-management-service/src/domain/hospitals/dtos";
-import { Hospital } from "apps/tenant-management-service/src/domain/hospitals/entities";
-import { IHospitalRepository } from "apps/tenant-management-service/src/domain/hospitals/interfaces";
+import { CreateHospitalInput, Hospital, IHospitalRepository, UpdateHospitalInput } from "apps/tenant-management-service/src/domain";
 import { DeepPartial, EntityManager, In, Repository } from "typeorm";
 
 @Injectable()

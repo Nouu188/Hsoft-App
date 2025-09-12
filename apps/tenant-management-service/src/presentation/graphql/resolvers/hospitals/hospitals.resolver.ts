@@ -18,12 +18,7 @@ import {
     GetHospitalByExternalCodeQuery,
     GetHospitalByIdQuery,
 } from 'apps/tenant-management-service/src/application/hospitals/queries';
-import {
-    CreateHospitalInput,
-    HospitalPayload,
-    UpdateHospitalInput,
-} from 'apps/tenant-management-service/src/domain/hospitals/dtos';
-import { Hospital } from 'apps/tenant-management-service/src/domain/hospitals/entities';
+import { CreateHospitalInput, Hospital, HospitalPayload, UpdateHospitalInput } from 'apps/tenant-management-service/src/domain';
 
 @Resolver()
 export class HospitalsResolver {

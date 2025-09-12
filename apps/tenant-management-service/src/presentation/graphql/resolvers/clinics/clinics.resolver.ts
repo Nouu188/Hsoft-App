@@ -14,11 +14,7 @@ import {
     GetActiveClinicsQuery,
     GetClinicByIdQuery,
 } from 'apps/tenant-management-service/src/application/clinics/queries/impl';
-import {
-    ClinicObjectType,
-    HospitalClinicInput,
-    UpsertClinicResult,
-} from 'apps/tenant-management-service/src/domain/clinics/dtos';
+import { ClinicObjectType, HospitalClinicInput, UpsertClinicResult } from 'apps/tenant-management-service/src/domain';
 
 @Resolver(() => ClinicObjectType)
 export class ClinicsResolver {

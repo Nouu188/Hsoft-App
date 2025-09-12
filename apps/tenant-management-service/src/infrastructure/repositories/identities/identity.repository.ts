@@ -1,7 +1,6 @@
 import { Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Identity } from "apps/tenant-management-service/src/domain/identities/entities";
-import { IIdentityRepository } from "apps/tenant-management-service/src/domain/identities/interfaces";
+import { Identity, IIdentityRepository } from "apps/tenant-management-service/src/domain";
 import { DeepPartial, EntityManager, In, Repository } from "typeorm";
 
 export class IdentityRepository implements IIdentityRepository {

@@ -2,11 +2,9 @@ import { Inject, InternalServerErrorException, Logger, NotFoundException } from 
 import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
 import { v4 as uuidv4 } from "uuid";
 import { HospitalApiClientService } from "@app/api-clients/hospital/hospital-api.service";
-import { IHospitalRepository } from "apps/tenant-management-service/src/domain/hospitals/interfaces";
-import { Identity } from "apps/tenant-management-service/src/domain/identities/entities";
-import { IIdentityRepository } from "apps/tenant-management-service/src/domain/identities/interfaces";
 import { IdentityTransactionService } from "apps/tenant-management-service/src/infrastructure/common/services/transaction.service";
 import { GetIdentityFromHospitalQuery } from "../impl/get-identity-from-hospital.query";
+import { Identity, IHospitalRepository, IIdentityRepository } from "apps/tenant-management-service/src/domain";
 
 @QueryHandler(GetIdentityFromHospitalQuery)
 export class GetIdentityFromHospitalHandler implements IQueryHandler<GetIdentityFromHospitalQuery, Identity | null> {

@@ -1,8 +1,7 @@
 import { QueryHandler, IQueryHandler } from "@nestjs/cqrs";
-import { Identity } from "apps/tenant-management-service/src/domain/identities/entities";
 import { Inject, Logger } from "@nestjs/common";
-import { IIdentityRepository } from "apps/tenant-management-service/src/domain/identities/interfaces";
 import { GetIdentityByUserIdQuery } from "../impl";
+import { Identity, IIdentityRepository } from "apps/tenant-management-service/src/domain";
 
 @QueryHandler(GetIdentityByUserIdQuery)
 export class GetIdentityByUserIdQueryHandler implements IQueryHandler<GetIdentityByUserIdQuery, Identity | null> {

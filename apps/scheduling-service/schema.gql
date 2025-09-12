@@ -14,7 +14,17 @@ type Clinic {
   updatedAt: DateTime!
 }
 
-"""DateTime custom scalar type"""
+type ClinicObjectType {
+  """Mã khoa phòng từ hệ thống bệnh viện"""
+  externalCode: String!
+
+  """ID nội bộ của phòng khám"""
+  id: ID!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
 scalar DateTime
 
 type DeviceToken {
@@ -73,7 +83,7 @@ enum DoseStatus {
   UPCOMING
 }
 
-enum Gender {
+enum GenderPayload {
   FEMALE
   MALE
   OTHER
@@ -104,7 +114,7 @@ type Identity {
 
   """Họ và tên đầy đủ"""
   fullName: String!
-  gender: Gender
+  gender: GenderPayload
 
   """Số thẻ BHYT"""
   healthInsuranceNumber: String
@@ -131,14 +141,6 @@ input MealRelationInput {
 }
 
 type Mutation {
-  """Đồng bộ y lệnh từ bệnh viện cho một bệnh nhân dựa trên số điện thoại"""
-  syncDosesFromHospital(
-    """Mã bệnh viện/GraphQL endpoint"""
-    externalHospitalCode: String!
-
-    """Số điện thoại của bệnh nhân"""
-    phoneNumber: String!
-  ): Boolean!
   updateDoses(updates: [UpdateDoseInput!]!): [Dose!]!
 }
 
@@ -146,6 +148,12 @@ type Query {
   doseById(id: ID!): Dose
   dosesByDateRange(endDate: String!, startDate: String!): [Dose!]!
   dosesBySelectedDate(selectedDate: String!): [Dose!]!
+}
+
+type TimeSlot {
+  endTime: DateTime!
+  isAvailable: Boolean!
+  startTime: DateTime!
 }
 
 input UpdateDoseDataInput {

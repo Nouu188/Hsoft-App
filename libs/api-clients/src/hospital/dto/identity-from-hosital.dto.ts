@@ -1,5 +1,5 @@
 import { Field, ObjectType } from "@nestjs/graphql";
-import { Gender } from "apps/tenant-management-service/src/domain/identities/entities";
+import { Gender } from "apps/tenant-management-service/src/domain";
 
 @ObjectType('IdentityFromHospital')
 export class IdentityFromHospitalDto {

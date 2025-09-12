@@ -1,8 +1,7 @@
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { GetManyIdentitiesQuery } from "../impl";
-import { Identity } from "apps/tenant-management-service/src/domain/identities/entities";
 import { Inject, Logger } from "@nestjs/common";
-import { IIdentityRepository } from "apps/tenant-management-service/src/domain/identities/interfaces";
+import { Identity, IIdentityRepository } from "apps/tenant-management-service/src/domain";
 
 @CommandHandler(GetManyIdentitiesQuery)
 export class GetManyIdentitiesQueryHandler implements ICommandHandler<GetManyIdentitiesQuery, readonly Identity[]> {

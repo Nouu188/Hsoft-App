@@ -10,11 +10,9 @@ import {
 import { DataSource } from 'typeorm';
 
 import { Inject } from '@nestjs/common';
-import { IHospitalRepository } from 'apps/tenant-management-service/src/domain/hospitals/interfaces'; // giả định bạn có interface
-import { Identity } from 'apps/tenant-management-service/src/domain/identities/entities';
-import { IIdentityRepository } from 'apps/tenant-management-service/src/domain/identities/interfaces';
 import { CreateIdentityCommand } from '../impl/create-identity.command';
 import { InjectDataSource } from '@nestjs/typeorm';
+import { Identity, IHospitalRepository, IIdentityRepository } from 'apps/tenant-management-service/src/domain';
 
 @CommandHandler(CreateIdentityCommand)
 export class CreateIdentityHandler implements ICommandHandler<CreateIdentityCommand> {
