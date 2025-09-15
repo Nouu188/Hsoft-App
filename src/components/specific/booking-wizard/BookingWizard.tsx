@@ -41,8 +41,8 @@ const BookingWizard = () => {
       data.bookingType === 'DOCTOR'
         ? 'Chọn lịch theo bác sĩ'
         : data.bookingType === 'CLINIC'
-        ? 'Chọn lịch theo phòng khám'
-        : 'Chọn lịch';
+          ? 'Chọn lịch theo phòng khám'
+          : 'Chọn lịch';
     setSteps(['Chọn bệnh viện', step2, 'Xác nhận']);
   }, [data.bookingType]);
 
@@ -84,7 +84,8 @@ const BookingWizard = () => {
 
   const goToStep = useCallback(
     (stepIndex: number) => {
-      if (stepIndex > currentStep && !completedSteps.has(currentStep)) {
+      const { isStepValid } = useBookingStore.getState();
+      if (stepIndex > currentStep && !isStepValid(currentStep)) {
         Alert.alert('Thông báo', 'Vui lòng hoàn tất bước hiện tại.');
         return;
       }
@@ -99,10 +100,16 @@ const BookingWizard = () => {
               onPress: () => {
                 setCompletedSteps(prev => {
                   const newSet = new Set<number>();
-                  for (const s of prev) if (s < stepIndex) newSet.add(s);
+                  for (const s of prev) {
+                    if (s < stepIndex) {
+                      // kiểm tra step s valid
+                      if (isStepValid(s)) newSet.add(s);
+                    }
+                  }
                   return newSet;
                 });
                 setCurrentStep(stepIndex);
+
                 if (stepIndex === 0) setSteps(DEFAULT_STEPS);
               },
               style: 'destructive',
@@ -113,8 +120,9 @@ const BookingWizard = () => {
       }
       setCurrentStep(stepIndex);
     },
-    [currentStep, completedSteps]
+    [currentStep]
   );
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
