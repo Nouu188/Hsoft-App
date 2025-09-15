@@ -9,7 +9,6 @@ const formatGender = (gender?: string | null): string => {
   if (!gender) return 'Chưa cập nhật';
   if (gender.toUpperCase() === 'FEMALE') return 'Nữ';
   if (gender.toUpperCase() === 'MALE') return 'Nam';
-  if (gender.toUpperCase() === 'OTHER') return 'Khác';
   return gender;
 };
 
@@ -58,26 +57,20 @@ export const PatientInfoCard = ({ identity, onEdit }: PatientInfoCardProps) => {
 
   return (
     <View style={styles.cardContainer}>
-      {/* Nút chỉnh sửa nằm góc phải trên */}
       <TouchableOpacity style={styles.editButton} onPress={onEdit}>
         <Ionicons name="create-outline" size={22} color={COLORS.primary} />
       </TouchableOpacity>
-
       <InfoRow label="Họ và tên" value={identity.fullName} icon="person-outline" />
-
       <InfoRowPair
         left={{ label: "Ngày sinh", value: identity.birthYear, icon: "calendar-outline" }}
         right={{ label: "Giới tính", value: formatGender(identity.gender), icon: "male-female-outline" }}
       />
-
       <InfoRow label="Số điện thoại" value={identity.phoneNumber} icon="call-outline" />
       <InfoRow label="Địa chỉ" value={identity.address} icon="home-outline" />
-
       <InfoRowPair
         left={{ label: "Mã bệnh nhân", value: identity.externalPatientCode, icon: "id-card-outline" }}
         right={{ label: "Số CMND/CCCD", value: identity.nationalId, icon: "card-outline" }}
       />
-
       <InfoRow label="Số BHYT" value={identity.healthInsuranceNumber} icon="medkit-outline" />
 
       {identity.hospitals && identity.hospitals.length > 0 && (

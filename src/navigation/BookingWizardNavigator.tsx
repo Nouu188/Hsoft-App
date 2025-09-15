@@ -2,8 +2,8 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BookingWizard from '@/components/specific/booking-wizard/BookingWizard';
 
-import { TimeSlot } from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard';
-import AppointmentTimeSelectionScreen from '@/components/specific/booking-wizard/steps/step_2/AppointmentTimeSelectionScreen';
+import { TimeSlot } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
+import AppointmentTimeSelectionScreen from '@/components/specific/booking-wizard/steps/step_2/screen_part/time_selection/AppointmentTimeSelectionScreen';
 
 export type BookingStackParamList = {
     BookingWizardMain: {

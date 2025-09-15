@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
-import { TimeSlot } from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard'; // Import TimeSlot
+import { TimeSlot } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard'; // Import TimeSlot
 
 // 1. Định nghĩa các màn hình và tham số cho từng Stack
 

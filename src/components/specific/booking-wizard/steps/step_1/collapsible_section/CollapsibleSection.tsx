@@ -10,7 +10,7 @@ interface CollapsibleSectionProps {
   title: string;
   subTitle?: React.ReactNode;
   children: React.ReactNode;
-  sectionKey: 'hospital' | 'bookingType' | 'patientInfo' | 'hospitalInfo' | 'doctorInfo';
+  sectionKey: 'hospital' | 'bookingType' | 'patientInfo' | 'hospitalInfo' | 'entityInfo';
 }
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({

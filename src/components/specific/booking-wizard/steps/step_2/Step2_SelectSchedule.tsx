@@ -1,194 +1,105 @@
+// src/features/booking-wizard/steps/Step2_SelectSchedule.tsx
 import React, { useEffect } from 'react';
 import { SafeAreaView, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BookingStackParamList } from '@/navigation/BookingWizardNavigator';
-import DoctorList from '@/components/specific/schedule/appointment/components/doctor_list/DoctorList';
 import HeaderSchedule from './screen_part/HeaderSchedule';
 import SelectedFooter from './screen_part/select_footer/SelectedFooter';
-import { Doctor } from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard';
+import { Entity, Doctor, Clinic } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import { useBookingStore } from '@/store/useBookingStore';
+import { DOCTORS, CLINICS } from '@/constants/entity';
+import EntityList from '@/components/specific/schedule/appointment/components/doctor_list/EntityList';
 
-type NavigationProp = NativeStackNavigationProp<
-  BookingStackParamList,
-  'BookingWizardMain'
->;
+type NavigationProp = NativeStackNavigationProp<BookingStackParamList, 'BookingWizardMain'>;
 
 interface Step2Props {
   onNext: () => void;
   scheduleType: 'doctor' | 'clinic';
   prefilledDoctors?: { doctorId: string; selectedTime: string }[];
+  prefilledClinics?: { clinicId: string; selectedTime: string }[];
   onBack?: () => void;
 }
-
-const DOCTORS: Doctor[] = [
-  {
-    id: '1',
-    name: 'Dr. John Smith',
-    specialty: 'Cardiologist',
-    hospital: 'City Hospital',
-    gender: 'male',
-    availableTimes: [
-      { time: '07:30 - 08:00', isAvailable: true },
-      { time: '08:00 - 08:30', isAvailable: true },
-      { time: '14:00 - 14:30', isAvailable: false },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Dr. Jane Doe',
-    specialty: 'Cardiologist',
-    hospital: 'General Hospital',
-    gender: 'female',
-    availableTimes: [
-      { time: '09:00 - 09:30', isAvailable: true },
-      { time: '17:30 - 18:00', isAvailable: true },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Dr. Alan Walker',
-    specialty: 'Dermatologist',
-    hospital: 'Sunshine Clinic',
-    gender: 'male',
-    availableTimes: [
-      { time: '08:00 - 08:30', isAvailable: true },
-      { time: '10:00 - 10:30', isAvailable: true },
-      { time: '15:00 - 15:30', isAvailable: false },
-    ],
-  },
-  {
-    id: '4',
-    name: 'Dr. Emily Clark',
-    specialty: 'Neurologist',
-    hospital: 'City Hospital',
-    gender: 'female',
-    availableTimes: [
-      { time: '09:30 - 10:00', isAvailable: true },
-      { time: '13:00 - 13:30', isAvailable: true },
-    ],
-  },
-  {
-    id: '5',
-    name: 'Dr. Michael Brown',
-    specialty: 'Pediatrician',
-    hospital: 'Green Valley Hospital',
-    gender: 'male',
-    availableTimes: [
-      { time: '07:00 - 07:30', isAvailable: true },
-      { time: '11:00 - 11:30', isAvailable: true },
-    ],
-  },
-  {
-    id: '6',
-    name: 'Dr. Olivia Davis',
-    specialty: 'Cardiologist',
-    hospital: 'General Hospital',
-    gender: 'female',
-    availableTimes: [
-      { time: '08:30 - 09:00', isAvailable: true },
-      { time: '16:00 - 16:30', isAvailable: false },
-    ],
-  },
-  {
-    id: '7',
-    name: 'Dr. William Lee',
-    specialty: 'Orthopedist',
-    hospital: 'Sunshine Clinic',
-    gender: 'male',
-    availableTimes: [
-      { time: '10:00 - 10:30', isAvailable: true },
-      { time: '14:30 - 15:00', isAvailable: true },
-    ],
-  },
-  {
-    id: '8',
-    name: 'Dr. Sophia Taylor',
-    specialty: 'Dermatologist',
-    hospital: 'City Hospital',
-    gender: 'female',
-    availableTimes: [
-      { time: '09:00 - 09:30', isAvailable: true },
-      { time: '12:00 - 12:30', isAvailable: true },
-    ],
-  },
-  {
-    id: '9',
-    name: 'Dr. James Wilson',
-    specialty: 'Pediatrician',
-    hospital: 'Green Valley Hospital',
-    gender: 'male',
-    availableTimes: [
-      { time: '07:30 - 08:00', isAvailable: true },
-      { time: '13:30 - 14:00', isAvailable: true },
-    ],
-  },
-  {
-    id: '10',
-    name: 'Dr. Isabella Martinez',
-    specialty: 'Neurologist',
-    hospital: 'General Hospital',
-    gender: 'female',
-    availableTimes: [
-      { time: '10:30 - 11:00', isAvailable: true },
-      { time: '15:30 - 16:00', isAvailable: true },
-    ],
-  },
-];
 
 const Step2_SelectSchedule: React.FC<Step2Props> = ({
   onNext,
   scheduleType,
   prefilledDoctors = [],
+  prefilledClinics = [],
 }) => {
   const navigation = useNavigation<NavigationProp>();
-
-  // ✅ lấy state và action từ store
   const {
-    data: { selectedDoctors, doctorTimes },
+    data: { selectedDoctors, doctorTimes, selectedClinics, clinicTimes },
     addDoctor,
     removeDoctor,
     setDoctorTime,
+    addClinic,
+    removeClinic,
+    setClinicTime,
   } = useBookingStore();
 
-  // Load prefilledDoctors nếu có
+  // Chuẩn bị danh sách entity
+  const ENTITIES: Entity[] = scheduleType === 'doctor' ? DOCTORS : CLINICS;
+
+  // Prefill doctor nếu có
   useEffect(() => {
-    if (prefilledDoctors.length > 0) {
-      prefilledDoctors.forEach(({ doctorId, selectedTime }) => {
-        const doctor = DOCTORS.find((d) => d.id === doctorId);
-        if (doctor) {
-          addDoctor(doctor, selectedTime); // ✅ lưu string trực tiếp
-        }
-      });
-    }
-  }, [prefilledDoctors, addDoctor]);
+    prefilledDoctors.forEach(({ doctorId, selectedTime }) => {
+      const doctor = DOCTORS.find(d => d.id === doctorId);
+      if (doctor) addDoctor(doctor, selectedTime);
+    });
+  }, [prefilledDoctors]);
 
-  // Chọn bác sĩ + mở màn hình chọn giờ
-  const handleSelectDoctor = (doctor: Doctor) => {
-    const isSelected = selectedDoctors.some((d) => d.id === doctor.id);
+  // Prefill clinic nếu có
+  useEffect(() => {
+    prefilledClinics.forEach(({ clinicId, selectedTime }) => {
+      const clinic = CLINICS.find(c => c.id === clinicId);
+      if (clinic) addClinic(clinic, selectedTime);
+    });
+  }, [prefilledClinics]);
 
-    if (isSelected) {
-      // Bỏ chọn bác sĩ
-      removeDoctor(doctor.id);
+  // Chọn entity
+  const handleSelectEntity = (entity: Entity) => {
+    if (entity.type === 'doctor') {
+      const isSelected = selectedDoctors.some(d => d.id === entity.id);
+      if (isSelected) {
+        removeDoctor(entity.id);
+      } else {
+        // Chọn giờ
+        navigation.navigate('AppointmentBooking', {
+          doctorId: entity.id,
+          doctorName: entity.name,
+          availableTimes: entity.availableTimes,
+          onSelectTime: (time: string) => {
+            addDoctor(entity as Doctor, time);
+            setDoctorTime(entity.id, time);
+          },
+        });
+      }
     } else {
-      // Mở màn hình chọn giờ
-      navigation.navigate('AppointmentBooking', {
-        doctorId: doctor.id,
-        doctorName: doctor.name,
-        availableTimes: doctor.availableTimes,
-        onSelectTime: (time: string) => {
-          // ✅ lưu luôn vào store dưới dạng string
-          addDoctor(doctor, time);
-          setDoctorTime(doctor.id, time);
-        },
-      });
+      // entity.type === 'clinic'
+      const isSelected = selectedClinics.some(c => c.id === entity.id);
+      if (isSelected) {
+        removeClinic(entity.id);
+      } else {
+        // Chọn giờ cho phòng khám
+        navigation.navigate('AppointmentBooking', {
+          doctorId: entity.id, // dùng chung param
+          doctorName: entity.name,
+          availableTimes: entity.availableTimes,
+          onSelectTime: (time: string) => {
+            addClinic(entity as Clinic, time);
+            setClinicTime(entity.id, time);
+          },
+        });
+      }
     }
   };
 
   const handleNextStep = () => {
-    const missingTime = selectedDoctors.some((d) => !doctorTimes[d.id]);
-    if (missingTime) {
-      Alert.alert('Chú ý', 'Vui lòng chọn giờ khám cho tất cả bác sĩ đã chọn.');
+    const missingDoctorTime = selectedDoctors.some(d => !doctorTimes[d.id]);
+    const missingClinicTime = selectedClinics.some(c => !clinicTimes[c.id]);
+    if (missingDoctorTime || missingClinicTime) {
+      Alert.alert('Chú ý', 'Vui lòng chọn giờ khám cho tất cả.');
       return;
     }
     onNext();
@@ -197,14 +108,15 @@ const Step2_SelectSchedule: React.FC<Step2Props> = ({
   return (
     <SafeAreaView style={styles.container}>
       <HeaderSchedule scheduleType={scheduleType} />
-      <DoctorList
-        doctors={DOCTORS}
-        selectedDoctors={selectedDoctors}
-        onSelectDoctor={handleSelectDoctor}
+      <EntityList
+        entities={ENTITIES}
+        selectedEntities={scheduleType === 'doctor' ? selectedDoctors : selectedClinics}
+        onSelectEntity={handleSelectEntity}
       />
       <SelectedFooter
-        selectedDoctors={selectedDoctors}
-        doctorTimes={doctorTimes}
+        selectedDoctors={scheduleType === 'doctor' ? selectedDoctors : []}
+        selectedClinics={scheduleType === 'clinic' ? selectedClinics : []}
+        entityTimes={{ ...doctorTimes, ...clinicTimes }}
         onNext={handleNextStep}
       />
     </SafeAreaView>

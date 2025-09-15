@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated, PanResponder } from 'react-native';
 import { COLORS, SIZES } from '@/constants/theme';
-import { Doctor } from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard';
-import DoctorTagList from './DoctorTagList';
+import { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
+import EntityTagList from './EntityTagList';
 import ExpandHandle from './ExpandHandle';
 
 interface SelectedFooterProps {
-  selectedDoctors: Doctor[];
-  doctorTimes: Record<string, string | undefined>;
+  selectedDoctors: Entity[];
+  selectedClinics?: Entity[];
+  entityTimes: Record<string, string | undefined>;
   onNext: () => void;
 }
 
@@ -15,18 +16,24 @@ const screenWidth = Dimensions.get('window').width;
 const PADDING_HORIZONTAL = SIZES.padding * 2;
 const TAG_MARGIN = 6;
 const TAG_HEIGHT = 30;
-const TAG_WIDTH = (screenWidth - PADDING_HORIZONTAL - TAG_MARGIN) / 2;
 const HANDLE_HEIGHT = 16;
 const FOOTER_PADDING_BOTTOM = SIZES.padding;
-const ZERO_DOCTOR_HEIGHT = HANDLE_HEIGHT + FOOTER_PADDING_BOTTOM;
+const ZERO_ENTITY_HEIGHT = HANDLE_HEIGHT + FOOTER_PADDING_BOTTOM;
 
-const SelectedFooter: React.FC<SelectedFooterProps> = ({ selectedDoctors, doctorTimes, onNext }) => {
+const SelectedFooter: React.FC<SelectedFooterProps> = ({
+  selectedDoctors,
+  selectedClinics = [],
+  entityTimes,
+  onNext,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const allEntities = [...selectedDoctors, ...selectedClinics];
+
   const calculateHeight = (expanded: boolean) => {
-    const numDoctors = selectedDoctors.length;
-    if (numDoctors === 0) return ZERO_DOCTOR_HEIGHT;
-    const rows = expanded ? Math.ceil(numDoctors / 2) : 1;
+    const numEntities = allEntities.length;
+    if (numEntities === 0) return ZERO_ENTITY_HEIGHT;
+    const rows = expanded ? Math.ceil(numEntities / 2) : 1;
     return rows * (TAG_HEIGHT + TAG_MARGIN) + HANDLE_HEIGHT + SIZES.base * 2;
   };
 
@@ -37,7 +44,7 @@ const SelectedFooter: React.FC<SelectedFooterProps> = ({ selectedDoctors, doctor
   };
 
   const toggleExpand = () => {
-    if (selectedDoctors.length === 0) return;
+    if (allEntities.length === 0) return;
     animatedHeight.stopAnimation(currentHeight => {
       const expandedHeight = calculateHeight(true);
       const collapsedHeight = calculateHeight(false);
@@ -52,12 +59,12 @@ const SelectedFooter: React.FC<SelectedFooterProps> = ({ selectedDoctors, doctor
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) =>
-        selectedDoctors.length > 0 && Math.abs(gestureState.dy) > 5,
+        allEntities.length > 0 && Math.abs(gestureState.dy) > 5,
       onPanResponderGrant: () => {
         animatedHeight.stopAnimation(value => (panY.current = value));
       },
       onPanResponderMove: (_, gestureState) => {
-        if (selectedDoctors.length === 0) return;
+        if (allEntities.length === 0) return;
         let newHeight = panY.current - gestureState.dy;
         const expandedHeight = calculateHeight(true);
         const collapsedHeight = calculateHeight(false);
@@ -68,8 +75,8 @@ const SelectedFooter: React.FC<SelectedFooterProps> = ({ selectedDoctors, doctor
         animatedHeight.setValue(newHeight);
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (selectedDoctors.length === 0) {
-          animateHeight(ZERO_DOCTOR_HEIGHT);
+        if (allEntities.length === 0) {
+          animateHeight(ZERO_ENTITY_HEIGHT);
           return;
         }
         animatedHeight.stopAnimation(currentHeight => {
@@ -89,23 +96,23 @@ const SelectedFooter: React.FC<SelectedFooterProps> = ({ selectedDoctors, doctor
   useEffect(() => {
     const target = calculateHeight(isExpanded);
     animateHeight(target);
-  }, [selectedDoctors.length]);
+  }, [allEntities.length]);
 
   return (
     <View style={styles.footer}>
       <Animated.View
-        style={[styles.doctorListContainer, { height: animatedHeight }]}
-        {...(selectedDoctors.length > 0 ? panResponder.panHandlers : {})}
+        style={[styles.entityListContainer, { height: animatedHeight }]}
+        {...(allEntities.length > 0 ? panResponder.panHandlers : {})}
       >
-        {selectedDoctors.length > 0 && <ExpandHandle isExpanded={isExpanded} onPress={toggleExpand} />}
-        {selectedDoctors.length > 0 && (
-          <DoctorTagList doctors={selectedDoctors} doctorTimes={doctorTimes} tagWidth={TAG_WIDTH} />
+        {allEntities.length > 0 && <ExpandHandle isExpanded={isExpanded} onPress={toggleExpand} />}
+        {allEntities.length > 0 && (
+          <EntityTagList entities={allEntities} entityTimes={entityTimes} tagWidth={(screenWidth - PADDING_HORIZONTAL - TAG_MARGIN) / 2} />
         )}
       </Animated.View>
 
       <TouchableOpacity
-        style={[styles.nextButton, { opacity: selectedDoctors.length > 0 ? 1 : 0.6 }]}
-        disabled={selectedDoctors.length === 0}
+        style={[styles.nextButton, { opacity: allEntities.length > 0 ? 1 : 0.6 }]}
+        disabled={allEntities.length === 0}
         onPress={onNext}
       >
         <Text style={styles.nextButtonText}>Tiếp tục</Text>
@@ -122,7 +129,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
-  doctorListContainer: {
+  entityListContainer: {
     overflow: 'hidden',
     marginBottom: 8,
   },

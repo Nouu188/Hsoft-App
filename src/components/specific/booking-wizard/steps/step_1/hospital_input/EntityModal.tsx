@@ -5,11 +5,11 @@ import NewsCarouselView from '../../../../home/news_carousel/CarouselView';
 import ExpandableText from '@/components/common/ExpandableText';
 import type { Hospital } from '@/types/dtos/tenant/hospital.dto';
 import { useBookingStore } from '@/store/useBookingStore';
-import type { Doctor } from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard';
+import type { Doctor, Clinic } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 
 interface Props {
-  type: 'hospital' | 'doctor';
-  item: Hospital | Doctor | null;
+  type: 'hospital' | 'doctor' | 'clinic';
+  item: Hospital | Doctor | Clinic | null;
   onCancel: () => void;
   onSelect?: (item: Hospital) => void;
 }
@@ -22,9 +22,9 @@ const EntityModal: React.FC<Props> = ({ type, item, onCancel, onSelect }) => {
       ? (item as any).images.map((url: string, idx: number) => ({ id: idx + 1, url }))
       : [{ id: 1, url: (item as any).images }]
     : [
-      { id: 1, url: 'https://bvtn.org.vn/wp-content/uploads/2023/12/benh-vien-thong-nhat.jpg' },
-      { id: 2, url: 'https://prod-cdn.pharmacity.io/blog/benh-vien-thong-nhat-truc-thuoc-bo-y-te-va-la-mot-trong-nhung-benh-vien-lon-trong-khu-vuc.png' },
-    ];
+        { id: 1, url: 'https://bvtn.org.vn/wp-content/uploads/2023/12/benh-vien-thong-nhat.jpg' },
+        { id: 2, url: 'https://prod-cdn.pharmacity.io/blog/benh-vien-thong-nhat-truc-thuoc-bo-y-te-va-la-mot-trong-nhung-benh-vien-lon-trong-khu-vuc.png' },
+      ];
 
   return (
     <Modal visible={!!item} transparent animationType="slide" onRequestClose={onCancel}>
@@ -54,38 +54,57 @@ const EntityModal: React.FC<Props> = ({ type, item, onCancel, onSelect }) => {
                   <Text style={styles.text}>Địa chỉ: {(item as Hospital).address}</Text>
                   <Text style={styles.text}>Điện thoại: {(item as Hospital).phone}</Text>
                   <Text style={styles.text}>Email: contact@hospital.com</Text>
-                  <ExpandableText text={(item as Hospital).description || ''} limit={150} fontSize={16} />
                 </>
               )}
 
               {type === 'doctor' && (
                 <>
-                  <Text style={styles.text}>Chuyên khoa: {(item as Doctor).specialty}</Text>
                   <Text style={styles.text}>Bệnh viện: {(item as Doctor).hospital}</Text>
+                  <Text style={styles.text}>Chuyên khoa: {(item as Doctor).specialty}</Text>
                   <Text style={styles.text}>Giới tính: {(item as Doctor).gender}</Text>
                 </>
               )}
-            </ScrollView>
-            <View style={styles.buttons}>
-              {type === 'hospital' && (
-                <TouchableOpacity style={[styles.btn, { backgroundColor: COLORS.danger }]} onPress={onCancel}>
-                  <Text style={styles.btnText}>Hủy</Text>
-                </TouchableOpacity>
-              )}
-              {type === 'hospital' && onSelect && (
-                <TouchableOpacity
-                  style={[styles.btn, { backgroundColor: COLORS.lightBlue }]}
-                  onPress={() => {
-                    onSelect(item as Hospital);
-                    useBookingStore.getState().setHospitalSelected(true);
-                    onCancel();
-                  }}
-                >
-                  <Text style={styles.btnText}>Chọn</Text>
-                </TouchableOpacity>
+
+              {type === 'clinic' && (
+                <>
+                  <Text style={styles.text}>Mã phòng: {(item as Clinic).id}</Text>
+                  <Text style={styles.text}>Chuyên khoa: {(item as Clinic).specialty}</Text>
+                  <Text style={styles.text}>Email: {(item as Clinic).email}</Text>
+                </>
               )}
 
-              {type === 'doctor' && (
+              <ExpandableText
+                text={(item as any).description || 'Thông tin chi tiết về đơn vị.'}
+                limit={150}
+                fontSize={16}
+              />
+            </ScrollView>
+
+            <View style={styles.buttons}>
+              {/* Hospital có nút Chọn */}
+              {type === 'hospital' && (
+                <>
+                  <TouchableOpacity style={[styles.btn, { backgroundColor: COLORS.danger }]} onPress={onCancel}>
+                    <Text style={styles.btnText}>Hủy</Text>
+                  </TouchableOpacity>
+
+                  {onSelect && (
+                    <TouchableOpacity
+                      style={[styles.btn, { backgroundColor: COLORS.lightBlue }]}
+                      onPress={() => {
+                        onSelect(item as Hospital);
+                        useBookingStore.getState().setHospitalSelected(true);
+                        onCancel();
+                      }}
+                    >
+                      <Text style={styles.btnText}>Chọn</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+
+              {/* Doctor hoặc Clinic chỉ có nút Đóng */}
+              {(type === 'doctor' || type === 'clinic') && (
                 <TouchableOpacity style={[styles.btn, { backgroundColor: COLORS.lightBlue }]} onPress={onCancel}>
                   <Text style={styles.btnText}>Đóng</Text>
                 </TouchableOpacity>

@@ -9,9 +9,9 @@ import CollapsibleSection from '../step_1/collapsible_section/CollapsibleSection
 import { useNavigation } from '@react-navigation/native';
 import type { RootStackParamList } from '@/navigation/types';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Ionicons from '@react-native-vector-icons/ionicons';
-import DoctorCard from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard';
+import EntityCard from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import { HospitalInfoCard } from './HospitalInfoCard';
+
 interface Step3Props {
     onBack: () => void;
 }
@@ -22,26 +22,26 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
     const scrollY = useRef(new Animated.Value(0)).current;
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const getEntitySectionTitle = () => {
+        const hasDoctors = data.selectedDoctors.length > 0;
+        const hasClinics = (data.selectedClinics?.length || 0) > 0;
+
+        if (hasDoctors && hasClinics) return "Bác sĩ & Phòng khám đã chọn";
+        if (hasDoctors) return "Bác sĩ đã chọn";
+        if (hasClinics) return "Phòng khám đã chọn";
+        return "Không có bác sĩ hoặc phòng khám nào"; 
+    };
 
     const handleConfirm = () => {
-        // Xóa dữ liệu booking hiện tại trong store
         resetBooking();
-        // Reset navigation stack
         navigation.reset({
-            index: 0, // Chỉ định màn hình active trong stack mới là phần tử thứ 0
-            routes: [{ name: 'MainApp' }], // Stack mới chỉ gồm màn hình 'MainApp'
+            index: 0,
+            routes: [{ name: 'MainApp' }],
         });
         setTimeout(() => {
             Alert.alert('Thành công', 'Bạn đã đặt lịch thành công!');
         }, 300);
     };
-
-    const InfoRow = ({ label, value }: { label: string; value: string }) => (
-        <View style={styles.row}>
-            <Text style={styles.cardLabel}>{label}</Text>
-            <Text style={styles.cardValue}>{value}</Text>
-        </View>
-    );
 
     const sections = [
         {
@@ -75,23 +75,33 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
             ),
         },
         {
-            key: 'doctorInfo',
+            key: 'entityInfo',
             render: () => (
-                <CollapsibleSection title="Bác sĩ đã chọn" sectionKey="doctorInfo">
+                <CollapsibleSection title={getEntitySectionTitle()} sectionKey="entityInfo">
+                    {/* Doctors */}
                     {data.selectedDoctors.map((doc) => (
-                        <DoctorCard
+                        <EntityCard
                             key={doc.id}
-                            {...doc}
+                            entity={doc}
                             variant="summary"
                             appointmentTime={data.doctorTimes[doc.id]}
+                            onEditEntity={() => console.log('Chỉnh sửa bác sĩ')}
+                        />
+                    ))}
+
+                    {/* Clinics */}
+                    {data.selectedClinics?.map((clinic) => (
+                        <EntityCard
+                            key={clinic.id}
+                            entity={clinic}
+                            variant="summary"
+                            appointmentTime={data.clinicTimes?.[clinic.id]}
+                            onEditEntity={() => console.log('Chỉnh sửa phòng khám')}
                         />
                     ))}
                 </CollapsibleSection>
             ),
-        }
-
-
-
+        },
     ];
 
     return (
@@ -137,29 +147,10 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: COLORS.textDark,
-        marginBottom: 6,
+        marginBottom: SIZES.padding / 5,
+        marginTop: SIZES.padding,
     },
     subTitle: { fontSize: 14, color: COLORS.text },
-    cardBox: {
-        backgroundColor: COLORS.background,
-        marginBottom: SIZES.padding,
-        padding: SIZES.padding,
-        borderRadius: 8,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 6,
-    },
-    cardLabel: { fontSize: 14, color: COLORS.text },
-    cardValue: {
-        fontSize: 14,
-        color: COLORS.textDark,
-        fontWeight: '600',
-        flexShrink: 1,
-        textAlign: 'right',
-        marginLeft: 8,
-    },
     footer: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
@@ -176,49 +167,6 @@ const styles = StyleSheet.create({
     },
     confirmButton: { backgroundColor: COLORS.lightBlue },
     buttonText: { fontSize: 16, fontWeight: '600' },
-    doctorCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.background,
-        padding: SIZES.padding,
-        borderRadius: 12,
-        marginBottom: SIZES.padding,
-    },
-    doctorIconBox: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: COLORS.white,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    doctorInfoBox: {
-        flex: 1,
-    },
-    doctorName: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: COLORS.textDark,
-        marginBottom: 6,
-        lineHeight: 24,
-    },
-    doctorSub: {
-        fontSize: 16,
-        color: COLORS.text,
-        marginBottom: 4,
-        lineHeight: 22,
-    },
-    doctorSubValue: {
-        fontWeight: '500',
-        color: COLORS.textDark,
-    },
-
-
 });
 
 export default Step3_Confirmation;

@@ -1,6 +1,5 @@
 // src/store/useBookingStore.ts
-import { Clinic } from '@/types/dtos/clinic/clinic.dto';
-import { Doctor } from '@/components/specific/schedule/appointment/components/doctor_list/DoctorCard';
+import { Clinic, Doctor } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import { Hospital } from '@/types/dtos/tenant/hospital.dto';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -12,9 +11,12 @@ interface BookingStateData {
   bookingType: BookingType | null;
   clinic: Clinic | null;
 
-  // multi-doctor
+  // multi-doctor / multi-clinic
   selectedDoctors: Doctor[];
-  doctorTimes: Record<string, string | undefined>; // 🔹 sửa thành string
+  doctorTimes: Record<string, string | undefined>;
+  selectedClinics: Clinic[];
+  clinicTimes: Record<string, string | undefined>;
+
   notes: string;
 }
 
@@ -33,9 +35,13 @@ interface BookingState {
   setBookingType: (type: BookingType | null) => void;
   setClinic: (clinic: Clinic | null) => void;
 
-  addDoctor: (doctor: Doctor, time?: string) => void;              // 🔹 time -> string
+  addDoctor: (doctor: Doctor, time?: string) => void;
   removeDoctor: (doctorId: string) => void;
-  setDoctorTime: (doctorId: string, time?: string) => void;        // 🔹 time -> string
+  setDoctorTime: (doctorId: string, time?: string) => void;
+
+  addClinic: (clinic: Clinic, time?: string) => void;
+  removeClinic: (clinicId: string) => void;
+  setClinicTime: (clinicId: string, time?: string) => void;
 
   setNotes: (notes: string) => void;
   isStepValid: (step: number) => boolean;
@@ -53,6 +59,8 @@ const initialData: BookingStateData = {
   clinic: null,
   selectedDoctors: [],
   doctorTimes: {},
+  selectedClinics: [],
+  clinicTimes: {},
   notes: '',
 };
 
@@ -74,41 +82,38 @@ export const useBookingStore = create<BookingState>()(
 
       // booking actions
       setHospital: (hospital) =>
-        set(
-          (state) => ({
-            data: {
-              ...state.data,
-              hospital,
-              clinic: null,
-              selectedDoctors: [],
-              doctorTimes: {},
-            },
-          }),
-          false,
-          'setHospital'
-        ),
+        set((state) => ({
+          data: {
+            ...state.data,
+            hospital,
+            clinic: null,
+            selectedDoctors: [],
+            doctorTimes: {},
+            selectedClinics: [],
+            clinicTimes: {},
+          },
+        })),
 
       setBookingType: (type) =>
-        set(
-          (state) => ({
-            data: {
-              ...state.data,
-              bookingType: type,
-              clinic: type === 'DOCTOR' ? null : state.data.clinic,
-              selectedDoctors: type === 'CLINIC' ? [] : state.data.selectedDoctors,
-              doctorTimes: type === 'CLINIC' ? {} : state.data.doctorTimes,
-            },
-          }),
-          false,
-          'setBookingType'
-        ),
+        set((state) => ({
+          data: {
+            ...state.data,
+            bookingType: type,
+            clinic: type === 'DOCTOR' ? null : state.data.clinic,
+            selectedDoctors: type === 'CLINIC' ? [] : state.data.selectedDoctors,
+            doctorTimes: type === 'CLINIC' ? {} : state.data.doctorTimes,
+            selectedClinics: type === 'DOCTOR' ? [] : state.data.selectedClinics,
+            clinicTimes: type === 'DOCTOR' ? {} : state.data.clinicTimes,
+          },
+        })),
 
       setClinic: (clinic) =>
-        set((state) => ({ data: { ...state.data, clinic } }), false, 'setClinic'),
+        set((state) => ({ data: { ...state.data, clinic } })),
 
       // multi-doctor
       addDoctor: (doctor, time) =>
         set((state) => {
+          if (state.data.bookingType !== 'DOCTOR') return state; // chỉ chọn doctor nếu bookingType = DOCTOR
           const exists = state.data.selectedDoctors.find((d) => d.id === doctor.id);
           if (exists) {
             return {
@@ -134,63 +139,79 @@ export const useBookingStore = create<BookingState>()(
         set((state) => {
           const filtered = state.data.selectedDoctors.filter((d) => d.id !== doctorId);
           const { [doctorId]: _, ...restTimes } = state.data.doctorTimes;
-          return {
-            data: {
-              ...state.data,
-              selectedDoctors: filtered,
-              doctorTimes: restTimes,
-            },
-          };
+          return { data: { ...state.data, selectedDoctors: filtered, doctorTimes: restTimes } };
         }),
 
       setDoctorTime: (doctorId, time) =>
+        set((state) => ({
+          data: { ...state.data, doctorTimes: { ...state.data.doctorTimes, [doctorId]: time } },
+        })),
+
+      // multi-clinic
+      addClinic: (clinic, time) =>
         set((state) => {
-          const exists = state.data.selectedDoctors.find((d) => d.id === doctorId);
+          if (state.data.bookingType !== 'CLINIC') return state; // chỉ chọn clinic nếu bookingType = CLINIC
+          const exists = state.data.selectedClinics.find((c) => c.id === clinic.id);
+          if (exists) {
+            return {
+              data: {
+                ...state.data,
+                clinicTimes: {
+                  ...state.data.clinicTimes,
+                  [clinic.id]: time ?? state.data.clinicTimes[clinic.id],
+                },
+              },
+            };
+          }
           return {
             data: {
               ...state.data,
-              selectedDoctors: exists ? state.data.selectedDoctors : [...state.data.selectedDoctors],
-              doctorTimes: { ...state.data.doctorTimes, [doctorId]: time },
+              selectedClinics: [...state.data.selectedClinics, clinic],
+              clinicTimes: { ...state.data.clinicTimes, [clinic.id]: time },
             },
           };
         }),
 
+      removeClinic: (clinicId) =>
+        set((state) => {
+          const filtered = state.data.selectedClinics.filter((c) => c.id !== clinicId);
+          const { [clinicId]: _, ...restTimes } = state.data.clinicTimes;
+          return { data: { ...state.data, selectedClinics: filtered, clinicTimes: restTimes } };
+        }),
+
+      setClinicTime: (clinicId, time) =>
+        set((state) => ({
+          data: { ...state.data, clinicTimes: { ...state.data.clinicTimes, [clinicId]: time } },
+        })),
+
       setNotes: (notes) =>
-        set((state) => ({ data: { ...state.data, notes } }), false, 'setNotes'),
+        set((state) => ({ data: { ...state.data, notes } })),
 
       isStepValid: (step) => {
         const { data } = get();
         const validators: Record<number, boolean> = {
           0: !!data.bookingType,
           1:
-            (data.bookingType === 'CLINIC' && !!data.clinic) ||
+            (data.bookingType === 'CLINIC' && data.selectedClinics.length > 0) ||
             (data.bookingType === 'DOCTOR' && data.selectedDoctors.length > 0),
           2: true,
         };
         return validators[step] ?? false;
       },
 
-      resetBooking: () =>
-        set({ data: initialData, ui: initialUI }, false, 'resetBooking'),
+      resetBooking: () => set({ data: initialData, ui: initialUI }),
 
       // ui actions
       setSectionExpanded: (key, expanded) =>
-        set(
-          (state) => ({
-            ui: {
-              ...state.ui,
-              sectionExpanded: { ...state.ui.sectionExpanded, [key]: expanded },
-            },
-          }),
-          false,
-          'setSectionExpanded'
-        ),
+        set((state) => ({
+          ui: { ...state.ui, sectionExpanded: { ...state.ui.sectionExpanded, [key]: expanded } },
+        })),
 
       setDropdownVisible: (visible) =>
-        set((state) => ({ ui: { ...state.ui, dropdownVisible: visible } }), false, 'setDropdownVisible'),
+        set((state) => ({ ui: { ...state.ui, dropdownVisible: visible } })),
 
       setHospitalSelected: (selected) =>
-        set((state) => ({ ui: { ...state.ui, hospitalSelected: selected } }), false, 'setHospitalSelected'),
+        set((state) => ({ ui: { ...state.ui, hospitalSelected: selected } })),
     }),
     { name: 'BookingStore' }
   )

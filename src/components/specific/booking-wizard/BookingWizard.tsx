@@ -10,7 +10,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 
 import WizardStepper from './WizardStepper';
-import Step1_SelectHospital from './steps/step_1/Step1_Screen';
+import Step1_SelectHospital from './steps/step_1/Step1_SelectHospital';
 import Step2_SelectSchedule from './steps/step_2/Step2_SelectSchedule';
 import Step3_Confirmation from './steps/step_3/Step3_Confirmation';
 import { useBookingStore } from '@/store/useBookingStore';
@@ -30,12 +30,10 @@ const BookingWizard = () => {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [steps, setSteps] = useState(DEFAULT_STEPS);
 
-  // Slide animation
   const contentAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: withTiming(-currentStep * screenWidth, { duration: 300 }) }],
   }));
 
-  // Update Step 2 label based on booking type
   const updateStepsForBookingType = useCallback(() => {
     const step2 =
       data.bookingType === 'DOCTOR'
@@ -47,11 +45,24 @@ const BookingWizard = () => {
   }, [data.bookingType]);
 
   const handleNext = useCallback(() => {
+    const { isStepValid } = useBookingStore.getState();
+
+    if (!isStepValid(currentStep)) {
+      Alert.alert('Thông báo', 'Vui lòng hoàn tất bước hiện tại trước khi sang bước tiếp theo.');
+      return;
+    }
+
     setCompletedSteps(prev => new Set([...prev, currentStep]));
+
     if (currentStep === 0) updateStepsForBookingType();
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
-    else Alert.alert('Thông báo', 'Bạn đã hoàn tất đặt lịch!');
+
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      Alert.alert('Thông báo', 'Bạn đã hoàn tất đặt lịch!');
+    }
   }, [currentStep, steps, updateStepsForBookingType]);
+
 
   const handleBack = useCallback(() => {
     if (currentStep > 0) {
@@ -129,7 +140,7 @@ const BookingWizard = () => {
             onNext={handleNext}
             onBack={handleBack}
             screenWidth={screenWidth}
-            prefilledDoctors={prefilledDoctors} // ✅ Step2 nhận mảng
+            prefilledDoctors={prefilledDoctors}
           />
           <StepWrapperStep3 onConfirm={handleNext} onBack={handleBack} screenWidth={screenWidth} />
         </Animated.View>
@@ -186,7 +197,6 @@ const StepWrapperStep3 = ({ onConfirm, onBack, screenWidth }: { onConfirm: () =>
   />
 );
 
-// --- Styles ---
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.white },
   header: {

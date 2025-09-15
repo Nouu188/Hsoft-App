@@ -4,7 +4,7 @@ import { COLORS, SIZES } from '@/constants/theme';
 
 const Placeholder: React.FC = () => (
   <View style={styles.placeholder}>
-    <Text>Danh sách phòng khám sẽ hiển thị ở đây</Text>
+    <Text>Chưa có danh sách đặt lịch</Text>
   </View>
 );
 
