@@ -1,4 +1,5 @@
-import React from 'react';
+// EntityList.tsx
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
 import EntityCard, { Entity } from './EntityCard';
 
@@ -8,21 +9,20 @@ interface EntityListProps {
   onSelectEntity: (entity: Entity) => void;
 }
 
-const EntityList: React.FC<EntityListProps> = ({ entities, selectedEntities, onSelectEntity }) => {
+const EntityList = forwardRef<FlatList<Entity>, EntityListProps>(({ entities, selectedEntities, onSelectEntity }, ref) => {
+  const flatListRef = useRef<FlatList<Entity>>(null);
+
+  useImperativeHandle(ref, () => flatListRef.current!);
+
   const renderItem = ({ item }: { item: Entity }) => {
     const isSelected = !!selectedEntities.find(e => e.id === item.id);
-    return (
-      <EntityCard
-        entity={item}
-        selected={isSelected}
-        onSelectEntity={onSelectEntity}
-      />
-    );
+    return <EntityCard entity={item} selected={isSelected} onSelectEntity={onSelectEntity} />;
   };
 
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={entities}
         renderItem={renderItem}
         keyExtractor={item => item.id}
@@ -30,7 +30,7 @@ const EntityList: React.FC<EntityListProps> = ({ entities, selectedEntities, onS
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

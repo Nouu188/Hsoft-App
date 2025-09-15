@@ -1,3 +1,4 @@
+// Step3_Confirmation.tsx
 import React, { useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,21 +8,22 @@ import { useBookingStore } from '@/store/useBookingStore';
 import { PatientInfoCard } from './PatientInfoCard';
 import CollapsibleSection from '../step_1/collapsible_section/CollapsibleSection';
 import { useNavigation } from '@react-navigation/native';
-import type { RootStackParamList } from '@/navigation/types';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import EntityCard from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import { HospitalInfoCard } from './HospitalInfoCard';
+import type { BookingStackParamList } from '@/navigation/BookingWizardNavigator';
+import type { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 
 interface Step3Props {
-    onBack: () => void;
+    onBack: (entity?: Entity) => void;
 }
-
 const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
     const { identity } = useIdentityStore();
     const { data, resetBooking } = useBookingStore();
     const scrollY = useRef(new Animated.Value(0)).current;
 
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const navigation = useNavigation<NativeStackNavigationProp<BookingStackParamList>>();
+
     const getEntitySectionTitle = () => {
         const hasDoctors = data.selectedDoctors.length > 0;
         const hasClinics = (data.selectedClinics?.length || 0) > 0;
@@ -29,18 +31,22 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
         if (hasDoctors && hasClinics) return "Bác sĩ & Phòng khám đã chọn";
         if (hasDoctors) return "Bác sĩ đã chọn";
         if (hasClinics) return "Phòng khám đã chọn";
-        return "Không có bác sĩ hoặc phòng khám nào"; 
+        return "Không có bác sĩ hoặc phòng khám nào";
     };
 
     const handleConfirm = () => {
         resetBooking();
         navigation.reset({
             index: 0,
-            routes: [{ name: 'MainApp' }],
+            routes: [{ name: 'MainApp' as any }],
         });
         setTimeout(() => {
             Alert.alert('Thành công', 'Bạn đã đặt lịch thành công!');
         }, 300);
+    };
+
+    const handleEditEntity = (entity: Entity) => {
+        onBack(entity);
     };
 
     const sections = [
@@ -85,7 +91,7 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
                             entity={doc}
                             variant="summary"
                             appointmentTime={data.doctorTimes[doc.id]}
-                            onEditEntity={() => console.log('Chỉnh sửa bác sĩ')}
+                            onEditEntity={handleEditEntity} 
                         />
                     ))}
 
@@ -96,7 +102,7 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
                             entity={clinic}
                             variant="summary"
                             appointmentTime={data.clinicTimes?.[clinic.id]}
-                            onEditEntity={() => console.log('Chỉnh sửa phòng khám')}
+                            onEditEntity={handleEditEntity} 
                         />
                     ))}
                 </CollapsibleSection>

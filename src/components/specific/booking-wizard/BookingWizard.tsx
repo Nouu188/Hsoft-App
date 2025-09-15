@@ -1,5 +1,6 @@
+// BookingWizard.tsx
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, useWindowDimensions, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Alert, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -14,6 +15,7 @@ import Step1_SelectHospital from './steps/step_1/Step1_SelectHospital';
 import Step2_SelectSchedule from './steps/step_2/Step2_SelectSchedule';
 import Step3_Confirmation from './steps/step_3/Step3_Confirmation';
 import { useBookingStore } from '@/store/useBookingStore';
+import { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 
 const DEFAULT_STEPS = ['Chọn bệnh viện', 'Chọn lịch', 'Xác nhận'];
 
@@ -21,7 +23,6 @@ const BookingWizard = () => {
   const route = useRoute<RouteProp<BookingStackParamList, 'BookingWizardMain'>>();
   const initialStep = route.params?.step ?? 0;
   const { prefilledDoctors = [] } = route.params || {};
-
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width: screenWidth } = useWindowDimensions();
   const { data } = useBookingStore();
@@ -29,6 +30,7 @@ const BookingWizard = () => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [steps, setSteps] = useState(DEFAULT_STEPS);
+  const [scrollToEntityId, setScrollToEntityId] = useState<string | undefined>(undefined);
 
   const contentAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: withTiming(-currentStep * screenWidth, { duration: 300 }) }],
@@ -39,8 +41,8 @@ const BookingWizard = () => {
       data.bookingType === 'DOCTOR'
         ? 'Chọn lịch theo bác sĩ'
         : data.bookingType === 'CLINIC'
-          ? 'Chọn lịch theo phòng khám'
-          : 'Chọn lịch';
+        ? 'Chọn lịch theo phòng khám'
+        : 'Chọn lịch';
     setSteps(['Chọn bệnh viện', step2, 'Xác nhận']);
   }, [data.bookingType]);
 
@@ -63,7 +65,6 @@ const BookingWizard = () => {
     }
   }, [currentStep, steps, updateStepsForBookingType]);
 
-
   const handleBack = useCallback(() => {
     if (currentStep > 0) {
       if (currentStep === 1) setSteps(DEFAULT_STEPS);
@@ -75,6 +76,11 @@ const BookingWizard = () => {
       ]);
     }
   }, [currentStep, navigation]);
+
+  const handleBackFromStep3 = useCallback((entity?: Entity) => {
+    if (entity) setScrollToEntityId(entity.id);
+    setCurrentStep(1); // quay về Step2
+  }, []);
 
   const goToStep = useCallback(
     (stepIndex: number) => {
@@ -141,8 +147,9 @@ const BookingWizard = () => {
             onBack={handleBack}
             screenWidth={screenWidth}
             prefilledDoctors={prefilledDoctors}
+            scrollToEntityId={scrollToEntityId}
           />
-          <StepWrapperStep3 onConfirm={handleNext} onBack={handleBack} screenWidth={screenWidth} />
+          <StepWrapperStep3 onConfirm={handleNext} onBack={handleBackFromStep3} screenWidth={screenWidth} />
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -169,12 +176,14 @@ const StepWrapperStep2 = ({
   onBack,
   screenWidth,
   prefilledDoctors,
+  scrollToEntityId,
 }: {
   scheduleType: 'doctor' | 'clinic';
   onNext: () => void;
-  onBack: () => void;
+  onBack: (entity?: Entity) => void;
   screenWidth: number;
   prefilledDoctors?: { doctorId: string; selectedTime: string }[];
+  scrollToEntityId?: string;
 }) => (
   <Animated.View style={{ width: screenWidth }}>
     <Step2_SelectSchedule
@@ -182,11 +191,12 @@ const StepWrapperStep2 = ({
       onNext={onNext}
       onBack={onBack}
       prefilledDoctors={prefilledDoctors}
+      scrollToEntityId={scrollToEntityId}
     />
   </Animated.View>
 );
 
-const StepWrapperStep3 = ({ onConfirm, onBack, screenWidth }: { onConfirm: () => void; onBack: () => void; screenWidth: number }) => (
+const StepWrapperStep3 = ({ onConfirm, onBack, screenWidth }: { onConfirm: () => void; onBack: (entity?: Entity) => void; screenWidth: number }) => (
   <Animated.FlatList
     data={[0]}
     keyExtractor={() => 'step3'}

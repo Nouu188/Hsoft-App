@@ -9,6 +9,7 @@ export type BookingStackParamList = {
     BookingWizardMain: {
         step?: number;
         prefilledDoctors?: { doctorId: string; selectedTime: string }[];
+        prefilledClinics?: { clinicId: string; selectedTime: string }[];
     };
     AppointmentBooking: {
         doctorId: string;
@@ -16,6 +17,7 @@ export type BookingStackParamList = {
         availableTimes: TimeSlot[];
         onSelectTime?: (time: string) => void; 
     };
+    
 };
 
 
