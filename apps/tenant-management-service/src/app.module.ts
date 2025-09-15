@@ -20,23 +20,31 @@ import { DoctorRepository } from './infrastructure/repositories/doctors';
 import { ClinicsResolver, HospitalsResolver, IdentitiesResolver } from './presentation/graphql/resolvers';
 import { DoctorsResolver } from './presentation/graphql/resolvers/doctors';
 import { ClinicRepository, HospitalRepository, IdentityRepository } from './infrastructure';
-import { GetActiveClinicsHandler, GetIdentityByIdQueryHandler, GetIdentityByUserIdQueryHandler, GetIdentityFromHospitalHandler, GetManyIdentitiesQueryHandler } from './application/queries';
+import { GetActiveClinicsHandler, GetAllHospitalsHandler, GetHospitalByExternalCodeHandler, GetHospitalByIdHandler, GetIdentityByIdQueryHandler, GetIdentityByUserIdQueryHandler, GetIdentityFromHospitalHandler, GetManyIdentitiesQueryHandler } from './application/queries';
 import { CreateHospitalHandler, CreateIdentityHandler, RemoveHospitalHandler, UpdateHospitalHandler, UpsertClinicsHandler } from './application/commands';
 import { IdentityCreatedConsumer } from './application';
 
 export const CommandHandlers = [
-  GetActiveClinicsHandler,
   UpsertClinicsHandler,
-
-  GetDoctorByIdHandler,
-  GetAllDoctorsHandler,
-  GetAvailableDoctorsHandler,
-
+  
   CreateHospitalHandler,
   RemoveHospitalHandler,
   UpdateHospitalHandler,
 
   CreateIdentityHandler,
+];
+
+export const QueryHandlers = [
+  GetAllHospitalsHandler,
+  GetHospitalByExternalCodeHandler,
+  GetHospitalByIdHandler,
+
+  GetDoctorByIdHandler,
+  GetAllDoctorsHandler,
+  GetAvailableDoctorsHandler,
+
+  GetActiveClinicsHandler,
+
   GetIdentityByIdQueryHandler,
   GetIdentityByUserIdQueryHandler,
   GetManyIdentitiesQueryHandler,
@@ -115,6 +123,7 @@ export const Consumers = [
   ],
   providers: [
     ...CommandHandlers,
+    ...QueryHandlers,
     ...Repositories,
     ...InfrastructureServices,
     ...Resolvers,

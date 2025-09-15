@@ -1,5 +1,5 @@
 import { Role } from '@app/auth/enums/role.enum';
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 import {
@@ -17,6 +17,15 @@ export enum DeviceTokenType { FCM = 'FCM', APN = 'APN' }
 @ObjectType()
 export class DeviceToken {
   @Field() token: string;
+  @Field() type: DeviceTokenType;
+}
+
+@InputType()
+export class DeviceTokenInput {
+  @Field()
+  token: string;
+
+  @Field({ nullable: true })
   @Field() type: DeviceTokenType;
 }
 

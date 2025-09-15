@@ -45,6 +45,11 @@ type DeviceToken {
   type: String!
 }
 
+input DeviceTokenInput {
+  token: String!
+  type: String
+}
+
 type Doctor {
   avatarUrl: String
   bio: String
@@ -171,12 +176,17 @@ type Mutation {
   loginByEmail(loginInput: LoginInputByEmail!): LoginResponse!
   loginByPhoneNumber(loginInput: LoginInputByPhoneNumber!): LoginResponse!
   loginWithGoogle: LoginResponse!
+  registerFcmToken(deviceToken: DeviceTokenInput!): Boolean!
   requestPasswordReset(input: RequestPasswordResetInput!): RequestPasswordResetResponse!
   verifyPasswordReset(input: VerifyPasswordResetInput!): VerifyPasswordResetResponse!
 }
 
 type Query {
+  findAllUsers: User!
+  findById(userId: String!): User
+  findByPhoneNumber(phoneNumber: String!): User
   healthCheck: String!
+  me: User!
 }
 
 input RegisterByEmailInput {
@@ -222,6 +232,26 @@ type TimeSlot {
   endTime: DateTime!
   isAvailable: Boolean!
   startTime: DateTime!
+}
+
+type User {
+  """URL ảnh đại diện"""
+  avatarUrl: String
+  createdAt: DateTime!
+
+  """Danh sách token thiết bị"""
+  deviceTokens: [DeviceToken!]
+
+  """Địa chỉ email (duy nhất)"""
+  email: String
+  googleId: String
+  id: ID!
+
+  """Flag indicating whether email is verified"""
+  isEmailVerified: Boolean!
+  phoneNumber: String
+  roles: [Role!]!
+  updatedAt: DateTime!
 }
 
 type UserPayload {

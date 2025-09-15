@@ -2,7 +2,7 @@ import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 import { NotFoundException, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '@app/auth/guards/jwt-auth.guard';
 import { M2MJwtGuard } from '@app/auth/guards/m2m-jwt.guard';
-import { DeviceToken, User } from 'apps/account-service/src/domain/users/entities';
+import { DeviceToken, DeviceTokenInput, User } from 'apps/account-service/src/domain/users/entities';
 import { CurrentUser } from '@app/auth';
 import { UserPayload } from 'apps/account-service/src/domain/users/dtos';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -62,7 +62,7 @@ export class UsersResolver {
   @UseGuards(JwtAuthGuard)
   async registerFcmToken(
     @CurrentUser() user: User,
-    @Args('deviceToken', { type: () => DeviceToken }) deviceToken: DeviceToken,
+    @Args('deviceToken', { type: () => DeviceTokenInput }) deviceToken: DeviceTokenInput,
   ): Promise<boolean> {
     return this.commandBus.execute(new FcmTokenRegisterationCommand(user.id, deviceToken))
   }

@@ -1,10 +1,10 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
-import { RegisterByEmailInput } from 'apps/account-service/src/presentation/graphql/resolvers/auth/dtos/registration/register-by-email.input';
+import { DeviceTokenInput, User } from 'apps/account-service/src/domain/users/entities';
 import { IUserRepository } from 'apps/account-service/src/domain/users/interfaces';
-import { DeviceToken, User } from 'apps/account-service/src/domain/users/entities';
+import { RegisterByEmailInput } from 'apps/account-service/src/presentation/graphql/resolvers/auth/dtos/registration/register-by-email.input';
 import { RegisterByHospitalInput } from 'apps/account-service/src/presentation/graphql/resolvers/auth/dtos/registration/register-by-hospital.input';
+import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -90,7 +90,7 @@ export class UserRepository implements IUserRepository {
 
   async updateDeviceTokenByUserId(
     userId: string,
-    deviceToken: DeviceToken,
+    deviceToken: DeviceTokenInput,
     manager?: EntityManager,
   ): Promise<Boolean> {
     const repo = manager ? manager.getRepository(User) : this.ormRepository;
@@ -100,7 +100,7 @@ export class UserRepository implements IUserRepository {
     }
     const tokens = user.deviceTokens || [];
     if (!tokens.some((t) => t.token === deviceToken.token)) {
-      tokens.push(deviceToken);
+      tokens.push({ token: deviceToken.token, type: deviceToken.type });
       await repo.save({ ...user, deviceTokens: tokens });
       this.logger.log(`Added ${deviceToken.type} device token for user ${userId}`);
     }

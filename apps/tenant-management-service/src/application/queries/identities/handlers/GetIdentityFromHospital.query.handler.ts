@@ -46,6 +46,7 @@ export class GetIdentityFromHospitalHandler implements IQueryHandler<GetIdentity
             const identity = this.transactionService.execute(async (manager) => {
                 const newIdentity = await this.identityRepository.create({
                     id: uuidv4(),
+                    userId: patient.phoneNumber,
                     phoneNumber: patient.phoneNumber,
                     externalPatientCode: patient.externalPatientCode,
                     fullName: patient.fullName,

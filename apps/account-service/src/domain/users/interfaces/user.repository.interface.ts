@@ -1,7 +1,7 @@
+import { RegisterByEmailInput, RegisterByHospitalInput } from 'apps/account-service/src/presentation/graphql/resolvers/auth/dtos/registration';
 import { EntityManager } from 'typeorm';
 import { IRepository } from '../../common/interfaces/repository.interface';
-import { DeviceToken, User } from '../entities/user.entity';
-import { RegisterByEmailInput, RegisterByHospitalInput } from 'apps/account-service/src/presentation/graphql/resolvers/auth/dtos/registration';
+import { DeviceTokenInput, User } from '../entities/user.entity';
 
 export const IUserRepository = Symbol('IUserRepository');
 export interface IUserRepository extends IRepository<User> {
@@ -14,5 +14,5 @@ export interface IUserRepository extends IRepository<User> {
     createByHospital(registerInput: RegisterByHospitalInput, manager?: EntityManager): Promise<User>;
 
     updatePasswordByUserId(userId: string, newPassword: string, manager?: EntityManager): Promise<User>;
-    updateDeviceTokenByUserId(userId: string, deviceToken: DeviceToken, manager?: EntityManager): Promise<Boolean>;
+    updateDeviceTokenByUserId(userId: string, deviceToken: DeviceTokenInput, manager?: EntityManager): Promise<Boolean>;
 }

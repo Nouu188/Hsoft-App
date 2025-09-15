@@ -28,10 +28,11 @@ export const CommandHandlers = [
   SyncAllDosesByUserHandler,
   SyncDosesInFutureHandler,
   UpdateDosesCommandHandler,
+];
 
+export const QueryHandlers = [
   GetDoseByIdQueryHandler,
-  GetDosesByDateRangeQuery,
-  GetDosesByDateRangeQueryHandler
+  GetDosesByDateRangeQueryHandler,
 ];
 
 export const Repositories = [
@@ -105,6 +106,7 @@ export const Services = [
   ],
   providers: [
     ...CommandHandlers,
+    ...QueryHandlers, 
     ...Repositories,
     ...InfrastructureServices,
     ...Resolvers,

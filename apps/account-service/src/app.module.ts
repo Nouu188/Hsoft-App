@@ -34,6 +34,7 @@ import { RefreshTokenRepository } from './infrastructure/users/repositories';
 import { UserRepository } from './infrastructure/users/repositories/user.repository';
 import { AuthResolver } from './presentation/graphql/resolvers/auth/auth.resolver';
 import { AuthController } from './presentation/http/controllers/auth';
+import { UsersResolver } from './presentation';
 
 export const CommandHandlers = [
   LoginByEmailHandler,
@@ -67,6 +68,7 @@ export const InfrastructureServices = [
 ];
 export const Resolvers = [
   AuthResolver,
+  UsersResolver
 ];
 export const Controllers = [
   AuthController
