@@ -18,10 +18,11 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { DoseStatusTransitionJobService, GetDoseByIdQueryHandler, GetDosesByDateRangeQuery, GetDosesByDateRangeQueryHandler, SyncAllDosesByUserHandler, SyncDosesInFutureHandler, UpdateDosesCommandHandler } from './application';
+import { DosesAllSyncConsumer, DoseStatusTransitionJobService, GetDosesByDateRangeQuery, SyncAllDosesByUserHandler, SyncDosesInFutureHandler, UpdateDosesCommandHandler } from './application';
 import { Dose, DoseSchedulerService, DoseStatusTransitionService, IDoseRepository } from './domain';
-import { DoseRepository, DosesAllSyncConsumer, DoseTransactionService, OutboxTransactionService } from './infrastructure';
+import { DoseRepository, DoseTransactionService, OutboxTransactionService } from './infrastructure';
 import { DosesResolver } from './presentation/graphql/resolvers/doses';
+import { GetDoseByIdQueryHandler, GetDosesByDateRangeQueryHandler } from './application/queries/dose/handlers';
 
 export const CommandHandlers = [
   SyncAllDosesByUserHandler,

@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import { Dose, DoseStatus } from 'apps/scheduling-service copyy/src/doses/entities/dose.entity';
+import { Dose, DoseStatus } from 'apps/scheduling-service/src/domain';
 
 @Injectable()
 export class DoseApiClientService {
@@ -54,7 +54,7 @@ export class DoseApiClientService {
   async fetchAndVerifyDoses(
     doseIds: string[],
     userId: string,
-    status: DoseStatus,
+    status: DoseStatus
   ): Promise<Dose[]> {
     if (!doseIds || doseIds.length === 0) {
       return [];

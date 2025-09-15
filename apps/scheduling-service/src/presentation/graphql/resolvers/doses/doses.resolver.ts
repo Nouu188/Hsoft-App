@@ -11,13 +11,13 @@ import {
   GetDoseByIdQuery,
   GetDosesByDateRangeQuery,
   GetDosesBySelectedDateQuery,
-  UpdateDosesCommand,
 } from 'apps/scheduling-service/src/application';
 import {
   Dose,
   UpdateDoseInput,
 } from 'apps/scheduling-service/src/domain';
 import { User } from 'apps/account-service/src/domain/users/entities';
+import { UpdateDosesCommand } from 'apps/scheduling-service/src/application/commands/dose';
 
 @Resolver(() => Dose)
 export class DosesResolver {

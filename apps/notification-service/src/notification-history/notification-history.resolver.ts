@@ -4,11 +4,11 @@ import { CurrentUser, JwtAuthGuard } from '@app/auth';
 import { GetHistoryArgs } from './dto/get-history.args';
 import { NotificationHistory } from './entities/notification-history.entity';
 import { MarkAsReadInput } from './dto/mark-as-read.input';
-import { User } from 'apps/account-service/src/users/entities/user.entity';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Histogram } from 'prom-client';
 import { MetricLabel, MetricName } from '@app/common/metrics/contracts/metrics.contracts';
 import { NotificationHistoryService } from './notification-history.service';
+import { User } from 'apps/account-service/src/domain/users/entities';
 
 @Resolver(() => NotificationHistory)
 @UseGuards(JwtAuthGuard)

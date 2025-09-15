@@ -13,21 +13,18 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { CreateHospitalHandler, GetIdentityByIdQueryHandler, GetIdentityByUserIdQueryHandler, GetIdentityFromHospitalHandler, GetManyIdentitiesQueryHandler, RemoveHospitalHandler, UpdateHospitalHandler } from './application';
-import { UpsertClinicsHandler } from './application/clinics';
-import { GetActiveClinicsHandler } from './application/clinics/queries/handlers';
-import { GetAllDoctorsHandler, GetAvailableDoctorsHandler, GetDoctorByIdHandler } from './application/doctors/queries/handlers';
-import { CreateIdentityHandler } from './application/identities/commands/handlers';
+import { GetAllDoctorsHandler, GetAvailableDoctorsHandler, GetDoctorByIdHandler } from './application/queries/doctors/handlers';
 import { Clinic, Doctor, Hospital, IClinicRepository, Identity, IDoctorRepository, IHospitalRepository, IIdentityRepository } from './domain';
 import { ClinicTransactionService, DoctorTransactionService, HospitalTransactionService, IdentityTransactionService, OutboxTransactionService } from './infrastructure/common/services/transaction.service';
 import { DoctorRepository } from './infrastructure/repositories/doctors';
 import { ClinicsResolver, HospitalsResolver, IdentitiesResolver } from './presentation/graphql/resolvers';
 import { DoctorsResolver } from './presentation/graphql/resolvers/doctors';
 import { ClinicRepository, HospitalRepository, IdentityRepository } from './infrastructure';
-import { IdentityCreatedConsumer } from './infrastructure/rabbitmq';
+import { GetActiveClinicsHandler, GetIdentityByIdQueryHandler, GetIdentityByUserIdQueryHandler, GetIdentityFromHospitalHandler, GetManyIdentitiesQueryHandler } from './application/queries';
+import { CreateHospitalHandler, CreateIdentityHandler, RemoveHospitalHandler, UpdateHospitalHandler, UpsertClinicsHandler } from './application/commands';
+import { IdentityCreatedConsumer } from './application';
 
 export const CommandHandlers = [
-  GetActiveClinicsHandler,
   GetActiveClinicsHandler,
   UpsertClinicsHandler,
 

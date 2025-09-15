@@ -3,7 +3,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { ServiceClient } from 'apps/account-service/src/domain/auth/entities/service-client.entity';
 import { M2MAuthGuard } from '../../../graphql/guards';
 import { Request } from 'express';
-import { GenerateM2mTokenCommand } from 'apps/account-service/src/application/auth/commands/impl/m2m/generate-m2m-token.command';
+import { GenerateM2mTokenCommand } from 'apps/account-service/src/application';
 
 @Controller('auth')
 export class AuthController {

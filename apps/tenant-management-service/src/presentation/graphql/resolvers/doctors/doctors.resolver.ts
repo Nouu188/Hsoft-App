@@ -9,7 +9,7 @@ import {
     GetAllDoctorsQuery,
     GetAvailableDoctorsQuery,
     GetDoctorByIdQuery,
-} from 'apps/tenant-management-service/src/application/doctors/queries/impl';
+} from 'apps/tenant-management-service/src/application/queries/doctors';
 import {
     DoctorAvailability,
     DoctorAvailabilityInput,

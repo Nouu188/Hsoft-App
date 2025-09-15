@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DeviceToken } from 'apps/account-service/src/users/entities/user.entity';
+import { DeviceToken } from 'apps/account-service/src/domain/users/entities';
 import * as admin from 'firebase-admin';
 import { BatchResponse } from 'firebase-admin/lib/messaging/messaging-api';
 

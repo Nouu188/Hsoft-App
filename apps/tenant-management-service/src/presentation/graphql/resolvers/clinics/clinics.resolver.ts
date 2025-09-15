@@ -7,13 +7,8 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import {
-    UpsertClinicsCommand,
-} from 'apps/tenant-management-service/src/application/clinics';
-import {
-    GetActiveClinicsQuery,
-    GetClinicByIdQuery,
-} from 'apps/tenant-management-service/src/application/clinics/queries/impl';
+import { UpsertClinicsCommand } from 'apps/tenant-management-service/src/application/commands';
+import { GetActiveClinicsQuery, GetClinicByIdQuery } from 'apps/tenant-management-service/src/application/queries';
 import { ClinicObjectType, HospitalClinicInput, UpsertClinicResult } from 'apps/tenant-management-service/src/domain';
 
 @Resolver(() => ClinicObjectType)

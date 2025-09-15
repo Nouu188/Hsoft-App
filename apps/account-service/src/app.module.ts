@@ -18,11 +18,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as redisStore from 'cache-manager-redis-store';
 import { OAuth2Client } from 'google-auth-library';
 import { join } from 'path';
-import { LoginByEmailHandler, LoginByGoogleHandler, LoginByPhoneNumberHandler } from './application/auth/commands/handlers/login';
-import { CreateServiceClientHandler, GenerateM2mTokenHandler } from './application/auth/commands/handlers/m2m';
-import { CompleteEmailRegistrationHandler, HospitalRegisterationHandler, InitiateEmailRegistrationHandler } from './application/auth/commands/handlers/registeration';
-import { FcmTokenRegisterationHandler } from './application/users/commands/handlers/users';
-import { GetAllUsersHandler, GetUserByIdHandler, GetUserByPhoneHandler } from './application/users/queries/handlers/users';
+import { FcmTokenRegisterationHandler } from './application';
+import { CompleteEmailRegistrationHandler, GenerateM2mTokenHandler, HospitalRegisterationHandler, InitiateEmailRegistrationHandler, LoginByEmailHandler, LoginByGoogleHandler, LoginByPhoneNumberHandler } from './application/commands/auth';
+import { CreateServiceClientHandler } from './application/commands/auth/handlers/CreateServiceClient.command.handler';
+import { GetAllUsersHandler, GetUserByIdHandler, GetUserByPhoneHandler } from './application/queries/users';
 import { ServiceClient } from './domain/auth/entities/service-client.entity';
 import { IServiceClientRepository } from './domain/auth/interfaces';
 import { RefreshToken, User } from './domain/users/entities';
@@ -176,7 +175,7 @@ export const Strategies = [
     ...CommandHandlers,
     ...Repositories,
     ...InfrastructureServices,
-    ...Resolvers, 
+    ...Resolvers,
     ...Strategies,
     {
       provide: APP_INTERCEPTOR,

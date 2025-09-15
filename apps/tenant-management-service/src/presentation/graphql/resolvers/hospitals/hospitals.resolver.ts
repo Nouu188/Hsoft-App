@@ -12,12 +12,12 @@ import {
     CreateHospitalCommand,
     RemoveHospitalCommand,
     UpdateHospitalCommand,
-} from 'apps/tenant-management-service/src/application/hospitals/commands/impl';
+} from 'apps/tenant-management-service/src/application/commands/hospitals';
 import {
     GetAllHospitalsQuery,
     GetHospitalByExternalCodeQuery,
     GetHospitalByIdQuery,
-} from 'apps/tenant-management-service/src/application/hospitals/queries';
+} from 'apps/tenant-management-service/src/application/queries/hospitals';
 import { CreateHospitalInput, Hospital, HospitalPayload, UpdateHospitalInput } from 'apps/tenant-management-service/src/domain';
 
 @Resolver()

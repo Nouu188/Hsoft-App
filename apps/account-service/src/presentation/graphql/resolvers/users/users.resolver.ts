@@ -6,10 +6,10 @@ import { DeviceToken, User } from 'apps/account-service/src/domain/users/entitie
 import { CurrentUser } from '@app/auth';
 import { UserPayload } from 'apps/account-service/src/domain/users/dtos';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { GetAllUsersQuery } from 'apps/account-service/src/application/users/queries/impl/users/get-all-users.query';
-import { GetUserByIdQuery } from 'apps/account-service/src/application/users/queries/impl/users/get-user-by-id.query';
-import { GetUserByPhoneNumberQuery } from 'apps/account-service/src/application/users/queries/impl/users';
-import { FcmTokenRegisterationCommand } from 'apps/account-service/src/application/users/commands/impl/users';
+import { GetAllUsersQuery } from 'apps/account-service/src/application/queries/users/GetAllUsers.query';
+import { GetUserByIdQuery } from 'apps/account-service/src/application/queries/users/GetUserById.query';
+import { GetUserByPhoneNumberQuery } from 'apps/account-service/src/application/queries/users';
+import { FcmTokenRegisterationCommand } from 'apps/account-service/src/application';
 
 @Resolver(() => User)
 export class UsersResolver {

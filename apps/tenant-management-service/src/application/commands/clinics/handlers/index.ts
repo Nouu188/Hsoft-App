@@ -1,0 +1,1 @@
+export * from "./UpsertClinics.command.handler"

@@ -1,4 +1,3 @@
-export * from "./clinics";
-export * from "./hospitals";
-export * from "./doctors";
-export * from "./identities";
+export * from "./commands";
+export * from "./queries";
+export * from "./events";
