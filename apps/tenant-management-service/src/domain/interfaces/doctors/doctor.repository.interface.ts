@@ -3,5 +3,6 @@ import { Doctor } from "../../entities";
 
 export const IDoctorRepository = Symbol('IDoctorRepository');
 export interface IDoctorRepository extends IRepository<Doctor> {
-    
+    findByExternalCode(externalCode: string): Promise<Doctor | null>;
+    upsert(doctors: Partial<Doctor>[]): Promise<Doctor[]>;
 }

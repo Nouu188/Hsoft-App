@@ -1,6 +1,11 @@
-import { ObjectType, Field, ID } from '@nestjs/graphql';
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Clinic } from '../clinics';
+import { Gender } from '../identities';
+import { MedicalService } from '../medical-service';
+
+// Di chuyển Gender enum ra một file chung để tái sử dụng
+// registerEnumType(Gender, { name: 'Gender' }); 
 
 @ObjectType('Doctor')
 @Entity({ name: 'doctors' })
@@ -10,41 +15,58 @@ export class Doctor {
   id: string;
 
   @Field()
-  @Column({ 
-    unique: true, 
+  @Column({
+    unique: true,
     name: 'external_code',
-    comment: 'External doctor code from hospital system (mabs)'
+    comment: 'Mã bác sĩ từ hệ thống bệnh viện (ma)'
   })
   externalCode: string;
 
   @Field()
-  @Column({ comment: 'Doctor full name' })
+  @Column({ comment: 'Họ và tên bác sĩ (hoten)' })
   name: string;
 
-  @Field({ nullable: true })
-  @Column({ name: 'avatar_url', nullable: true, comment: 'Profile picture URL of the doctor' })
-  avatarUrl?: string;
+  @Field(() => Gender, { nullable: true })
+  @Column({ type: 'enum', enum: Gender, nullable: true, comment: 'Giới tính (phai)' })
+  gender?: Gender;
 
   @Field({ nullable: true })
-  @Column({ type: 'text', nullable: true, comment: 'Short biography or description of the doctor' })
-  bio?: string;
+  @Column({ type: 'text', nullable: true, comment: 'Kinh nghiệm hoặc chuyên khoa (kinhnghiem)' })
+  experience?: string;
+
+  @Field({ nullable: true })
+  @Column({ type: 'text', nullable: true, comment: 'Thông báo chung của phòng khám (thongbao)' })
+  announcement?: string;
+
+  @Field({ nullable: true })
+  @Column({ name: 'pin_code', nullable: true, comment: 'Mã PIN nếu có (pin)' })
+  pinCode?: string;
 
   @Field()
-  @Column({ 
+  @Column({
     default: true,
     name: 'is_active',
-    comment: 'Flag to enable/disable doctor visibility in app'
+    comment: 'Flag để bật/tắt bác sĩ trong app'
   })
   isActive: boolean;
 
   @Field(() => Clinic)
-  @ManyToOne(() => Clinic, clinic => clinic.doctors, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Clinic, clinic => clinic.doctors, { onDelete: 'SET NULL' }) // Đổi thành SET NULL
   @JoinColumn({ name: 'clinic_id' })
   clinic: Clinic;
 
   @Field()
   @Column({ name: 'clinic_id' })
   clinicId: string;
+
+  @Field(() => [MedicalService], { description: 'Các dịch vụ khám mà bác sĩ này cung cấp' })
+  @ManyToMany(() => MedicalService, { cascade: true, eager: true }) // eager: true để tự động load
+  @JoinTable({
+    name: 'doctor_services',
+    joinColumn: { name: 'doctor_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'service_id', referencedColumnName: 'id' },
+  })
+  services: MedicalService[];
 
   @Field()
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
@@ -53,4 +75,8 @@ export class Doctor {
   @Field()
   @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
   updatedAt: Date;
+
+  @Field({ nullable: true })
+  @Column({ name: 'avatar_url', nullable: true, comment: 'URL ảnh đại diện (hinhanh)' })
+  avatarUrl?: string;
 }

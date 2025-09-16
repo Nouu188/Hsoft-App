@@ -8,6 +8,7 @@ import { FetchClinicsResponse, HospitalClinicDto } from './dto/clinic.dto';
 import { FetchDoctorsResponse } from './dto/doctor.dto';
 import { IdentityFromHospitalDto } from './dto/identity-from-hosital.dto';
 import { HospitalPatient } from '@app/common/types';
+import { NormalizedDoctorDataDto } from 'libs/normalizers/src/lib/doctor.normalizer';
 
 @Injectable()
 export class HospitalApiClientService {
@@ -228,17 +229,25 @@ export class HospitalApiClientService {
     return data.btdkp || [];
   }
 
-  async fetchDoctors(graphqlEndpoint: string, externalDoctorCode: string = '') {
+  async fetchDoctors(
+    graphqlEndpoint: string,
+    clinicCode: string = "",
+    doctorCode: string = "",
+    date: string = "",
+  ): Promise<NormalizedDoctorDataDto[]> {
     const query = `
-      query GetDoctors($loai: String!, $ma: String!) {
-        dmbs(loai: $loai, ma: $ma) {
-          ma
-          tenkp
-          hinhanh
-          hoten
-          giobd
-          giokt
-          makp
+      {
+        dmbsdangkykham(
+          loai: "",
+          ma: "${doctorCode || ""}",
+          mapk: "${clinicCode || ""}",
+          ngay: "${date}",
+          nhompk: "",
+          mabn: ""
+        ) {
+          ma, makp, tenkp, thongbao, hoten, bacsy, workername, pin, hienpin, hinhanh,
+          kinhnghiem, phai, mavp, tenvp, gia_th, gia_bh, gia_dv, gia_cs, gia_nn,
+          gia_ksk, bhyt, chenhlech, makpcl, benhvien, giobd, giokt
         }
       }
     `;
@@ -246,18 +255,62 @@ export class HospitalApiClientService {
     const data = await this.executeGraphQL<FetchDoctorsResponse>(
       graphqlEndpoint,
       query,
-      { loai: '', ma: externalDoctorCode },
-      'GetDoctors',
     );
 
-    if (!data.dmbs) return [];
+    if (!data.dmbsdangkykham) {
+      this.logger.warn(
+        `[fetchDoctors] No doctors found for clinic=${clinicCode}, date=${date}`,
+      );
+      return [];
+    }
 
-    return data.dmbs.map((doctor) => ({
-      mabs: doctor.ma,
-      tenbs: doctor.hoten,
-      makp: doctor.makp,
-      avatar: doctor.hinhanh,
-      gioithieu: `${doctor.giobd} - ${doctor.giokt}`,
-    }));
+    const doctorsMap = new Map<string, NormalizedDoctorDataDto>();
+
+    for (const record of data.dmbsdangkykham) {
+      const doctorId = record.ma;
+
+      if (!doctorsMap.has(doctorId)) {
+        doctorsMap.set(doctorId, {
+          externalCode: record.ma,
+          name: record.hoten,
+          gender: mapHospitalGender(record.phai),
+          avatarUrl: this.normalizeAvatarUrl(record.hinhanh),
+          experience: record.kinhnghiem || undefined,
+          announcement: record.thongbao || undefined,
+          pinCode: record.hienpin === '1' ? record.pin : undefined,
+          externalClinicCode: record.makp,
+          services: [],
+        });
+      }
+
+      const doctor = doctorsMap.get(doctorId)!;
+      doctor.services.push({
+        id: record.mavp,
+        name: record.tenvp,
+        isHealthInsuranceApplied: parseFloat(record.bhyt) === 1.0,
+        prices: {
+          regular: parseFloat(record.gia_th) || 0,
+          healthInsurance: parseFloat(record.gia_bh) || 0,
+          service: parseFloat(record.gia_dv) || 0,
+          foreigner: parseFloat(record.gia_nn) || 0,
+        },
+        rawData: {
+          gia_cs: record.gia_cs,
+          gia_ksk: record.gia_ksk,
+          chenhlech: record.chenhlech,
+          makpcl: record.makpcl,
+        },
+      });
+    }
+
+    return Array.from(doctorsMap.values());
+  }
+
+  private normalizeAvatarUrl(hinhanh: string | null): string | undefined {
+    if (!hinhanh || hinhanh.startsWith('//')) {
+      return undefined; // Hoặc một URL placeholder
+    }
+    // Thêm logic xử lý URL nếu cần
+    return hinhanh;
   }
 }

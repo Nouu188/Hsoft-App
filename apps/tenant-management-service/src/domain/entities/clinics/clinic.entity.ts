@@ -1,9 +1,10 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { Hospital } from '../hospitals';
 import { Doctor } from '../doctors';
 @ObjectType('Clinic')
 @Entity({ name: 'clinics' })
+@Unique(['hospitalId', 'externalCode'])
 export class Clinic {
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')

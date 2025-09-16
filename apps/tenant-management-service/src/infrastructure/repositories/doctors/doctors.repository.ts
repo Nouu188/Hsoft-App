@@ -20,7 +20,11 @@ export class DoctorRepository implements IDoctorRepository {
     }
 
     findMany(ids: string[]): Promise<Doctor[]> {
-        return this.ormRepo.find({ where: {id: In(ids)} });
+        return this.ormRepo.find({ where: { id: In(ids) } });
+    }
+
+    async findByExternalCode(externalCode: string): Promise<Doctor | null> {
+        return this.ormRepo.findOneBy({ externalCode });
     }
 
     save(doctor: Doctor | DeepPartial<Doctor>, manager?: EntityManager): Promise<Doctor>;
@@ -36,5 +40,16 @@ export class DoctorRepository implements IDoctorRepository {
             return repo.save(doctorOrDoctors);
         }
         return repo.save(doctorOrDoctors);
+    }
+
+    async upsert(doctors: Partial<Doctor>[]): Promise<Doctor[]> {
+        if (doctors.length === 0) return [];
+
+        this.logger.debug(`Upserting ${doctors.length} doctors.`);
+        // Upsert dựa trên `externalCode` vì nó là unique.
+        const result = await this.ormRepo.upsert(doctors, ['externalCode']);
+
+        const externalCodes = doctors.map(d => d.externalCode!);
+        return this.ormRepo.find({ where: { externalCode: In(externalCodes) } });
     }
 }

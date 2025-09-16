@@ -6,8 +6,8 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { UpsertClinicsCommand } from 'apps/tenant-management-service/src/application/commands';
+import { Args, Field, Int, Mutation, ObjectType, Query, Resolver } from '@nestjs/graphql';
+import { SyncClinicsFromHospitalCommand, UpsertClinicsCommand } from 'apps/tenant-management-service/src/application/commands';
 import { GetActiveClinicsQuery, GetClinicByIdQuery } from 'apps/tenant-management-service/src/application/queries';
 import { ClinicObjectType, HospitalClinicInput, UpsertClinicResult } from 'apps/tenant-management-service/src/domain';
 

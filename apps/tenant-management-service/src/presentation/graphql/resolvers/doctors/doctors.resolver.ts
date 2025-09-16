@@ -5,15 +5,19 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import { GetHospitalByExternalCodeQuery } from 'apps/tenant-management-service/src/application';
 import {
     GetAllDoctorsQuery,
     GetAvailableDoctorsQuery,
     GetDoctorByIdQuery,
+    GetDoctorsFromHospitalQuery,
 } from 'apps/tenant-management-service/src/application/queries/doctors';
 import {
     DoctorAvailability,
     DoctorAvailabilityInput,
     DoctorObjectType,
+    DoctorPayload,
+    HospitalPayload,
 } from 'apps/tenant-management-service/src/domain';
 
 @Resolver(() => DoctorObjectType)
@@ -89,5 +93,49 @@ export class DoctorsResolver {
                 'Could not fetch doctor availability',
             );
         }
+    }
+
+    @Query(() => [DoctorPayload], { name: 'doctorsByHospital' })
+    async getDoctorsByHospital(
+        @Args('externalHospitalCode', { type: () => String })
+        externalHospitalCode: string,
+        @Args('clinicCode', { type: () => String, nullable: true })
+        clinicCode?: string,
+        @Args('date', { type: () => String, nullable: true })
+        date?: string,
+    ): Promise<ReadonlyArray<DoctorPayload>> {
+        this.logger.debug(
+            `Resolving doctorsByHospital: hospital=${externalHospitalCode}, clinic=${clinicCode}, date=${date}`,
+        );
+
+        const hospital: HospitalPayload | null = await this.queryBus.execute(
+            new GetHospitalByExternalCodeQuery(externalHospitalCode),
+        );
+
+        if (!hospital) {
+            throw new NotFoundException(
+                `Hospital with code "${externalHospitalCode}" not found`,
+            );
+        }
+
+        const { graphqlEndpoint } = hospital;
+        if (!graphqlEndpoint) {
+            throw new NotFoundException(
+                `Hospital "${externalHospitalCode}" is missing graphqlEndpoint`,
+            );
+        }
+
+        const doctors: ReadonlyArray<DoctorPayload> =
+            await this.queryBus.execute(
+                new GetDoctorsFromHospitalQuery(graphqlEndpoint, clinicCode, undefined, date),
+            );
+
+        if (!doctors || doctors.length === 0) {
+            this.logger.warn(
+                `No doctors found for hospital=${externalHospitalCode}, clinic=${clinicCode}, date=${date}`,
+            );
+        }
+
+        return doctors;
     }
 }

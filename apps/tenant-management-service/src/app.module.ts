@@ -13,16 +13,19 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { GetAllDoctorsHandler, GetAvailableDoctorsHandler, GetDoctorByIdHandler } from './application/queries/doctors/handlers';
-import { Clinic, Doctor, Hospital, IClinicRepository, Identity, IDoctorRepository, IHospitalRepository, IIdentityRepository } from './domain';
+import { GetAllDoctorsHandler, GetAvailableDoctorsHandler, GetDoctorByIdHandler, GetDoctorsFromHospitalHandler } from './application/queries/doctors/handlers';
+import { Clinic, Doctor, Hospital, IClinicRepository, Identity, IDoctorRepository, IHospitalRepository, IIdentityRepository, MedicalService } from './domain';
 import { ClinicTransactionService, DoctorTransactionService, HospitalTransactionService, IdentityTransactionService, OutboxTransactionService } from './infrastructure/common/services/transaction.service';
 import { DoctorRepository } from './infrastructure/repositories/doctors';
 import { ClinicsResolver, HospitalsResolver, IdentitiesResolver } from './presentation/graphql/resolvers';
 import { DoctorsResolver } from './presentation/graphql/resolvers/doctors';
 import { ClinicRepository, HospitalRepository, IdentityRepository } from './infrastructure';
 import { GetActiveClinicsHandler, GetAllHospitalsHandler, GetHospitalByExternalCodeHandler, GetHospitalByIdHandler, GetIdentityByIdQueryHandler, GetIdentityByUserIdQueryHandler, GetIdentityFromHospitalHandler, GetManyIdentitiesQueryHandler } from './application/queries';
-import { CreateHospitalHandler, CreateIdentityHandler, RemoveHospitalHandler, UpdateHospitalHandler, UpsertClinicsHandler } from './application/commands';
+import { CreateHospitalHandler, CreateIdentityHandler, RemoveHospitalHandler, SyncClinicsFromHospitalHandler, SyncDoctorsFromHospitalHandler, UpdateHospitalHandler, UpsertClinicsHandler } from './application/commands';
 import { IdentityCreatedConsumer } from './application';
+import { SyncController } from './presentation';
+import { IMedicalServiceRepository } from './domain/interfaces/medical-service';
+import { MedicalServiceRepository } from './infrastructure/repositories/medical-service/medical-service.repository';
 
 export const CommandHandlers = [
   UpsertClinicsHandler,
@@ -32,6 +35,9 @@ export const CommandHandlers = [
   UpdateHospitalHandler,
 
   CreateIdentityHandler,
+
+  SyncDoctorsFromHospitalHandler,
+  SyncClinicsFromHospitalHandler,
 ];
 
 export const QueryHandlers = [
@@ -42,6 +48,7 @@ export const QueryHandlers = [
   GetDoctorByIdHandler,
   GetAllDoctorsHandler,
   GetAvailableDoctorsHandler,
+  GetDoctorsFromHospitalHandler,
 
   GetActiveClinicsHandler,
 
@@ -56,6 +63,7 @@ export const Repositories = [
   { provide: IDoctorRepository, useClass: DoctorRepository },
   { provide: IHospitalRepository, useClass: HospitalRepository },
   { provide: IIdentityRepository, useClass: IdentityRepository },
+  { provide: IMedicalServiceRepository, useClass: MedicalServiceRepository }
 ];
 export const InfrastructureServices = [
   ClinicTransactionService,
@@ -71,7 +79,7 @@ export const Resolvers = [
   IdentitiesResolver,
 ];
 export const Controllers = [
-
+  SyncController
 ];
 export const Strategies = [
 
@@ -105,16 +113,17 @@ export const Consumers = [
         username: configService.get<string>('TENANT_MANAGEMENT_DB_USER'),
         password: configService.get<string>('TENANT_MANAGEMENT_DB_PASS'),
         database: configService.get<string>('TENANT_MANAGEMENT_DB_NAME'),
-        entities: [Hospital, Clinic, Doctor, Identity, OutboxEntity],
+        entities: [Hospital, Clinic, Doctor, MedicalService, Identity, OutboxEntity],
         synchronize: true,
       }),
     }),
-    TypeOrmModule.forFeature([Hospital, Clinic, Doctor, Identity, OutboxEntity], 'tenantConnection'),
+    TypeOrmModule.forFeature([Hospital, Clinic, Doctor, Identity, MedicalService, OutboxEntity], 'tenantConnection'),
 
     OutboxModule.forRoot('tenantConnection'),
     MetricsModule,
     AuthLibModule,
     HospitalApiClientModule,
+    TenantManagementServiceModule,
 
     CqrsModule,
   ],

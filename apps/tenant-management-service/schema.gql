@@ -42,15 +42,21 @@ type DeviceToken {
 }
 
 type Doctor {
+  announcement: String
   avatarUrl: String
-  bio: String
   clinic: Clinic!
   clinicId: String!
   createdAt: DateTime!
+  experience: String
   externalCode: String!
+  gender: GenderPayload
   id: ID!
   isActive: Boolean!
   name: String!
+  pinCode: String
+
+  """Các dịch vụ khám mà bác sĩ này cung cấp"""
+  services: [MedicalService!]!
   updatedAt: DateTime!
 }
 
@@ -72,6 +78,29 @@ type DoctorObjectType {
   clinic: [ClinicObjectType!]!
   id: ID!
   name: String!
+}
+
+type DoctorPayload {
+  announcement: String
+  avatarUrl: String
+  experience: String
+  externalClinicCode: String!
+  externalCode: ID!
+  gender: GenderPayload
+  name: String!
+  services: [DoctorServicePayload!]!
+}
+
+type DoctorServicePayload {
+  id: ID!
+  isHealthInsuranceApplied: Boolean!
+  name: String!
+  prices: DoctorServicePricePayload!
+}
+
+type DoctorServicePricePayload {
+  healthInsurance: Float!
+  regular: Float!
 }
 
 enum GenderPayload {
@@ -141,6 +170,37 @@ type Identity {
   userId: String!
 }
 
+"""JSON custom scalar type"""
+scalar JSONObject
+
+type MedicalService {
+  id: ID!
+
+  """Áp dụng BHYT hay không"""
+  isHealthInsuranceApplied: Boolean!
+  name: String!
+
+  """Các mức giá của dịch vụ"""
+  prices: MedicalServicePrice!
+
+  """Dữ liệu gốc từ bệnh viện"""
+  rawData: JSONObject
+}
+
+type MedicalServicePrice {
+  """Giá cho người nước ngoài"""
+  foreigner: Float!
+
+  """Giá BHYT"""
+  healthInsurance: Float!
+
+  """Giá thu phí"""
+  regular: Float!
+
+  """Giá dịch vụ"""
+  service: Float!
+}
+
 type Mutation {
   createHospital(createHospitalInput: CreateHospitalInput!): HospitalPayload!
   removeHospital(id: ID!): Boolean!
@@ -169,6 +229,7 @@ type Query {
 
   """Lấy thông tin bác sĩ theo ID"""
   doctorById(doctorId: ID!): DoctorObjectType!
+  doctorsByHospital(clinicCode: String, date: String, externalHospitalCode: String!): [DoctorPayload!]!
   fetchIdentityFromHospital(externalCode: String!, phoneNumber: String!): Identity
   hospital(id: ID!): Hospital!
   hospitalByExternalCode(externalCode: String!): HospitalPayload!

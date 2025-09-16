@@ -52,16 +52,34 @@ input DeviceTokenInput {
 }
 
 type Doctor {
+  announcement: String
   avatarUrl: String
-  bio: String
   clinic: Clinic!
   clinicId: String!
   createdAt: DateTime!
+  experience: String
   externalCode: String!
+  gender: GenderPayload
   id: ID!
   isActive: Boolean!
   name: String!
+  pinCode: String
+
+  """Các dịch vụ khám mà bác sĩ này cung cấp"""
+  services: [MedicalService!]!
   updatedAt: DateTime!
+}
+
+type DoctorServicePayload {
+  id: ID!
+  isHealthInsuranceApplied: Boolean!
+  name: String!
+  prices: DoctorServicePricePayload!
+}
+
+type DoctorServicePricePayload {
+  healthInsurance: Float!
+  regular: Float!
 }
 
 enum GenderPayload {
@@ -152,6 +170,9 @@ type IdentityPayload {
   updatedAt: DateTime!
 }
 
+"""JSON custom scalar type"""
+scalar JSONObject
+
 input LoginInputByEmail {
   email: String!
   password: String!
@@ -167,6 +188,34 @@ type LoginResponse {
   accessToken: String!
   refreshToken: String!
   user: UserPayload!
+}
+
+type MedicalService {
+  id: ID!
+
+  """Áp dụng BHYT hay không"""
+  isHealthInsuranceApplied: Boolean!
+  name: String!
+
+  """Các mức giá của dịch vụ"""
+  prices: MedicalServicePrice!
+
+  """Dữ liệu gốc từ bệnh viện"""
+  rawData: JSONObject
+}
+
+type MedicalServicePrice {
+  """Giá cho người nước ngoài"""
+  foreigner: Float!
+
+  """Giá BHYT"""
+  healthInsurance: Float!
+
+  """Giá thu phí"""
+  regular: Float!
+
+  """Giá dịch vụ"""
+  service: Float!
 }
 
 type Mutation {

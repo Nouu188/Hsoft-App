@@ -20,7 +20,7 @@ export class ClinicRepository implements IClinicRepository {
     }
 
     findMany(ids: string[]): Promise<Clinic[]> {
-        return this.ormRepo.find({where: {id: In(ids)}});
+        return this.ormRepo.find({ where: { id: In(ids) } });
     }
 
     save(clinic: Clinic | DeepPartial<Clinic>, manager?: EntityManager): Promise<Clinic>;
@@ -43,5 +43,22 @@ export class ClinicRepository implements IClinicRepository {
             where: { isActive: true },
             order: { name: 'ASC' },
         });
+    }
+
+    async upsert(clinics: Partial<Clinic>[]): Promise<Clinic[]> {
+        if (clinics.length === 0) {
+            this.logger.debug('Upsert called with an empty array of clinics. Skipping.');
+            return [];
+        }
+
+        this.logger.log(`Upserting ${clinics.length} clinics.`);
+        // `upsert` sẽ INSERT hoặc UPDATE dựa trên conflict target.
+        // Ở đây, một phòng khám được xác định duy nhất bởi `hospitalId` và `externalCode`.
+        const result = await this.ormRepo.upsert(clinics, ['hospitalId', 'externalCode']);
+
+        // Upsert không trả về entity đầy đủ, chúng ta cần query lại để có ID nội bộ
+        const externalCodes = clinics.map(c => c.externalCode!);
+        const hospitalId = clinics[0].hospitalId; // Giả sử tất cả clinics thuộc cùng một bệnh viện
+        return this.ormRepo.find({ where: { hospitalId, externalCode: In(externalCodes) } });
     }
 }
