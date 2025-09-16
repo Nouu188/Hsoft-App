@@ -22,7 +22,7 @@ import { DosesAllSyncConsumer, DoseStatusTransitionJobService, GetDosesByDateRan
 import { Dose, DoseSchedulerService, DoseStatusTransitionService, IDoseRepository } from './domain';
 import { DoseRepository, DoseTransactionService, OutboxTransactionService } from './infrastructure';
 import { DosesResolver } from './presentation/graphql/resolvers/doses';
-import { GetDoseByIdQueryHandler, GetDosesByDateRangeQueryHandler } from './application/queries/dose/handlers';
+import { GetDoseByIdQueryHandler, GetDosesByDateRangeQueryHandler, GetDosesBySelectedDateQueryHandler } from './application/queries/dose/handlers';
 
 export const CommandHandlers = [
   SyncAllDosesByUserHandler,
@@ -33,6 +33,7 @@ export const CommandHandlers = [
 export const QueryHandlers = [
   GetDoseByIdQueryHandler,
   GetDosesByDateRangeQueryHandler,
+  GetDosesBySelectedDateQueryHandler
 ];
 
 export const Repositories = [

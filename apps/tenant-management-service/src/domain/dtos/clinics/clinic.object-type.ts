@@ -9,5 +9,5 @@ export class ClinicObjectType {
   externalCode: string;
 
   @Field()
-  name: string; b  
+  name: string; 
 }
