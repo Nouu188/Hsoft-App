@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Animated, TouchableOpacity, Dimensions } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import Pagination from './components/Pagination';
-import { COLORS, SIZES } from '@/constants/theme';
+import { COLORS } from '@/constants/theme';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -10,17 +10,22 @@ const { width: screenWidth } = Dimensions.get('window');
 export interface CarouselItemBase {
   id: string | number;
   url?: string;
+  [key: string]: any;
 }
 
 // --- Props generic ---
 interface CarouselProps<T extends CarouselItemBase> {
   data: T[];
-  renderItem: (item: T, opacity: Animated.Value) => React.ReactNode;
+  renderItem: (item: T, opacity?: Animated.Value) => React.ReactNode;
   autoplay?: boolean;
   autoplayInterval?: number;
   showPagination?: boolean;
+  showArrows?: boolean;
   containerStyle?: object;
   itemHeight?: number;
+  initialIndex?: number;
+  loop?: boolean;
+  arrowColor?: string;     
 }
 
 const NewsCarouselView = <T extends CarouselItemBase>({
@@ -29,10 +34,14 @@ const NewsCarouselView = <T extends CarouselItemBase>({
   autoplay = true,
   autoplayInterval = 4000,
   showPagination = true,
+  showArrows = true,
   containerStyle,
   itemHeight = 240,
+  initialIndex = 0,
+  loop = true,
+  arrowColor = COLORS.white,
 }: CarouselProps<T>) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
   const opacityAnim = useRef(new Animated.Value(1)).current;
 
   // --- Chuyển slide với hiệu ứng fade ---
@@ -51,8 +60,15 @@ const NewsCarouselView = <T extends CarouselItemBase>({
     });
   };
 
-  const nextSlide = () => changeSlide((activeIndex + 1) % data.length);
-  const prevSlide = () => changeSlide((activeIndex - 1 + data.length) % data.length);
+  const nextSlide = () => {
+    if (activeIndex === data.length - 1 && !loop) return;
+    changeSlide((activeIndex + 1) % data.length);
+  };
+
+  const prevSlide = () => {
+    if (activeIndex === 0 && !loop) return;
+    changeSlide((activeIndex - 1 + data.length) % data.length);
+  };
 
   // --- Autoplay ---
   useEffect(() => {
@@ -86,15 +102,24 @@ const NewsCarouselView = <T extends CarouselItemBase>({
         </View>
       )}
 
-      {/* Nút back */}
-      <TouchableOpacity style={[styles.carouselButton, styles.carouselButtonLeft]} onPress={prevSlide}>
-        <Ionicons name="chevron-back" size={24} color={COLORS.white} />
-      </TouchableOpacity>
+      {/* Arrows */}
+      {showArrows && data.length > 1 && (
+        <>
+          <TouchableOpacity
+            style={[styles.carouselButton, styles.carouselButtonLeft, { backgroundColor: COLORS.transparent }]}
+            onPress={prevSlide}
+          >
+            <Ionicons name="chevron-back" size={24} color={arrowColor} />
+          </TouchableOpacity>
 
-      {/* Nút next */}
-      <TouchableOpacity style={[styles.carouselButton, styles.carouselButtonRight]} onPress={nextSlide}>
-        <Ionicons name="chevron-forward" size={24} color={COLORS.white} />
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.carouselButton, styles.carouselButtonRight, { backgroundColor: COLORS.transparent }]}
+            onPress={nextSlide}
+          >
+            <Ionicons name="chevron-forward" size={24} color={arrowColor} />
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };

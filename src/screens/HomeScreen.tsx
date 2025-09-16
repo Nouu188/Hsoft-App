@@ -39,7 +39,7 @@ interface ScreenSection {
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<ScreenSection>);
 
 const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { theme } = useThemeStore(); 
+  const { theme } = useThemeStore();
   const isLoading = useScheduleStore(state => state.isLoading);
   const onRefresh = () => console.log("Refreshing...");
   const scrollY = useSharedValue(0);
@@ -80,7 +80,7 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       scrollY.value = event.contentOffset.y;
     },
   });
-  const {isDarkMode} = useThemeStore();
+  const { isDarkMode } = useThemeStore();
   const headerAnimatedStyle = useAnimatedStyle(() => {
     const translateY = interpolate(
       scrollY.value,
@@ -152,14 +152,22 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         );
       case 'carousel_tips':
         return <NewsCarouselView<TipItem>
-  data={carouselData}
-  renderItem={(tip) => (
-    <View style={{ padding: 20, backgroundColor: theme.white, borderRadius: 16 }}>
-      <Text>{tip.title}</Text>
-      <Text>{tip.content}</Text>
-    </View>
-  )}
-/>
+          data={carouselData}
+          arrowColor={theme.primary} 
+          renderItem={(tip) => (
+            <View style={{
+              padding: 20,
+              backgroundColor: theme.white,
+              borderRadius: 16,
+              height: 220,   
+              justifyContent: 'center'
+            }}>
+              <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 8 }}>{tip.title}</Text>
+              <Text style={{ fontSize: 14 }}>{tip.content}</Text>
+            </View>
+          )}
+        />
+
       case 'utility_grid':
         return <UtilitiesView title="Tiện ích sức khỏe" services={healthServices} />;
       case 'footer_spacer':
@@ -198,7 +206,7 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       ]}>
         <SafeAreaView style={{ flex: 1 }}>
           <Animated.View style={[styles.greetingSection, fadeOutAnimatedStyle, { height: GREETING_SECTION_HEIGHT }]}>
-            <Text style={[styles.greeting, { color:COLORS.white }]}>
+            <Text style={[styles.greeting, { color: COLORS.white }]}>
               Chào buổi sáng{'\n'}
               <Text style={[styles.userName, { color: COLORS.white }]}>Thịnh</Text>
             </Text>
@@ -230,7 +238,7 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               iconBgColor="#E9F7FE"
               title="Uống 1 viên Panadol Extra"
               subtitle="Vào lúc 14:00 hôm nay"
-              onPress={() => {}}
+              onPress={() => { }}
             />
           </View>
         </SafeAreaView>

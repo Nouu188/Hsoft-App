@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import EntityCard from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import { HospitalInfoCard } from './HospitalInfoCard';
-import type { BookingStackParamList } from '@/navigation/BookingWizardNavigator';
+import type { BookingStackParamList } from '@/navigation/BookingScreenNavigator';
 import type { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 
 interface Step3Props {

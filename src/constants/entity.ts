@@ -1,4 +1,4 @@
-import { Doctor,Clinic } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
+import { Doctor, Clinic } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 
 export const DOCTORS: Doctor[] = [
   {
@@ -9,9 +9,9 @@ export const DOCTORS: Doctor[] = [
     hospital: 'City Hospital',
     gender: 'male',
     availableTimes: [
-      { time: '07:30 - 08:00', isAvailable: true },
-      { time: '08:00 - 08:30', isAvailable: true },
-      { time: '14:00 - 14:30', isAvailable: false },
+      { date: '2025-09-16', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-16', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-17', time: '14:00 - 14:30', isAvailable: false },
     ],
   },
   {
@@ -22,8 +22,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'General Hospital',
     gender: 'female',
     availableTimes: [
-      { time: '09:00 - 09:30', isAvailable: true },
-      { time: '17:30 - 18:00', isAvailable: true },
+      { date: '2025-09-16', time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-18', time: '17:30 - 18:00', isAvailable: true },
     ],
   },
   {
@@ -34,9 +34,9 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Sunshine Clinic',
     gender: 'male',
     availableTimes: [
-      { time: '08:00 - 08:30', isAvailable: true },
-      { time: '10:00 - 10:30', isAvailable: true },
-      { time: '15:00 - 15:30', isAvailable: false },
+      { date: '2025-09-17', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-18', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-19', time: '15:00 - 15:30', isAvailable: false },
     ],
   },
   {
@@ -47,8 +47,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'City Hospital',
     gender: 'female',
     availableTimes: [
-      { time: '09:30 - 10:00', isAvailable: true },
-      { time: '13:00 - 13:30', isAvailable: true },
+      { date: '2025-09-16', time: '09:30 - 10:00', isAvailable: true },
+      { date: '2025-09-20', time: '13:00 - 13:30', isAvailable: true },
     ],
   },
   {
@@ -59,8 +59,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Green Valley Hospital',
     gender: 'male',
     availableTimes: [
-      { time: '07:00 - 07:30', isAvailable: true },
-      { time: '11:00 - 11:30', isAvailable: true },
+      { date: '2025-09-17', time: '07:00 - 07:30', isAvailable: true },
+      { date: '2025-09-18', time: '11:00 - 11:30', isAvailable: true },
     ],
   },
   {
@@ -71,8 +71,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'General Hospital',
     gender: 'female',
     availableTimes: [
-      { time: '08:30 - 09:00', isAvailable: true },
-      { time: '16:00 - 16:30', isAvailable: false },
+      { date: '2025-09-16', time: '08:30 - 09:00', isAvailable: true },
+      { date: '2025-09-19', time: '16:00 - 16:30', isAvailable: false },
     ],
   },
   {
@@ -83,8 +83,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Sunshine Clinic',
     gender: 'male',
     availableTimes: [
-      { time: '10:00 - 10:30', isAvailable: true },
-      { time: '14:30 - 15:00', isAvailable: true },
+      { date: '2025-09-18', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-19', time: '14:30 - 15:00', isAvailable: true },
     ],
   },
   {
@@ -95,8 +95,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'City Hospital',
     gender: 'female',
     availableTimes: [
-      { time: '09:00 - 09:30', isAvailable: true },
-      { time: '12:00 - 12:30', isAvailable: true },
+      { date: '2025-09-17', time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-20', time: '12:00 - 12:30', isAvailable: true },
     ],
   },
   {
@@ -107,8 +107,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Green Valley Hospital',
     gender: 'male',
     availableTimes: [
-      { time: '07:30 - 08:00', isAvailable: true },
-      { time: '13:30 - 14:00', isAvailable: true },
+      { date: '2025-09-16', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-18', time: '13:30 - 14:00', isAvailable: true },
     ],
   },
   {
@@ -119,8 +119,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'General Hospital',
     gender: 'female',
     availableTimes: [
-      { time: '10:30 - 11:00', isAvailable: true },
-      { time: '15:30 - 16:00', isAvailable: true },
+      { date: '2025-09-17', time: '10:30 - 11:00', isAvailable: true },
+      { date: '2025-09-19', time: '15:30 - 16:00', isAvailable: true },
     ],
   },
 ];
@@ -134,8 +134,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện City',
     email: 'cardio@cityhospital.com',
     availableTimes: [
-      { time: '08:00 - 08:30', isAvailable: true },
-      { time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-16', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-18', time: '09:00 - 09:30', isAvailable: true },
     ],
   },
   {
@@ -146,8 +146,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện Sunshine',
     email: 'derma@sunshineclinic.com',
     availableTimes: [
-      { time: '10:00 - 10:30', isAvailable: true },
-      { time: '14:00 - 14:30', isAvailable: true },
+      { date: '2025-09-17', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-19', time: '14:00 - 14:30', isAvailable: true },
     ],
   },
   {
@@ -158,8 +158,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện Green Valley',
     email: 'pediatrics@greenvalley.com',
     availableTimes: [
-      { time: '07:30 - 08:00', isAvailable: true },
-      { time: '11:00 - 11:30', isAvailable: true },
+      { date: '2025-09-16', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-18', time: '11:00 - 11:30', isAvailable: true },
     ],
   },
   {
@@ -170,8 +170,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện Blue Sky',
     email: 'pulmo@bluesky.com',
     availableTimes: [
-      { time: '09:00 - 09:30', isAvailable: true },
-      { time: '13:00 - 13:30', isAvailable: true },
+      { date: '2025-09-17', time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-19', time: '13:00 - 13:30', isAvailable: true },
     ],
   },
   {
@@ -182,8 +182,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện Sunrise',
     email: 'neuro@sunrise.com',
     availableTimes: [
-      { time: '08:30 - 09:00', isAvailable: true },
-      { time: '15:00 - 15:30', isAvailable: true },
+      { date: '2025-09-18', time: '08:30 - 09:00', isAvailable: true },
+      { date: '2025-09-20', time: '15:00 - 15:30', isAvailable: true },
     ],
   },
   {
@@ -194,8 +194,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện Green Leaf',
     email: 'endocrine@greenleaf.com',
     availableTimes: [
-      { time: '10:00 - 10:30', isAvailable: true },
-      { time: '14:30 - 15:00', isAvailable: true },
+      { date: '2025-09-16', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-19', time: '14:30 - 15:00', isAvailable: true },
     ],
   },
   {
@@ -206,8 +206,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện Horizon',
     email: 'gastro@horizon.com',
     availableTimes: [
-      { time: '07:30 - 08:00', isAvailable: true },
-      { time: '11:30 - 12:00', isAvailable: true },
+      { date: '2025-09-17', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-18', time: '11:30 - 12:00', isAvailable: true },
     ],
   },
   {
@@ -218,8 +218,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Bệnh viện Lotus',
     email: 'obgyn@lotus.com',
     availableTimes: [
-      { time: '08:00 - 08:30', isAvailable: true },
-      { time: '13:00 - 13:30', isAvailable: true },
+      { date: '2025-09-16', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-19', time: '13:00 - 13:30', isAvailable: true },
     ],
   },
 ];

@@ -4,7 +4,7 @@ import ScheduleScreen from '../screens/schedule/ScheduleScreen';
 import CustomTabBar from './CustomTabBar';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import HomeScreenNavigator from './HomeScreenNavigator';
-import BookingWizardNavigator from './BookingWizardNavigator';
+import BookingWizardNavigator from './BookingScreenNavigator';
 
 const Tab = createBottomTabNavigator();
 

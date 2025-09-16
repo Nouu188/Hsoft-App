@@ -4,7 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { COLORS, SIZES } from '@/constants/theme';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import EntityModal from '@/components/specific/booking-wizard/steps/step_1/hospital_input/EntityModal';
-export type TimeSlot = { time: string; isAvailable: boolean };
+export type TimeSlot = { date: string; time: string; isAvailable: boolean };
 export type Doctor = {
   id: string;
   type: 'doctor';
@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
   summaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,

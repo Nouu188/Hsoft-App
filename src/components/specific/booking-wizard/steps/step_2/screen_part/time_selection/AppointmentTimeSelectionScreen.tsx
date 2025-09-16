@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import type { BookingStackParamList } from '@/navigation/BookingWizardNavigator';
+import type { BookingStackParamList } from '@/navigation/BookingScreenNavigator';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, SHADOWS, SIZES } from '@/constants/theme';
 import AppointmentHeader from './AppointmentHeader';

@@ -1,4 +1,3 @@
-// BookingWizard.tsx
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Alert, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -6,20 +5,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import type { BookingStackParamList } from '@/navigation/BookingWizardNavigator';
+import type { BookingStackParamList } from '@/navigation/BookingScreenNavigator';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 
-import WizardStepper from './WizardStepper';
-import Step1_SelectHospital from './steps/step_1/Step1_SelectHospital';
-import Step2_SelectSchedule from './steps/step_2/Step2_SelectSchedule';
-import Step3_Confirmation from './steps/step_3/Step3_Confirmation';
+import WizardStepper from '../../components/specific/booking-wizard/WizardStepper';
+import Step1_SelectHospital from '../../components/specific/booking-wizard/steps/step_1/Step1_SelectHospital';
+import Step2_SelectSchedule from '../../components/specific/booking-wizard/steps/step_2/Step2_SelectSchedule';
+import Step3_Confirmation from '../../components/specific/booking-wizard/steps/step_3/Step3_Confirmation';
 import { useBookingStore } from '@/store/useBookingStore';
 import { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 
 const DEFAULT_STEPS = ['Chọn bệnh viện', 'Chọn lịch', 'Xác nhận'];
 
-const BookingWizard = () => {
+const BookingScreen = () => {
   const route = useRoute<RouteProp<BookingStackParamList, 'BookingWizardMain'>>();
   const initialStep = route.params?.step ?? 0;
   const { prefilledDoctors = [] } = route.params || {};
@@ -164,7 +163,7 @@ const BookingWizard = () => {
   );
 };
 
-export default BookingWizard;
+export default BookingScreen;
 
 // --- Wrappers ---
 const StepWrapperStep1 = ({ onNext, screenWidth }: { onNext: () => void; screenWidth: number }) => (
