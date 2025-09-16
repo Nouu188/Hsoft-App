@@ -1,0 +1,1 @@
+export enum DeviceTokenType { FCM = 'FCM', APN = 'APN' }

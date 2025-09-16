@@ -6,7 +6,7 @@ import EntityCard, { Entity } from './EntityCard';
 interface EntityListProps {
   entities: Entity[];
   selectedEntities: Entity[];
-  onSelectEntity: (entity: Entity) => void;
+  onSelectEntity: (entity: Entity) => voi;
 }
 
 const EntityList = forwardRef<FlatList<Entity>, EntityListProps>(({ entities, selectedEntities, onSelectEntity }, ref) => {
