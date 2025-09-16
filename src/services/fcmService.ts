@@ -1,6 +1,8 @@
 import { accountClient } from '@/api/apoloClient';
 import { REGISTER_FCM_TOKEN } from '@/api/mutations/registerFCM_token';
+import { DeviceTokenType } from '@/types/enums/deviceToken.enum';
 import messaging from '@react-native-firebase/messaging';
+import { Platform } from 'react-native';
 
 class FcmService {
   async requestUserPermission(): Promise<boolean> {
@@ -22,7 +24,7 @@ class FcmService {
         console.log('[FCMService] User has not granted notification permission.');
         return null;
       }
-      
+
       const token = await messaging().getToken();
       if (token) {
         console.log('[FCMService] FCM Token:', token);
@@ -35,12 +37,13 @@ class FcmService {
     }
   }
 
-  async registerTokenWithServer(fcm_token: string): Promise<void> {
+  async registerTokenWithServer(token: string): Promise<void> {
     try {
-      console.log(`[FCMService] Registering token with server...`);
+      const type = Platform.OS === 'ios' ? DeviceTokenType.APN : DeviceTokenType.FCM;
+      console.log(`[FCMService] Registering token with server...`, { token, type });
       await accountClient.mutate({
         mutation: REGISTER_FCM_TOKEN,
-        variables: { fcm_token: fcm_token },
+        variables: { deviceToken: { token, type } },
       });
       console.log(`[FCMService] Token successfully registered with server.`);
     } catch (error) {

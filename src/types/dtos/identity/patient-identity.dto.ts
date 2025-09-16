@@ -11,6 +11,6 @@ export interface Identity {
   hospitals?: {
     id: string;
     name: string;
-    graphqlEndpoint?: string;
+    externalCode?: string;
   }[];
 }

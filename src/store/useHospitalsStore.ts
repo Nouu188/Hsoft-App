@@ -31,7 +31,7 @@ export const useHospitalStore = create<HospitalState & HospitalActions>((set, ge
     try {
       const { data, errors } = await tenantClient.query<{ hospitals: Hospital[] }>({
         query: GET_HOSPITALS,
-        variables: { isActive: true },
+        variables: { },
         fetchPolicy: 'network-only',
       });
 

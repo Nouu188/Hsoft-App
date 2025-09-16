@@ -80,7 +80,7 @@ export const PatientInfoCard = ({ identity, onEdit }: PatientInfoCardProps) => {
             <InfoRow
               key={h.id}
               label={h.name}
-              value={h.graphqlEndpoint}
+              value={h.name}
               icon="business-outline"
             />
           ))}
