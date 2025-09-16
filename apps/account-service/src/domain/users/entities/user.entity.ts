@@ -25,8 +25,8 @@ export class DeviceTokenInput {
   @Field()
   token: string;
 
-  @Field({ nullable: true })
-  @Field() type: DeviceTokenType;
+  @Field() 
+  type: DeviceTokenType;
 }
 
 @ObjectType('User')

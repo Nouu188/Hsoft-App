@@ -7,4 +7,7 @@ export class ClinicObjectType {
 
   @Field({ description: 'Mã khoa phòng từ hệ thống bệnh viện' })
   externalCode: string;
+
+  @Field()
+  name: string; b  
 }

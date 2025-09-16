@@ -20,6 +20,7 @@ type ClinicObjectType {
 
   """ID nội bộ của phòng khám"""
   id: ID!
+  name: String!
 }
 
 """
