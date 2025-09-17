@@ -14,6 +14,53 @@ import { StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'r
 import Animated, { Easing, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const dummyAppointments = [
+  {
+    id: '1',
+    date: '2023-10-10',
+    time: '09:30 am',
+    title: 'Heart Surgeon',
+    doctor: 'Dr. Emily White',
+    avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
+    contactType: 'call' as 'call',
+  },
+  {
+    id: '2',
+    date: '2023-10-15',
+    time: '11:30 am',
+    title: 'ECG Test',
+    doctor: 'Lab Technician',
+    avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
+    contactType: 'video' as 'video',
+  },
+  {
+    id: '3',
+    date: '2023-10-24',
+    time: '11:30 am',
+    title: 'Medicine Doctor',
+    doctor: 'Dr. John Doe',
+    avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
+    contactType: 'chat' as 'chat',
+  },
+  {
+    id: '4',
+    date: '2023-11-05',
+    time: '10:00 am',
+    title: 'Dental Checkup',
+    doctor: 'Dr. Jane Smith',
+    avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
+    contactType: 'call' as 'call',
+  },
+  {
+    id: '5',
+    date: '2023-11-12',
+    time: '02:00 pm',
+    title: 'Eye Exam',
+    doctor: 'Dr. Alex Kim',
+    avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
+    contactType: 'video' as 'video',
+  },
+];
 type ScheduleScreenRouteProp = MainTabsScreenProps<'Schedule'>['route'];
 
 const ScheduleScreen: React.FC = () => {
@@ -105,7 +152,7 @@ const ScheduleScreen: React.FC = () => {
               <MedicationScheduleView />
             </View>
             <View style={{ width: screenWidth }}>
-              <AppointmentView />
+              <AppointmentView appointments={dummyAppointments} />
             </View>
           </Animated.View>
         </View>

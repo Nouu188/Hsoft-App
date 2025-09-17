@@ -13,9 +13,9 @@ interface BookingStateData {
 
   // multi-doctor / multi-clinic
   selectedDoctors: Doctor[];
-  doctorTimes: Record<string, string | undefined>;
+  doctorTimes: Record<string, string | undefined>; // Key: `doctorId-YYYY-MM-DD`, Value: `HH:mm - HH:mm`
   selectedClinics: Clinic[];
-  clinicTimes: Record<string, string | undefined>;
+  clinicTimes: Record<string, string | undefined>; // Key: `clinicId-YYYY-MM-DD`, Value: `HH:mm - HH:mm`
 
   notes: string;
 }
@@ -35,17 +35,20 @@ interface BookingState {
   setBookingType: (type: BookingType | null) => void;
   setClinic: (clinic: Clinic | null) => void;
 
-  addDoctor: (doctor: Doctor, time?: string) => void;
-  removeDoctor: (doctorId: string) => void;
-  setDoctorTime: (doctorId: string, time?: string) => void;
+  addDoctor: (doctor: Doctor, time: string, date: string) => void;
+  removeDoctorTime: (doctorId: string, date: string) => void;
+  setDoctorTime: (doctorId: string, time: string, date: string) => void;
 
-  addClinic: (clinic: Clinic, time?: string) => void;
-  removeClinic: (clinicId: string) => void;
-  setClinicTime: (clinicId: string, time?: string) => void;
+  addClinic: (clinic: Clinic, time: string, date: string) => void;
+  removeClinicTime: (clinicId: string, date: string) => void;
+  setClinicTime: (clinicId: string, time: string, date: string) => void;
 
   setNotes: (notes: string) => void;
   isStepValid: (step: number) => boolean;
   resetBooking: () => void;
+
+  // selectors/helpers
+  getAppointments: () => { key: string; entityId: string; time: string | undefined }[];
 
   // ui actions
   setSectionExpanded: (key: string, expanded: boolean) => void;
@@ -111,95 +114,133 @@ export const useBookingStore = create<BookingState>()(
         set((state) => ({ data: { ...state.data, clinic } })),
 
       // multi-doctor
-      addDoctor: (doctor, time) =>
-        set((state) => {
-          if (state.data.bookingType !== 'DOCTOR') return state; // chỉ chọn doctor nếu bookingType = DOCTOR
-          const exists = state.data.selectedDoctors.find((d) => d.id === doctor.id);
-          if (exists) {
-            return {
-              data: {
-                ...state.data,
-                doctorTimes: {
-                  ...state.data.doctorTimes,
-                  [doctor.id]: time ?? state.data.doctorTimes[doctor.id],
-                },
-              },
-            };
-          }
+      addDoctor: (doctor, time, date) =>
+        set(state => {
+          if (state.data.bookingType !== 'DOCTOR') return state;
+
+          const isAlreadyInList = state.data.selectedDoctors.some(d => d.id === doctor.id);
+          const newSelectedDoctors = isAlreadyInList
+            ? state.data.selectedDoctors
+            : [...state.data.selectedDoctors, doctor];
+
+          const key = `${doctor.id}-${date}`;
+          const newDoctorTimes = { ...state.data.doctorTimes, [key]: time };
+
           return {
             data: {
               ...state.data,
-              selectedDoctors: [...state.data.selectedDoctors, doctor],
-              doctorTimes: { ...state.data.doctorTimes, [doctor.id]: time },
+              selectedDoctors: newSelectedDoctors,
+              doctorTimes: newDoctorTimes,
             },
           };
         }),
 
-      removeDoctor: (doctorId) =>
-        set((state) => {
-          const filtered = state.data.selectedDoctors.filter((d) => d.id !== doctorId);
-          const { [doctorId]: _, ...restTimes } = state.data.doctorTimes;
-          return { data: { ...state.data, selectedDoctors: filtered, doctorTimes: restTimes } };
+      removeDoctorTime: (doctorId, date) =>
+        set(state => {
+          const key = `${doctorId}-${date}`;
+          const { [key]: _, ...restTimes } = state.data.doctorTimes;
+
+          const hasOtherAppointments = Object.keys(restTimes).some(k => k.startsWith(`${doctorId}-`));
+
+          const newSelectedDoctors = hasOtherAppointments
+            ? state.data.selectedDoctors
+            : state.data.selectedDoctors.filter(d => d.id !== doctorId);
+
+          return {
+            data: {
+              ...state.data,
+              selectedDoctors: newSelectedDoctors,
+              doctorTimes: restTimes,
+            },
+          };
         }),
 
-      setDoctorTime: (doctorId, time) =>
-        set((state) => ({
-          data: { ...state.data, doctorTimes: { ...state.data.doctorTimes, [doctorId]: time } },
-        })),
+      setDoctorTime: (doctorId, time, date) =>
+        set(state => {
+          const key = `${doctorId}-${date}`;
+          return {
+            data: { ...state.data, doctorTimes: { ...state.data.doctorTimes, [key]: time } },
+          };
+        }),
 
       // multi-clinic
-      addClinic: (clinic, time) =>
-        set((state) => {
-          if (state.data.bookingType !== 'CLINIC') return state; // chỉ chọn clinic nếu bookingType = CLINIC
-          const exists = state.data.selectedClinics.find((c) => c.id === clinic.id);
-          if (exists) {
-            return {
-              data: {
-                ...state.data,
-                clinicTimes: {
-                  ...state.data.clinicTimes,
-                  [clinic.id]: time ?? state.data.clinicTimes[clinic.id],
-                },
-              },
-            };
-          }
+      addClinic: (clinic, time, date) =>
+        set(state => {
+          if (state.data.bookingType !== 'CLINIC') return state;
+          const isAlreadyInList = state.data.selectedClinics.some(c => c.id === clinic.id);
+          const newSelectedClinics = isAlreadyInList
+            ? state.data.selectedClinics
+            : [...state.data.selectedClinics, clinic];
+
+          const key = `${clinic.id}-${date}`;
+          const newClinicTimes = { ...state.data.clinicTimes, [key]: time };
+
           return {
             data: {
               ...state.data,
-              selectedClinics: [...state.data.selectedClinics, clinic],
-              clinicTimes: { ...state.data.clinicTimes, [clinic.id]: time },
+              selectedClinics: newSelectedClinics,
+              clinicTimes: newClinicTimes,
             },
           };
         }),
 
-      removeClinic: (clinicId) =>
-        set((state) => {
-          const filtered = state.data.selectedClinics.filter((c) => c.id !== clinicId);
-          const { [clinicId]: _, ...restTimes } = state.data.clinicTimes;
-          return { data: { ...state.data, selectedClinics: filtered, clinicTimes: restTimes } };
+      removeClinicTime: (clinicId, date) =>
+        set(state => {
+          const key = `${clinicId}-${date}`;
+          const { [key]: _, ...restTimes } = state.data.clinicTimes;
+
+          const hasOtherAppointments = Object.keys(restTimes).some(k => k.startsWith(`${clinicId}-`));
+
+          const newSelectedClinics = hasOtherAppointments
+            ? state.data.selectedClinics
+            : state.data.selectedClinics.filter(c => c.id !== clinicId);
+
+          return {
+            data: {
+              ...state.data,
+              selectedClinics: newSelectedClinics,
+              clinicTimes: restTimes,
+            },
+          };
         }),
 
-      setClinicTime: (clinicId, time) =>
-        set((state) => ({
-          data: { ...state.data, clinicTimes: { ...state.data.clinicTimes, [clinicId]: time } },
-        })),
+      setClinicTime: (clinicId, time, date) =>
+        set(state => {
+          const key = `${clinicId}-${date}`;
+          return {
+            data: { ...state.data, clinicTimes: { ...state.data.clinicTimes, [key]: time } },
+          };
+        }),
 
-      setNotes: (notes) =>
-        set((state) => ({ data: { ...state.data, notes } })),
+      setNotes: notes => set(state => ({ data: { ...state.data, notes } })),
 
-      isStepValid: (step) => {
+      isStepValid: step => {
         const { data } = get();
         const validators: Record<number, boolean> = {
           0: !!data.bookingType,
           1:
-            (data.bookingType === 'CLINIC' && data.selectedClinics.length > 0) ||
-            (data.bookingType === 'DOCTOR' && data.selectedDoctors.length > 0),
+            (data.bookingType === 'CLINIC' &&
+              data.selectedClinics.length > 0 &&
+              !data.selectedClinics.some(c => !Object.keys(data.clinicTimes).some(k => k.startsWith(`${c.id}-`)))) ||
+            (data.bookingType === 'DOCTOR' &&
+              data.selectedDoctors.length > 0 &&
+              !data.selectedDoctors.some(d => !Object.keys(data.doctorTimes).some(k => k.startsWith(`${d.id}-`)))),
           2: true,
         };
         return validators[step] ?? false;
       },
 
       resetBooking: () => set({ data: initialData, ui: initialUI }),
+
+      // selectors/helpers
+      getAppointments: () => {
+        const state = get();
+        const times = { ...state.data.doctorTimes, ...state.data.clinicTimes };
+        return Object.entries(times).map(([key, value]) => {
+          const [entityId] = key.split('-');
+          return { key, entityId, time: value };
+        });
+      },
 
       // ui actions
       setSectionExpanded: (key, expanded) =>

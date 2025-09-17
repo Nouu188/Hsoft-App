@@ -87,6 +87,7 @@ export type ProfileStackParamList = {
     }
   } | undefined;
   AddRingtone: { onSelect?: (newRingtone: Ringtone) => void };
+  EditProfile: undefined
 };
 
 //Stack cho BookingWizard

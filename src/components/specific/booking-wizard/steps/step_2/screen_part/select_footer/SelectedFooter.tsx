@@ -4,11 +4,15 @@ import { COLORS, SIZES } from '@/constants/theme';
 import { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import EntityTagList from './EntityTagList';
 import ExpandHandle from './ExpandHandle';
+import type { AppointmentItem } from './types';
 
 interface SelectedFooterProps {
   selectedDoctors: Entity[];
   selectedClinics?: Entity[];
-  entityTimes: Record<string, string | undefined>;
+  // optional: an array of appointment-level items. If provided, it will be used
+  // to render appointment tags. Otherwise `entityTimes` fallback is used.
+  appointments?: AppointmentItem[];
+  entityTimes?: Record<string, string | undefined>;
   onNext: () => void;
 }
 
@@ -23,6 +27,7 @@ const ZERO_ENTITY_HEIGHT = HANDLE_HEIGHT + FOOTER_PADDING_BOTTOM;
 const SelectedFooter: React.FC<SelectedFooterProps> = ({
   selectedDoctors,
   selectedClinics = [],
+  appointments,
   entityTimes,
   onNext,
 }) => {
@@ -30,9 +35,22 @@ const SelectedFooter: React.FC<SelectedFooterProps> = ({
 
   const allEntities = [...selectedDoctors, ...selectedClinics];
 
+  // If `appointments` prop is provided, use it. Otherwise build from entityTimes
+  const builtAppointments: AppointmentItem[] = appointments
+    ? appointments
+    : Object.entries({ ...(entityTimes ?? {}) })
+        .map(([key, value]) => {
+          const [entityId, ...dateParts] = key.split('-');
+          const date = dateParts.join('-');
+          const entity = allEntities.find(e => e.id === entityId);
+          return entity ? ({ key, entity, date, time: value } as AppointmentItem) : null;
+        })
+        .filter(Boolean) as AppointmentItem[];
+
   const calculateHeight = (expanded: boolean) => {
-    const numEntities = allEntities.length;
+    const numEntities = builtAppointments.length || allEntities.length;
     if (numEntities === 0) return ZERO_ENTITY_HEIGHT;
+    // each row shows up to 2 tags
     const rows = expanded ? Math.ceil(numEntities / 2) : 1;
     return rows * (TAG_HEIGHT + TAG_MARGIN) + HANDLE_HEIGHT + SIZES.base * 2;
   };
@@ -105,8 +123,8 @@ const SelectedFooter: React.FC<SelectedFooterProps> = ({
         {...(allEntities.length > 0 ? panResponder.panHandlers : {})}
       >
         {allEntities.length > 0 && <ExpandHandle isExpanded={isExpanded} onPress={toggleExpand} />}
-        {allEntities.length > 0 && (
-          <EntityTagList entities={allEntities} entityTimes={entityTimes} tagWidth={(screenWidth - PADDING_HORIZONTAL - TAG_MARGIN) / 2} />
+        {builtAppointments.length > 0 && (
+          <EntityTagList appointments={builtAppointments} tagWidth={(screenWidth - PADDING_HORIZONTAL - TAG_MARGIN) / 2} />
         )}
       </Animated.View>
 

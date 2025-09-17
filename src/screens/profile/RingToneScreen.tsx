@@ -48,7 +48,7 @@ const RingtoneSelectionScreen: React.FC = () => {
   const handleApplyRingtone = (r: Ringtone) => { setSelectedRingtoneId(r.id); saveSelectedRingtone(r.id); };
   const handleDisableRingtone = () => { setSelectedRingtoneId(null); saveSelectedRingtone(null); };
   const handleAddRingTonePress = () => {
-    navigation.navigate('AddRingTone', { onSelect: (newR: Ringtone) => {
+    navigation.navigate('AddRingtone', { onSelect: (newR: Ringtone) => {
       const updated = [...myRingtones, newR];
       setMyRingtones(updated); saveRingtones(updated);
     }});

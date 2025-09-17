@@ -13,21 +13,21 @@ import EntityCard from '@/components/specific/schedule/appointment/components/do
 import { HospitalInfoCard } from './HospitalInfoCard';
 import type { BookingStackParamList } from '@/navigation/BookingScreenNavigator';
 import type { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
+import dayjs from 'dayjs';
 
 interface Step3Props {
-    onBack: (entity?: Entity) => void;
+  onBack: (entity?: Entity, selectedDate?: string) => void;
 }
+
 const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
     const { identity } = useIdentityStore();
     const { data, resetBooking } = useBookingStore();
     const scrollY = useRef(new Animated.Value(0)).current;
-
     const navigation = useNavigation<NativeStackNavigationProp<BookingStackParamList>>();
 
     const getEntitySectionTitle = () => {
         const hasDoctors = data.selectedDoctors.length > 0;
         const hasClinics = (data.selectedClinics?.length || 0) > 0;
-
         if (hasDoctors && hasClinics) return "Bác sĩ & Phòng khám đã chọn";
         if (hasDoctors) return "Bác sĩ đã chọn";
         if (hasClinics) return "Phòng khám đã chọn";
@@ -45,8 +45,46 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
         }, 300);
     };
 
-    const handleEditEntity = (entity: Entity) => {
-        onBack(entity);
+    const handleEditEntity = (entity: Entity, date: string) => {
+        onBack(entity, date);
+    };
+
+    const renderEntityAppointments = () => {
+        const doctorAppointments = Object.entries(data.doctorTimes).map(([key, time]) => {
+            const firstHyphenIndex = key.indexOf('-');
+            const doctorId = key.substring(0, firstHyphenIndex);
+            const date = key.substring(firstHyphenIndex + 1);
+            const doctor = data.selectedDoctors.find(d => d.id === doctorId);
+            if (!doctor || !time) return null;
+            return (
+                <EntityCard
+                    key={key}
+                    entity={doctor}
+                    variant="summary"
+                    appointmentTime={`${time} - ${dayjs(date).format('DD/MM/YYYY')}`}
+                    onEditEntity={() => handleEditEntity(doctor, date)}
+                />
+            );
+        });
+
+        const clinicAppointments = Object.entries(data.clinicTimes).map(([key, time]) => {
+            const firstHyphenIndex = key.indexOf('-');
+            const clinicId = key.substring(0, firstHyphenIndex);
+            const date = key.substring(firstHyphenIndex + 1);
+            const clinic = data.selectedClinics.find(c => c.id === clinicId);
+            if (!clinic || !time) return null;
+            return (
+                <EntityCard
+                    key={key}
+                    entity={clinic}
+                    variant="summary"
+                    appointmentTime={`${time} - ${dayjs(date).format('DD/MM/YYYY')}`}
+                    onEditEntity={() => handleEditEntity(clinic, date)}
+                />
+            );
+        });
+
+        return [...doctorAppointments, ...clinicAppointments];
     };
 
     const sections = [
@@ -84,27 +122,7 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
             key: 'entityInfo',
             render: () => (
                 <CollapsibleSection title={getEntitySectionTitle()} sectionKey="entityInfo">
-                    {/* Doctors */}
-                    {data.selectedDoctors.map((doc) => (
-                        <EntityCard
-                            key={doc.id}
-                            entity={doc}
-                            variant="summary"
-                            appointmentTime={data.doctorTimes[doc.id]}
-                            onEditEntity={handleEditEntity} 
-                        />
-                    ))}
-
-                    {/* Clinics */}
-                    {data.selectedClinics?.map((clinic) => (
-                        <EntityCard
-                            key={clinic.id}
-                            entity={clinic}
-                            variant="summary"
-                            appointmentTime={data.clinicTimes?.[clinic.id]}
-                            onEditEntity={handleEditEntity} 
-                        />
-                    ))}
+                    {renderEntityAppointments()}
                 </CollapsibleSection>
             ),
         },
@@ -140,15 +158,8 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLORS.white },
-    listContent: {
-        paddingVertical: SIZES.padding,
-        paddingBottom: 120,
-        flexGrow: 1,
-    },
-    headerSection: {
-        marginBottom: SIZES.padding,
-        paddingHorizontal: SIZES.padding,
-    },
+    listContent: { paddingVertical: SIZES.padding, paddingBottom: 120, flexGrow: 1 },
+    headerSection: { marginBottom: SIZES.padding, paddingHorizontal: SIZES.padding },
     title: {
         fontSize: 20,
         fontWeight: 'bold',

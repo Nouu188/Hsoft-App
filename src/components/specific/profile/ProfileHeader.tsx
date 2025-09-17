@@ -13,7 +13,7 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 
 const ProfileHeader: React.FC = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-  const { theme } = useThemeStore(); // ✅ lấy theme từ store
+  const { theme } = useThemeStore(); 
 
   return (
     <View style={[styles.header, { backgroundColor: theme.primary }]}>

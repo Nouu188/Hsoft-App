@@ -1,4 +1,3 @@
-// Step2_SelectSchedule.tsx
 import React, { useEffect, useRef, useMemo } from 'react';
 import { SafeAreaView, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -9,7 +8,7 @@ import HeaderSchedule from './screen_part/HeaderSchedule';
 import SelectedFooter from './screen_part/select_footer/SelectedFooter';
 import { Entity, Doctor, Clinic } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import { useBookingStore } from '@/store/useBookingStore';
-import { useScheduleStore } from '@/store/useScheduleStore'; // 1. Import store lịch
+import { useScheduleStore } from '@/store/useScheduleStore';
 import { DOCTORS, CLINICS } from '@/constants/entity';
 import EntityList from '@/components/specific/schedule/appointment/components/doctor_list/EntityList';
 
@@ -21,6 +20,7 @@ interface Step2Props {
   scheduleType: 'doctor' | 'clinic';
   prefilledDoctors?: { doctorId: string; selectedTime: string }[];
   scrollToEntityId?: string;
+  initialDate?: string; 
 }
 
 const Step2_SelectSchedule: React.FC<Step2Props> = ({
@@ -29,16 +29,24 @@ const Step2_SelectSchedule: React.FC<Step2Props> = ({
   scheduleType,
   prefilledDoctors = [],
   scrollToEntityId,
+  initialDate,
 }) => {
   const navigation = useNavigation<NavigationProp>();
-  const { data, addDoctor, removeDoctor, setDoctorTime, addClinic, removeClinic, setClinicTime } = useBookingStore();
-  const selectedDate = useScheduleStore(state => state.selectedDate); // 2. Lấy ngày đã chọn từ store
+  const { data, addDoctor, removeDoctorTime, setDoctorTime, addClinic, removeClinicTime, setClinicTime, getAppointments } =
+    useBookingStore();
+  const { selectedDate, setSelectedDate } = useScheduleStore();
 
   const ENTITIES: Entity[] = scheduleType === 'doctor' ? DOCTORS : CLINICS;
-
   const flatListRef = useRef<any>(null);
 
-  // 3. Tự động lọc lại danh sách khi ngày thay đổi
+  // ✅ Sync initialDate vào store khi Step2 mount
+  useEffect(() => {
+    if (initialDate) {
+      setSelectedDate(dayjs(initialDate));
+    }
+  }, [initialDate, setSelectedDate]);
+
+  // Lọc entity theo ngày
   const filteredEntities = useMemo(() => {
     return ENTITIES.filter(entity =>
       entity.availableTimes?.some(timeSlot =>
@@ -47,15 +55,18 @@ const Step2_SelectSchedule: React.FC<Step2Props> = ({
     );
   }, [ENTITIES, selectedDate]);
 
-  // Prefill bác sĩ nếu có
+  // Prefill doctor - Note: This logic might need adjustment for multi-date pre-filling
   useEffect(() => {
+    const dateStr = selectedDate.format('YYYY-MM-DD');
     prefilledDoctors.forEach(({ doctorId, selectedTime }) => {
       const doctor = DOCTORS.find(d => d.id === doctorId);
-      if (doctor) addDoctor(doctor, selectedTime);
+      if (doctor && !data.doctorTimes[`${doctorId}-${dateStr}`]) {
+        addDoctor(doctor, selectedTime, dateStr);
+      }
     });
-  }, [prefilledDoctors]);
+  }, [prefilledDoctors, selectedDate, addDoctor, data.doctorTimes]);
 
-  // Scroll tới entity nếu có (cập nhật để dùng danh sách đã lọc)
+  // Scroll đến entity được chỉ định
   useEffect(() => {
     if (scrollToEntityId && flatListRef.current && filteredEntities.length > 0) {
       const index = filteredEntities.findIndex(e => e.id === scrollToEntityId);
@@ -66,7 +77,6 @@ const Step2_SelectSchedule: React.FC<Step2Props> = ({
   }, [scrollToEntityId, filteredEntities]);
 
   const handleSelectEntity = (entity: Entity) => {
-    // 4. Lọc giờ khám chỉ trong ngày đã chọn
     const availableTimesForSelectedDate = entity.availableTimes?.filter(timeSlot =>
       dayjs(timeSlot.date).isSame(selectedDate, 'day')
     );
@@ -76,38 +86,47 @@ const Step2_SelectSchedule: React.FC<Step2Props> = ({
       return;
     }
 
+    const dateStr = selectedDate.format('YYYY-MM-DD');
+    const timeKey = `${entity.id}-${dateStr}`;
+
     if (entity.type === 'doctor') {
-      const isSelected = data.selectedDoctors.some(d => d.id === entity.id);
-      if (isSelected) removeDoctor(entity.id);
-      else navigation.navigate('AppointmentBooking', {
-        doctorId: entity.id,
-        doctorName: entity.name,
-        availableTimes: availableTimesForSelectedDate, // Chỉ truyền giờ khám của ngày đã chọn
-        onSelectTime: (time: string) => {
-          addDoctor(entity as Doctor, time);
-          setDoctorTime(entity.id, time);
-        },
-      });
+      const isSelectedOnThisDate = !!data.doctorTimes[timeKey];
+      if (isSelectedOnThisDate) {
+        removeDoctorTime(entity.id, dateStr);
+      } else {
+        navigation.navigate('AppointmentBooking', {
+          doctorId: entity.id,
+          doctorName: entity.name,
+          availableTimes: availableTimesForSelectedDate,
+          onSelectTime: (time: string) => {
+            addDoctor(entity as Doctor, time, dateStr);
+          },
+        });
+      }
     } else {
-      const isSelected = data.selectedClinics.some(c => c.id === entity.id);
-      if (isSelected) removeClinic(entity.id);
-      else navigation.navigate('AppointmentBooking', {
-        doctorId: entity.id,
-        doctorName: entity.name,
-        availableTimes: availableTimesForSelectedDate, // Chỉ truyền giờ khám của ngày đã chọn
-        onSelectTime: (time: string) => {
-          addClinic(entity as Clinic, time);
-          setClinicTime(entity.id, time);
-        },
-      });
+      const isSelectedOnThisDate = !!data.clinicTimes[timeKey];
+      if (isSelectedOnThisDate) {
+        removeClinicTime(entity.id, dateStr);
+      } else {
+        navigation.navigate('AppointmentBooking', {
+          doctorId: entity.id,
+          doctorName: entity.name,
+          availableTimes: availableTimesForSelectedDate,
+          onSelectTime: (time: string) => {
+            addClinic(entity as Clinic, time, dateStr);
+          },
+        });
+      }
     }
   };
 
   const handleNextStep = () => {
-    const missingDoctorTime = data.selectedDoctors.some(d => !data.doctorTimes[d.id]);
-    const missingClinicTime = data.selectedClinics.some(c => !data.clinicTimes[c.id]);
-    if (missingDoctorTime || missingClinicTime) {
-      Alert.alert('Chú ý', 'Vui lòng chọn giờ khám cho tất cả bác sĩ/phòng khám.');
+    const hasSelection =
+      (data.bookingType === 'DOCTOR' && Object.keys(data.doctorTimes).length > 0) ||
+      (data.bookingType === 'CLINIC' && Object.keys(data.clinicTimes).length > 0);
+
+    if (!hasSelection) {
+      Alert.alert('Chú ý', 'Vui lòng chọn ít nhất một lịch khám.');
       return;
     }
     onNext();
@@ -118,20 +137,29 @@ const Step2_SelectSchedule: React.FC<Step2Props> = ({
       <HeaderSchedule scheduleType={scheduleType} />
       <EntityList
         ref={flatListRef}
-        entities={filteredEntities} // 5. Sử dụng danh sách đã được lọc
+        entities={filteredEntities}
         selectedEntities={scheduleType === 'doctor' ? data.selectedDoctors : data.selectedClinics}
+        entityTimes={scheduleType === 'doctor' ? data.doctorTimes : data.clinicTimes}
+        selectedDate={selectedDate.format('YYYY-MM-DD')}
         onSelectEntity={handleSelectEntity}
       />
       <SelectedFooter
         selectedDoctors={scheduleType === 'doctor' ? data.selectedDoctors : []}
         selectedClinics={scheduleType === 'clinic' ? data.selectedClinics : []}
-        entityTimes={{ ...data.doctorTimes, ...data.clinicTimes }}
+        appointments={getAppointments().map(a => ({
+          key: a.key,
+          entity: [...data.selectedDoctors, ...data.selectedClinics].find(e => e.id === a.entityId)!,
+          date: a.key.split('-').slice(1).join('-'),
+          time: a.time,
+        })).filter(Boolean)}
         onNext={handleNextStep}
       />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({ container: { flex: 1 } });
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+});
 
 export default Step2_SelectSchedule;

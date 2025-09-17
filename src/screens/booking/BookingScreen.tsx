@@ -8,12 +8,14 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import type { BookingStackParamList } from '@/navigation/BookingScreenNavigator';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
+import dayjs from 'dayjs'; // Thêm import dayjs
 
 import WizardStepper from '../../components/specific/booking-wizard/WizardStepper';
 import Step1_SelectHospital from '../../components/specific/booking-wizard/steps/step_1/Step1_SelectHospital';
 import Step2_SelectSchedule from '../../components/specific/booking-wizard/steps/step_2/Step2_SelectSchedule';
 import Step3_Confirmation from '../../components/specific/booking-wizard/steps/step_3/Step3_Confirmation';
 import { useBookingStore } from '@/store/useBookingStore';
+import { useScheduleStore } from '@/store/useScheduleStore'; // Thêm import
 import { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 
 const DEFAULT_STEPS = ['Chọn bệnh viện', 'Chọn lịch', 'Xác nhận'];
@@ -25,6 +27,7 @@ const BookingScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width: screenWidth } = useWindowDimensions();
   const { data } = useBookingStore();
+  const setSelectedDate = useScheduleStore((state) => state.setSelectedDate); // Lấy hàm cập nhật ngày
 
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -76,10 +79,20 @@ const BookingScreen = () => {
     }
   }, [currentStep, navigation]);
 
-  const handleBackFromStep3 = useCallback((entity?: Entity) => {
-    if (entity) setScrollToEntityId(entity.id);
-    setCurrentStep(1); // quay về Step2
-  }, []);
+  const handleBackFromStep3 = useCallback(
+    (entity?: Entity, selectedDate?: string) => {
+      if (entity) {
+        if (selectedDate) {
+          setSelectedDate(dayjs(selectedDate));
+        }
+        setScrollToEntityId(entity.id);
+      }
+      setCurrentStep(1);
+    },
+    [setSelectedDate]
+  );
+
+
 
   const goToStep = useCallback(
     (stepIndex: number) => {
@@ -203,7 +216,15 @@ const StepWrapperStep2 = ({
   </Animated.View>
 );
 
-const StepWrapperStep3 = ({ onConfirm, onBack, screenWidth }: { onConfirm: () => void; onBack: (entity?: Entity) => void; screenWidth: number }) => (
+const StepWrapperStep3 = ({
+  onConfirm,
+  onBack,
+  screenWidth,
+}: {
+  onConfirm: () => void;
+  onBack: (entity?: Entity, selectedDate?: string) => void;
+  screenWidth: number;
+}) => (
   <Animated.FlatList
     data={[0]}
     keyExtractor={() => 'step3'}
@@ -213,6 +234,7 @@ const StepWrapperStep3 = ({ onConfirm, onBack, screenWidth }: { onConfirm: () =>
     showsVerticalScrollIndicator={false}
   />
 );
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.white },

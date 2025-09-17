@@ -27,7 +27,7 @@ const ProfileScreen: React.FC = () => {
     navigation.navigate('Languages'); 
   };
   const handleRingTonePress = () => {
-    navigation.navigate('RingTone'); 
+    navigation.navigate('Ringtone'); 
   };
   const handleLogout = async () => {
     try {

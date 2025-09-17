@@ -11,7 +11,7 @@ import RNFS from 'react-native-fs';
 import Sound from 'react-native-sound';
 type AddAudioScreenNavigationProp = NativeStackNavigationProp<
   ProfileStackParamList,
-  'AddRingTone'
+  'AddRingtone'
 >;
 
 const AddAudioScreen: React.FC = () => {

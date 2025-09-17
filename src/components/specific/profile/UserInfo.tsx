@@ -2,9 +2,16 @@ import { FONTS, SHADOWS, SIZES } from "@/constants/theme";
 import Ionicons from "@react-native-vector-icons/ionicons";
 import { StyleSheet, Text, Image, TouchableOpacity, View } from "react-native";
 import { useThemeStore } from "@/store/useThemeStore";
+import { useNavigation } from "@react-navigation/native";
+import type { ProfileStackParamList } from "@/navigation/types"; 
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const UserInfo: React.FC = () => {
-  const { theme, isDarkMode } = useThemeStore(); 
+  const { theme, isDarkMode } = useThemeStore();
+
+  // ✅ Khai báo navigation
+  const navigation =
+    useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
 
   return (
     <View style={styles.userInfoContainer}>
@@ -28,6 +35,7 @@ const UserInfo: React.FC = () => {
             styles.editIconContainer,
             { backgroundColor: isDarkMode ? theme.primaryLight : "#E6F0E6" },
           ]}
+          onPress={() => navigation.navigate("EditProfile")} // ✅ chuyển sang màn EditProfile
         >
           <Ionicons name="pencil" size={20} color={theme.primary} />
         </TouchableOpacity>
