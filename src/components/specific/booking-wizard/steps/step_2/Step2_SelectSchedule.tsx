@@ -46,14 +46,16 @@ const Step2_SelectSchedule: React.FC<Step2Props> = ({
     }
   }, [initialDate, setSelectedDate]);
 
-  // Lọc entity theo ngày
+  // Lọc entity theo bệnh viện đã chọn và ngày
   const filteredEntities = useMemo(() => {
-    return ENTITIES.filter(entity =>
-      entity.availableTimes?.some(timeSlot =>
+    return ENTITIES.filter(entity => {
+      const isInSelectedHospital = entity.hospital === data.hospital?.name;
+      const hasAvailableTimeSlot = entity.availableTimes?.some(timeSlot =>
         dayjs(timeSlot.date).isSame(selectedDate, 'day')
-      )
-    );
-  }, [ENTITIES, selectedDate]);
+      );
+      return isInSelectedHospital && hasAvailableTimeSlot;
+    });
+  }, [ENTITIES, selectedDate, data.hospital?.name]);
 
   // Prefill doctor - Note: This logic might need adjustment for multi-date pre-filling
   useEffect(() => {

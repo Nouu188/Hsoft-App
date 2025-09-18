@@ -126,10 +126,12 @@ const EntityCard: React.FC<EntityCardProps> = ({
           {entity.type === 'doctor' && <Image source={avatarSource!} style={styles.avatar} />}
           <View style={styles.textContainer}>
             <Text style={[styles.name, { color: textColor }]}>{entity.name}</Text>
-            <Text style={[styles.specialty, { color: textColor }]}>{entity.specialty}</Text>
-            <Text style={[styles.hospital, { color: textColor }]}>
-              {entity.type === 'doctor' ? entity.hospital : entity.email}
-            </Text>
+            <Text style={[styles.specialty, { color: textColor }]}>Chuyên khoa: {entity.specialty}</Text>
+            {entity.type === 'clinic' && (
+              <Text style={[styles.hospital, { color: textColor }]}>
+                Email: {entity.email}
+              </Text>
+            )}
           </View>
         </View>
 
