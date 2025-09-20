@@ -60,13 +60,22 @@ const dummyAppointments = [
     avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
     contactType: 'video' as 'video',
   },
+  {
+    id: '6',
+    date: '2023-11-12',
+    time: '02:00 pm',
+    title: 'Eye Exam',
+    doctor: 'Dr. Alex Kim',
+    avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
+    contactType: 'video' as 'video',
+  },
 ];
 type ScheduleScreenRouteProp = MainTabsScreenProps<'Schedule'>['route'];
 
 const ScheduleScreen: React.FC = () => {
   const route = useRoute<ScheduleScreenRouteProp>();
   const navigation = useNavigation();
-  
+
   // Lấy các action từ store
   const setSelectedDate = useScheduleStore(state => state.setSelectedDate);
   const setDoseIdToFocus = useScheduleStore(state => state.setDoseIdToFocus);
@@ -74,7 +83,7 @@ const ScheduleScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       const doseIds = route.params?.doseIdsToFocus;
-      
+
       if (doseIds && doseIds.length > 0) {
         const firstDoseId = doseIds[0];
         console.log(`[ScheduleScreen] Focus effect detected doseIdsToFocus:`, doseIds);
@@ -82,7 +91,7 @@ const ScheduleScreen: React.FC = () => {
         const findAndNavigate = async (doseId: string) => {
           try {
             console.log(`[ScheduleScreen] Looking up details for doseId: ${doseId}`);
-            
+
             const { data } = await schedulingClient.query({
               query: GET_DOSE_DETAILS_BY_ID,
               variables: { id: doseId },
@@ -93,12 +102,12 @@ const ScheduleScreen: React.FC = () => {
 
             if (targetDose && targetDose.due_at) {
               const targetDate = dayjs(targetDose.due_at);
-              
+
               console.log(`[ScheduleScreen] Dose found. Navigating to date: ${targetDate.format('YYYY-MM-DD')}`);
-              
+
               // 1. Chuyển đến đúng ngày
               setSelectedDate(targetDate);
-              
+
               // 2. Set ID cần focus vào store
               setDoseIdToFocus(firstDoseId);
 
@@ -147,11 +156,17 @@ const ScheduleScreen: React.FC = () => {
         />
 
         <View style={styles.contentWrapper}>
-          <Animated.View style={[styles.contentSlider, contentAnimatedStyle]}>
-            <View style={{ width: screenWidth }}>
+          <Animated.View
+            style={[
+              styles.contentSlider,
+              { width: screenWidth * 2 },
+              contentAnimatedStyle
+            ]}
+          >
+            <View style={{ width: screenWidth, flex: 1 }}>
               <MedicationScheduleView />
             </View>
-            <View style={{ width: screenWidth }}>
+            <View style={{ width: screenWidth, flex: 1 }}>
               <AppointmentView appointments={dummyAppointments} />
             </View>
           </Animated.View>
@@ -174,8 +189,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: SIZES.padding,
-    paddingBottom: SIZES.padding*0.8,
-    paddingTop: SIZES.padding*0.6,
+    paddingBottom: SIZES.padding * 0.8,
+    paddingTop: SIZES.padding * 0.6,
     backgroundColor: COLORS.primary,
   },
   headerTitle: {

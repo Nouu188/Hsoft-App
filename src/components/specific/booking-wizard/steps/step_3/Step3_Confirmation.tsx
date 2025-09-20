@@ -1,6 +1,6 @@
 // Step3_Confirmation.tsx
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES } from '@/constants/theme';
 import { useIdentityStore } from '@/store/useIdentityStore';
@@ -8,22 +8,29 @@ import { useBookingStore } from '@/store/useBookingStore';
 import { PatientInfoCard } from './PatientInfoCard';
 import CollapsibleSection from '../step_1/collapsible_section/CollapsibleSection';
 import { useNavigation } from '@react-navigation/native';
+import { storageService } from '@/services/storage';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import EntityCard from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
+import EntityCard, { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import { HospitalInfoCard } from './HospitalInfoCard';
-import type { BookingStackParamList } from '@/navigation/BookingScreenNavigator';
-import type { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import dayjs from 'dayjs';
+import { BookingStackParamList } from '@/navigation/types';
 
 interface Step3Props {
-  onBack: (entity?: Entity, selectedDate?: string) => void;
+    onBack: (entity?: Entity, selectedDate?: string) => void;
 }
 
 const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
     const { identity } = useIdentityStore();
-    const { data, resetBooking } = useBookingStore();
+    const { data, setSectionExpanded } = useBookingStore();
     const scrollY = useRef(new Animated.Value(0)).current;
     const navigation = useNavigation<NativeStackNavigationProp<BookingStackParamList>>();
+
+    // 👇 Khi vào Step3 thì expand tất cả section
+    useEffect(() => {
+        ["patientInfo", "hospitalInfo", "entityInfo"].forEach(key =>
+            setSectionExpanded(key, true)
+        );
+    }, [setSectionExpanded]);
 
     const getEntitySectionTitle = () => {
         const hasDoctors = data.selectedDoctors.length > 0;
@@ -34,15 +41,91 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
         return "Không có bác sĩ hoặc phòng khám nào";
     };
 
-    const handleConfirm = () => {
-        resetBooking();
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'MainApp' as any }],
+    const handleConfirm = async () => {
+        const { data } = useBookingStore.getState();
+        const appointmentsToSave: any[] = [];
+
+        // Doctor appointments
+        Object.entries(data.doctorTimes).forEach(([key, time]) => {
+            if (!time) return;
+            const [doctorId, ...dateParts] = key.split('-');
+            const date = dateParts.join('-');
+            const doctor = data.selectedDoctors.find(d => d.id === doctorId);
+            if (!doctor) return;
+            appointmentsToSave.push({
+                id: doctorId,       
+                date,
+                time,
+                entityType: 'doctor',
+                entityId: doctorId,
+                entityName: doctor.name,
+                specialty: doctor.specialty,
+                title: `Khám với ${doctor.name}`,
+            });
         });
-        setTimeout(() => {
-            Alert.alert('Thành công', 'Bạn đã đặt lịch thành công!');
-        }, 300);
+
+        // Clinic appointments
+        Object.entries(data.clinicTimes).forEach(([key, time]) => {
+            if (!time) return;
+            const [clinicId, ...dateParts] = key.split('-');
+            const date = dateParts.join('-');
+            const clinic = data.selectedClinics.find(c => c.id === clinicId);
+            if (!clinic) return;
+            appointmentsToSave.push({
+                id: clinicId,        
+                date,
+                time,
+                entityType: 'clinic',
+                entityId: clinicId,
+                entityName: clinic.name,
+                specialty: clinic.specialty,
+                title: `Khám tại ${clinic.name}`,
+            });
+        });
+
+        // Mã số khám
+        const appointmentCode = `${Math.floor(100000 + Math.random() * 900000)}`;
+
+        // Data hiển thị trong BookingReceipt
+        const bookingData = {
+            patientName: identity?.fullName || '',
+            patientPhone: identity?.phoneNumber || '',
+            patientDob: identity?.birthYear ? String(identity.birthYear) : '',
+            hospitalName: data.hospital?.name || '',
+            entityType: data.selectedDoctors.length > 0 ? 'doctor' : 'clinic',
+            entityName: (data.selectedDoctors[0]?.name) || (data.selectedClinics[0]?.name) || '',
+            entitySpecialty: data.selectedDoctors[0]?.specialty || data.selectedClinics[0]?.specialty || '',
+            appointmentTime: (() => {
+                const firstDoctorKey = Object.keys(data.doctorTimes)[0];
+                if (firstDoctorKey && data.doctorTimes[firstDoctorKey]) {
+                    const date = firstDoctorKey.substring(firstDoctorKey.indexOf('-') + 1);
+                    return `${data.doctorTimes[firstDoctorKey]} - ${dayjs(date).format('DD/MM/YYYY')}`;
+                }
+                const firstClinicKey = Object.keys(data.clinicTimes)[0];
+                if (firstClinicKey && data.clinicTimes[firstClinicKey]) {
+                    const date = firstClinicKey.substring(firstClinicKey.indexOf('-') + 1);
+                    return `${data.clinicTimes[firstClinicKey]} - ${dayjs(date).format('DD/MM/YYYY')}`;
+                }
+                return '';
+            })(),
+            note: data.notes || '',
+        };
+
+        // 👉 Gom full data để lưu
+        const fullBookingData = {
+            appointmentCode,
+            bookingData,
+            appointments: appointmentsToSave,
+            createdAt: new Date().toISOString(),
+        };
+
+        try {
+            await storageService.addBooking(fullBookingData);
+        } catch (err) {
+            console.error('Failed to save booking', err);
+        }
+
+        navigation.navigate('BookingReceipt' as any, { bookingData, appointmentCode } as any);
     };
 
     const handleEditEntity = (entity: Entity, date: string) => {

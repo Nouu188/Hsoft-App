@@ -1,163 +1,247 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated, PanResponder } from 'react-native';
-import { COLORS, SIZES } from '@/constants/theme';
-import { Entity } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
-import EntityTagList from './EntityTagList';
-import ExpandHandle from './ExpandHandle';
-import type { AppointmentItem } from './types';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Animated,
+  PanResponder,
+  FlatList,
+} from "react-native";
+import { COLORS, SIZES } from "@/constants/theme";
+import type { AppointmentItem } from "./types";
+import { Entity } from "@/components/specific/schedule/appointment/components/doctor_list/EntityCard";
+import Ionicons from "@react-native-vector-icons/ionicons";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+const COLLAPSED_HEIGHT = 70;
+const EXPANDED_HEIGHT = SCREEN_HEIGHT * 0.9;
 
 interface SelectedFooterProps {
   selectedDoctors: Entity[];
   selectedClinics?: Entity[];
-  // optional: an array of appointment-level items. If provided, it will be used
-  // to render appointment tags. Otherwise `entityTimes` fallback is used.
   appointments?: AppointmentItem[];
-  entityTimes?: Record<string, string | undefined>;
   onNext: () => void;
+  onRemove: (entity: Entity, date: string) => void;
 }
-
-const screenWidth = Dimensions.get('window').width;
-const PADDING_HORIZONTAL = SIZES.padding * 2;
-const TAG_MARGIN = 6;
-const TAG_HEIGHT = 30;
-const HANDLE_HEIGHT = 16;
-const FOOTER_PADDING_BOTTOM = SIZES.padding;
-const ZERO_ENTITY_HEIGHT = HANDLE_HEIGHT + FOOTER_PADDING_BOTTOM;
 
 const SelectedFooter: React.FC<SelectedFooterProps> = ({
   selectedDoctors,
   selectedClinics = [],
-  appointments,
-  entityTimes,
+  appointments = [],
   onNext,
+  onRemove,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
+  const animatedHeight = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
   const allEntities = [...selectedDoctors, ...selectedClinics];
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
 
-  // If `appointments` prop is provided, use it. Otherwise build from entityTimes
-  const builtAppointments: AppointmentItem[] = appointments
-    ? appointments
-    : Object.entries({ ...(entityTimes ?? {}) })
-        .map(([key, value]) => {
-          const [entityId, ...dateParts] = key.split('-');
-          const date = dateParts.join('-');
-          const entity = allEntities.find(e => e.id === entityId);
-          return entity ? ({ key, entity, date, time: value } as AppointmentItem) : null;
-        })
-        .filter(Boolean) as AppointmentItem[];
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -4,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
-  const calculateHeight = (expanded: boolean) => {
-    const numEntities = builtAppointments.length || allEntities.length;
-    if (numEntities === 0) return ZERO_ENTITY_HEIGHT;
-    // each row shows up to 2 tags
-    const rows = expanded ? Math.ceil(numEntities / 2) : 1;
-    return rows * (TAG_HEIGHT + TAG_MARGIN) + HANDLE_HEIGHT + SIZES.base * 2;
-  };
-
-  const animatedHeight = useRef(new Animated.Value(calculateHeight(false))).current;
-
-  const animateHeight = (targetHeight: number) => {
-    Animated.timing(animatedHeight, { toValue: targetHeight, duration: 200, useNativeDriver: false }).start();
+  const animateHeight = (expanded: boolean) => {
+    Animated.timing(animatedHeight, {
+      toValue: expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
   };
 
   const toggleExpand = () => {
     if (allEntities.length === 0) return;
-    animatedHeight.stopAnimation(currentHeight => {
-      const expandedHeight = calculateHeight(true);
-      const collapsedHeight = calculateHeight(false);
-      const halfway = (expandedHeight + collapsedHeight) / 2;
-      const expand = currentHeight <= halfway;
-      setIsExpanded(expand);
-      animateHeight(expand ? expandedHeight : collapsedHeight);
+    setIsExpanded((prev) => {
+      const next = !prev;
+      animateHeight(next);
+      Animated.timing(rotateAnim, {
+        toValue: next ? 1 : 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      return next;
     });
   };
 
-  const panY = useRef(0);
+  useEffect(() => {
+    if (allEntities.length === 0) {
+      setIsExpanded(false);
+      animateHeight(false);
+    }
+  }, [allEntities.length]);
+
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) =>
-        allEntities.length > 0 && Math.abs(gestureState.dy) > 5,
-      onPanResponderGrant: () => {
-        animatedHeight.stopAnimation(value => (panY.current = value));
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (allEntities.length === 0) return;
-        let newHeight = panY.current - gestureState.dy;
-        const expandedHeight = calculateHeight(true);
-        const collapsedHeight = calculateHeight(false);
-
-        if (newHeight > expandedHeight) newHeight = expandedHeight + (newHeight - expandedHeight) * 0.3;
-        else if (newHeight < collapsedHeight) newHeight = collapsedHeight - (collapsedHeight - newHeight) * 0.3;
-
-        animatedHeight.setValue(newHeight);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (allEntities.length === 0) {
-          animateHeight(ZERO_ENTITY_HEIGHT);
-          return;
-        }
-        animatedHeight.stopAnimation(currentHeight => {
-          const expandedHeight = calculateHeight(true);
-          const collapsedHeight = calculateHeight(false);
-          const halfway = (expandedHeight + collapsedHeight) / 2;
-
-          const expand =
-            gestureState.dy < -10 || (gestureState.dy >= -10 && gestureState.dy <= 10 && currentHeight > halfway);
-          setIsExpanded(expand);
-          animateHeight(expand ? expandedHeight : collapsedHeight);
-        });
-      },
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => false,
     })
   ).current;
 
-  useEffect(() => {
-    const target = calculateHeight(isExpanded);
-    animateHeight(target);
-  }, [allEntities.length]);
+  const summaryText =
+    allEntities.length === 0
+      ? ""
+      : selectedDoctors.length > 0
+        ? `${selectedDoctors.length} bác sĩ đã chọn`
+        : `${selectedClinics.length} phòng khám đã chọn`;
+
+  const renderDetailItem = ({ item }: { item: AppointmentItem }) => (
+    <View style={styles.detailItem}>
+      {/* Hàng đầu tiên: Tên + icon xoá */}
+      <View style={styles.titleRow}>
+        <Text style={styles.detailTitle}>{item.entity.name}</Text>
+        <TouchableOpacity onPress={() => onRemove(item.entity, item.date)}>
+          <Ionicons name="trash-outline" size={20} color="black" />
+        </TouchableOpacity>
+      </View>
+      {item.entity.specialty && (
+        <Text style={styles.detailSub}>
+          Chuyên khoa: {item.entity.specialty}
+        </Text>
+      )}
+      {item.entity.type === "doctor" && (
+        <Text style={styles.detailSub}>
+          Giới tính: {item.entity.gender === "male" ? "Nam" : "Nữ"}
+        </Text>
+      )}
+      {item.date && <Text style={styles.detailSub}>Ngày: {item.date}</Text>}
+      {item.time && <Text style={styles.detailSub}>Giờ: {item.time}</Text>}
+    </View>
+  );
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
 
   return (
-    <View style={styles.footer}>
-      <Animated.View
-        style={[styles.entityListContainer, { height: animatedHeight }]}
-        {...(allEntities.length > 0 ? panResponder.panHandlers : {})}
-      >
-        {allEntities.length > 0 && <ExpandHandle isExpanded={isExpanded} onPress={toggleExpand} />}
-        {builtAppointments.length > 0 && (
-          <EntityTagList appointments={builtAppointments} tagWidth={(screenWidth - PADDING_HORIZONTAL - TAG_MARGIN) / 2} />
-        )}
-      </Animated.View>
+    <Animated.View
+      style={[styles.footer, { height: animatedHeight }]}
+    >
+      {/* Header */}
+      <View style={styles.headerRow} {...panResponder.panHandlers}>
+        <View style={styles.leftBox}>
+          <Text style={styles.summaryText}>{summaryText}</Text>
+          {allEntities.length > 0 && (
+            <TouchableOpacity onPress={toggleExpand}>
+              <Animated.View
+                style={{
+                  transform: [{ translateY: floatAnim }, { rotate }],
+                }}
+              >
+                <Ionicons name="chevron-up-outline" size={20} color="black" />
+              </Animated.View>
+            </TouchableOpacity>
+          )}
+        </View>
 
-      <TouchableOpacity
-        style={[styles.nextButton, { opacity: allEntities.length > 0 ? 1 : 0.6 }]}
-        disabled={allEntities.length === 0}
-        onPress={onNext}
-      >
-        <Text style={styles.nextButtonText}>Tiếp tục</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Nút tiếp tục */}
+        {allEntities.length > 0 && (
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              { opacity: allEntities.length > 0 ? 1 : 0.6 },
+            ]}
+            disabled={allEntities.length === 0}
+            onPress={onNext}
+          >
+            <Text style={styles.nextButtonText}>Tiếp tục</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Nội dung khi expand */}
+      {isExpanded && (
+        <FlatList
+          data={appointments}
+          keyExtractor={(item) => item.key}
+          renderItem={renderDetailItem}
+          contentContainerStyle={[
+            styles.detailList,
+            { paddingBottom: SIZES.padding * 11 },
+          ]}
+          showsVerticalScrollIndicator
+        />
+      )}
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   footer: {
     backgroundColor: COLORS.white,
-    paddingHorizontal: SIZES.padding,
-    paddingBottom: SIZES.padding,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    paddingHorizontal: SIZES.padding,
+    flexDirection: "column",
   },
-  entityListContainer: {
-    overflow: 'hidden',
-    marginBottom: 8,
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: SIZES.base,
+  },
+  leftBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  summaryText: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontWeight: "600",
+    marginRight: 8,
   },
   nextButton: {
     backgroundColor: COLORS.lightBlue,
-    paddingVertical: 14,
-    borderRadius: SIZES.radius,
-    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  nextButtonText: { color: COLORS.white, fontSize: 16, fontWeight: '600' },
+  detailList: {
+    paddingBottom: 90,
+  },
+  detailItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  detailTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  detailSub: {
+    fontSize: 14,
+    color: COLORS.placeHolderIcon,
+  },
+  nextButtonText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontWeight: "600",
+  },
 });
 
 export default SelectedFooter;

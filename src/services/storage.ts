@@ -1,53 +1,120 @@
 /**
  * @file src/services/storage.ts
  * @description Service để quản lý việc lưu và đọc dữ liệu từ AsyncStorage.
- * Việc tập trung logic lưu trữ vào một nơi giúp dễ quản lý, bảo trì và tránh các "magic string".
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Khai báo một hằng số cho key lưu trữ để tránh lỗi gõ sai (typo) ở nhiều nơi trong code.
 const ONBOARDING_COMPLETED_KEY = 'onboardingCompleted';
+const APPOINTMENTS_KEY = 'appointments';
+const BOOKINGS_KEY = 'bookings';
 
-/**
- * Kiểm tra xem người dùng đã hoàn thành (đã xem) màn hình Onboarding hay chưa.
- * @returns {Promise<boolean>} Trả về `true` nếu người dùng đã hoàn thành, ngược lại trả về `false`.
- */
+// -------------------- Onboarding --------------------
 const hasCompletedOnboarding = async (): Promise<boolean> => {
   try {
-    // Cố gắng đọc giá trị từ AsyncStorage với key đã định nghĩa.
     const value = await AsyncStorage.getItem(ONBOARDING_COMPLETED_KEY);
-    // AsyncStorage chỉ lưu chuỗi, vì vậy ta so sánh với chuỗi 'true'.
-    // Nếu giá trị là 'true' thì trả về true, ngược lại (null hoặc chuỗi khác) trả về false.
     return value === 'true';
   } catch (error) {
-    // Ghi lại lỗi nếu có vấn đề khi đọc dữ liệu từ storage.
     console.error('Lỗi khi đọc trạng thái onboarding từ storage:', error);
-    // Mặc định trả về false để đảm bảo an toàn, tránh trường hợp người dùng bị kẹt.
     return false;
   }
 };
 
-/**
- * Đánh dấu rằng người dùng đã hoàn thành màn hình Onboarding.
- * Hàm này sẽ được gọi khi người dùng nhấn nút "Bắt đầu" hoặc "Hoàn thành" trên màn hình Onboarding.
- */
 const markOnboardingAsCompleted = async (): Promise<void> => {
   try {
-    // Lưu giá trị 'true' vào AsyncStorage.
     await AsyncStorage.setItem(ONBOARDING_COMPLETED_KEY, 'true');
   } catch (error) {
-    // Ghi lại lỗi nếu có vấn đề khi lưu dữ liệu.
     console.error('Lỗi khi lưu trạng thái onboarding vào storage:', error);
   }
 };
 
-/**
- * Gom tất cả các hàm liên quan đến storage vào một object duy nhất.
- * Điều này giúp việc import và sử dụng trở nên gọn gàng hơn.
- * Ví dụ: `import { storageService } from '...'` và gọi `storageService.hasCompletedOnboarding()`.
- */
+// -------------------- Appointments --------------------
+const getAppointments = async (): Promise<any[]> => {
+  try {
+    const raw = await AsyncStorage.getItem(APPOINTMENTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (error) {
+    console.error('Lỗi khi đọc appointments từ storage:', error);
+    return [];
+  }
+};
+
+const saveAppointments = async (appointments: any[]): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments));
+  } catch (error) {
+    console.error('Lỗi khi lưu appointments vào storage:', error);
+  }
+};
+
+const addAppointments = async (appointmentsToAdd: any[] = []): Promise<void> => {
+  try {
+    const existingRaw = await AsyncStorage.getItem(APPOINTMENTS_KEY);
+    const existing = existingRaw ? JSON.parse(existingRaw) : [];
+    const map: Record<string, any> = {};
+    existing.forEach((a: any) => { if (a?.id) map[a.id] = a; });
+    appointmentsToAdd.forEach((a: any) => { if (a?.id) map[a.id] = a; });
+    await AsyncStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(Object.values(map)));
+  } catch (error) {
+    console.error('Lỗi khi thêm appointments vào storage:', error);
+  }
+};
+
+const clearAppointments = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(APPOINTMENTS_KEY);
+  } catch (error) {
+    console.error('Lỗi khi xóa appointments trong storage:', error);
+  }
+};
+
+// -------------------- Bookings --------------------
+const getBookings = async (): Promise<any[]> => {
+  try {
+    const raw = await AsyncStorage.getItem(BOOKINGS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (error) {
+    console.error('Lỗi khi đọc bookings từ storage:', error);
+    return [];
+  }
+};
+
+const saveBookings = async (bookings: any[]): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings));
+  } catch (error) {
+    console.error('Lỗi khi lưu bookings vào storage:', error);
+  }
+};
+
+const addBooking = async (booking: any): Promise<void> => {
+  try {
+    const existingRaw = await AsyncStorage.getItem(BOOKINGS_KEY);
+    const existing = existingRaw ? JSON.parse(existingRaw) : [];
+    existing.push(booking);
+    await AsyncStorage.setItem(BOOKINGS_KEY, JSON.stringify(existing));
+  } catch (error) {
+    console.error('Lỗi khi thêm booking vào storage:', error);
+  }
+};
+
+const clearBookings = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(BOOKINGS_KEY);
+  } catch (error) {
+    console.error('Lỗi khi xóa bookings trong storage:', error);
+  }
+};
+
 export const storageService = {
   hasCompletedOnboarding,
   markOnboardingAsCompleted,
+  getAppointments,
+  saveAppointments,
+  addAppointments,
+  clearAppointments,
+  getBookings,
+  saveBookings,
+  addBooking,
+  clearBookings,
 };

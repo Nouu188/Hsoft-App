@@ -45,7 +45,7 @@ const Step1_Screen: React.FC<Step1_SelectHospitalProps> = ({ onNext }) => {
   };
 
   const handleNextPress = () => {
-    if (isStep1Valid()) onNext(); 
+    if (isStep1Valid()) onNext();
     else Alert.alert("Thông tin chưa đầy đủ", "Vui lòng chọn bệnh viện hợp lệ và hình thức khám.");
   };
 
@@ -61,9 +61,13 @@ const Step1_Screen: React.FC<Step1_SelectHospitalProps> = ({ onNext }) => {
         onSelectHospital={(hospital) => {
           setHospital(hospital);
           setIsHospitalInputValid(true);
+
+          // 👇 Tự động mở phần Chọn hình thức khám
+          setSectionExpanded("bookingType", true);
         }}
         onValidationChange={setIsHospitalInputValid}
       />
+
     );
   };
 
@@ -184,7 +188,7 @@ const Step1_Screen: React.FC<Step1_SelectHospitalProps> = ({ onNext }) => {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
-      />      
+      />
     </>
   );
 };

@@ -325,8 +325,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'Server BVDHYD H...',
     email: 'gastro@horizon.com',
     availableTimes: [
-      { date: '2025-09-17', time: '07:30 - 08:00', isAvailable: true },
-      { date: '2025-09-18', time: '11:30 - 12:00', isAvailable: true },
+      { date: '2025-09-20', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-20', time: '11:30 - 12:00', isAvailable: true },
     ],
   },
   {
@@ -334,11 +334,11 @@ export const CLINICS: Clinic[] = [
     type: 'clinic',
     name: 'Phòng Sản phụ khoa',
     specialty: 'Sản - Phụ khoa',
-    hospital: 'Server Tuy Hoa',
+    hospital: 'Server BVDHYD H...',
     email: 'obgyn@lotus.com',
     availableTimes: [
-      { date: '2025-09-16', time: '08:00 - 08:30', isAvailable: true },
-      { date: '2025-09-19', time: '13:00 - 13:30', isAvailable: true },
+      { date: '2025-09-20', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-20', time: '13:00 - 13:30', isAvailable: true },
     ],
   },
   {
@@ -346,7 +346,7 @@ export const CLINICS: Clinic[] = [
     type: 'clinic',
     name: 'Phòng Mắt',
     specialty: 'Mắt',
-    hospital: 'BV.Vạn Hạnh',
+    hospital: 'Server BVDHYD H...',
     email: 'eye@vanhanh.com',
     availableTimes: [
       { date: '2025-09-16', time: '11:00 - 11:30', isAvailable: true },
@@ -358,10 +358,10 @@ export const CLINICS: Clinic[] = [
     type: 'clinic',
     name: 'Phòng Tâm thần',
     specialty: 'Tâm thần',
-    hospital: 'BV.Thống nhất',
+    hospital: 'Server BVDHYD H...',
     email: 'psy@thongnhat.com',
     availableTimes: [
-      { date: '2025-09-17', time: '14:00 - 14:30', isAvailable: true },
+      { date: '2025-09-20', time: '14:00 - 14:30', isAvailable: true },
       { date: '2025-09-20', time: '09:00 - 09:30', isAvailable: true },
     ],
   },
@@ -370,11 +370,11 @@ export const CLINICS: Clinic[] = [
     type: 'clinic',
     name: 'Phòng Ung bướu',
     specialty: 'Ung bướu',
-    hospital: 'BV.Hùng vương',
+    hospital: 'Server BVDHYD H...',
     email: 'oncology@hungvuong.com',
     availableTimes: [
-      { date: '2025-09-16', time: '15:30 - 16:00', isAvailable: true },
-      { date: '2025-09-18', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-20', time: '15:30 - 16:00', isAvailable: true },
+      { date: '2025-09-20', time: '10:00 - 10:30', isAvailable: true },
     ],
   },
   {
@@ -382,11 +382,11 @@ export const CLINICS: Clinic[] = [
     type: 'clinic',
     name: 'Phòng Cơ xương khớp',
     specialty: 'Cơ xương khớp',
-    hospital: 'BV.Quận 11',
+    hospital: 'Server BVDHYD H...',
     email: 'rheuma@quan11.com',
     availableTimes: [
-      { date: '2025-09-17', time: '08:00 - 08:30', isAvailable: true },
-      { date: '2025-09-19', time: '10:30 - 11:00', isAvailable: true },
+      { date: '2025-09-20', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-20', time: '10:30 - 11:00', isAvailable: true },
     ],
   },
   {
@@ -394,11 +394,11 @@ export const CLINICS: Clinic[] = [
     type: 'clinic',
     name: 'Phòng Tai mũi họng',
     specialty: 'Tai Mũi Họng',
-    hospital: 'Server Mắt TN',
+    hospital: 'Server BVDHYD H...',
     email: 'ent@mat-tinhnguyen.com',
     availableTimes: [
-      { date: '2025-09-16', time: '07:00 - 07:30', isAvailable: true },
-      { date: '2025-09-18', time: '09:30 - 10:00', isAvailable: true },
+      { date: '2025-09-20', time: '07:00 - 07:30', isAvailable: true },
+      { date: '2025-09-20', time: '09:30 - 10:00', isAvailable: true },
     ],
   },
   {

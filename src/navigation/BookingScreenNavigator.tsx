@@ -4,21 +4,8 @@ import BookingScreen from '@/screens/booking/BookingScreen';
 
 import { TimeSlot } from '@/components/specific/schedule/appointment/components/doctor_list/EntityCard';
 import AppointmentTimeSelectionScreen from '@/components/specific/booking-wizard/steps/step_2/screen_part/time_selection/AppointmentTimeSelectionScreen';
+import { BookingStackParamList } from './types';
 
-export type BookingStackParamList = {
-    BookingWizardMain: {
-        step?: number;
-        prefilledDoctors?: { doctorId: string; selectedTime: string }[];
-        prefilledClinics?: { clinicId: string; selectedTime: string }[];
-    };
-    AppointmentBooking: {
-        doctorId: string;
-        doctorName: string;
-        availableTimes: TimeSlot[];
-        onSelectTime?: (time: string) => void; 
-    };
-    
-};
 
 
 const Stack = createNativeStackNavigator<BookingStackParamList>();
@@ -28,6 +15,7 @@ const BookingScreenNavigator = () => {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="BookingWizardMain" component={BookingScreen} />
             <Stack.Screen name="AppointmentBooking" component={AppointmentTimeSelectionScreen} />
+            <Stack.Screen name="BookingReceipt" component={require('@/screens/booking/BookingReceipt').default} />
         </Stack.Navigator>
     );
 };

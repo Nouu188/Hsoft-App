@@ -5,9 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { COLORS, SIZES } from '@/constants/theme';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import type { BookingStackParamList } from '@/navigation/BookingScreenNavigator';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '@/navigation/types';
+import type { BookingStackParamList, RootStackParamList } from '@/navigation/types';
 import dayjs from 'dayjs'; // Thêm import dayjs
 
 import WizardStepper from '../../components/specific/booking-wizard/WizardStepper';
