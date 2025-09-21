@@ -8,9 +8,9 @@ export const DOCTORS: Doctor[] = [
     hospital: 'BV.Vạn Hạnh',
     gender: 'male',
     availableTimes: [
-      { date: '2025-09-16', time: '07:30 - 08:00', isAvailable: true },
-      { date: '2025-09-19', time: '08:00 - 08:30', isAvailable: true },
-      { date: '2025-09-18', time: '14:00 - 14:30', isAvailable: true },
+      { date: '2025-09-21', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-24', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-23', time: '14:00 - 14:30', isAvailable: true },
     ],
   },
   {
@@ -21,8 +21,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'BV.Thống nhất',
     gender: 'female',
     availableTimes: [
-      { date: '2025-09-16', time: '09:00 - 09:30', isAvailable: true },
-      { date: '2025-09-18', time: '17:30 - 18:00', isAvailable: true },
+      { date: '2025-09-21', time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-23', time: '17:30 - 18:00', isAvailable: true },
     ],
   },
   {
@@ -33,9 +33,9 @@ export const DOCTORS: Doctor[] = [
     hospital: 'BV.Hùng vương',
     gender: 'male',
     availableTimes: [
-      { date: '2025-09-17', time: '08:00 - 08:30', isAvailable: true },
-      { date: '2025-09-18', time: '10:00 - 10:30', isAvailable: true },
-      { date: '2025-09-19', time: '15:00 - 15:30', isAvailable: true },
+      { date: '2025-09-22', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-23', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-24', time: '15:00 - 15:30', isAvailable: true },
     ],
   },
   {
@@ -46,8 +46,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'BV.Quận 11',
     gender: 'female',
     availableTimes: [
-      { date: '2025-09-16', time: '09:30 - 10:00', isAvailable: true },
-      { date: '2025-09-20', time: '13:00 - 13:30', isAvailable: true },
+      { date: '2025-09-21', time: '09:30 - 10:00', isAvailable: true },
+      { date: '2025-09-25', time: '13:00 - 13:30', isAvailable: true },
     ],
   },
   {
@@ -58,8 +58,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Server Mắt TN',
     gender: 'male',
     availableTimes: [
-      { date: '2025-09-17', time: '07:00 - 07:30', isAvailable: true },
-      { date: '2025-09-18', time: '11:00 - 11:30', isAvailable: true },
+      { date: '2025-09-22', time: '07:00 - 07:30', isAvailable: true },
+      { date: '2025-09-23', time: '11:00 - 11:30', isAvailable: true },
     ],
   },
   {
@@ -70,8 +70,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Server BV A',
     gender: 'female',
     availableTimes: [
-      { date: '2025-09-16', time: '08:30 - 09:00', isAvailable: true },
-      { date: '2025-09-19', time: '16:00 - 16:30', isAvailable: true },
+      { date: '2025-09-21', time: '08:30 - 09:00', isAvailable: true },
+      { date: '2025-09-24', time: '16:00 - 16:30', isAvailable: true },
     ],
   },
   {
@@ -82,8 +82,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Server BVDHYD H...',
     gender: 'male',
     availableTimes: [
-      { date: '2025-09-18', time: '10:00 - 10:30', isAvailable: true },
-      { date: '2025-09-19', time: '14:30 - 15:00', isAvailable: true },
+      { date: '2025-09-23', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-24', time: '14:30 - 15:00', isAvailable: true },
     ],
   },
   {
@@ -94,8 +94,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Server Tuy Hoa',
     gender: 'female',
     availableTimes: [
-      { date: '2025-09-17', time: '09:00 - 09:30', isAvailable: true },
-      { date: '2025-09-20', time: '12:00 - 12:30', isAvailable: true },
+      { date: '2025-09-22', time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-25', time: '12:00 - 12:30', isAvailable: true },
     ],
   },
   {
@@ -106,8 +106,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Server Quảng Ngãi',
     gender: 'male',
     availableTimes: [
-      { date: '2025-09-16', time: '07:30 - 08:00', isAvailable: true },
-      { date: '2025-09-18', time: '13:30 - 14:00', isAvailable: true },
+      { date: '2025-09-21', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-23', time: '13:30 - 14:00', isAvailable: true },
     ],
   },
   {
@@ -118,8 +118,8 @@ export const DOCTORS: Doctor[] = [
     hospital: 'Server Vũng tàu',
     gender: 'female',
     availableTimes: [
-      { date: '2025-09-17', time: '10:30 - 11:00', isAvailable: true },
-      { date: '2025-09-19', time: '15:30 - 16:00', isAvailable: true },
+      { date: '2025-09-22', time: '10:30 - 11:00', isAvailable: true },
+      { date: '2025-09-24', time: '15:30 - 16:00', isAvailable: true },
     ],
   },
   {
@@ -253,8 +253,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'BV.Vạn Hạnh',
     email: 'cardio@cityhospital.com',
     availableTimes: [
-      { date: '2025-09-16', time: '08:00 - 08:30', isAvailable: true },
-      { date: '2025-09-18', time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-21', time: '08:00 - 08:30', isAvailable: true },
+      { date: '2025-09-23', time: '09:00 - 09:30', isAvailable: true },
     ],
   },
   {
@@ -265,8 +265,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'BV.Thống nhất',
     email: 'derma@sunshineclinic.com',
     availableTimes: [
-      { date: '2025-09-17', time: '10:00 - 10:30', isAvailable: true },
-      { date: '2025-09-19', time: '14:00 - 14:30', isAvailable: true },
+      { date: '2025-09-22', time: '10:00 - 10:30', isAvailable: true },
+      { date: '2025-09-24', time: '14:00 - 14:30', isAvailable: true },
     ],
   },
   {
@@ -277,8 +277,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'BV.Hùng vương',
     email: 'pediatrics@greenvalley.com',
     availableTimes: [
-      { date: '2025-09-16', time: '07:30 - 08:00', isAvailable: true },
-      { date: '2025-09-18', time: '11:00 - 11:30', isAvailable: true },
+      { date: '2025-09-21', time: '07:30 - 08:00', isAvailable: true },
+      { date: '2025-09-23', time: '11:00 - 11:30', isAvailable: true },
     ],
   },
   {
@@ -289,8 +289,8 @@ export const CLINICS: Clinic[] = [
     hospital: 'BV.Quận 11',
     email: 'pulmo@bluesky.com',
     availableTimes: [
-      { date: '2025-09-17', time: '09:00 - 09:30', isAvailable: true },
-      { date: '2025-09-19', time: '13:00 - 13:30', isAvailable: true },
+      { date: '2025-09-22', time: '09:00 - 09:30', isAvailable: true },
+      { date: '2025-09-24', time: '13:00 - 13:30', isAvailable: true },
     ],
   },
   {

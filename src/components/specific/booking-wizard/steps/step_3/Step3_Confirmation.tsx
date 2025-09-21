@@ -48,12 +48,13 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
         // Doctor appointments
         Object.entries(data.doctorTimes).forEach(([key, time]) => {
             if (!time) return;
-            const [doctorId, ...dateParts] = key.split('-');
-            const date = dateParts.join('-');
+            const parts = key.split('-');
+            const date = parts.slice(-3).join('-');
+            const doctorId = parts.slice(0, -3).join('-');
             const doctor = data.selectedDoctors.find(d => d.id === doctorId);
             if (!doctor) return;
             appointmentsToSave.push({
-                id: doctorId,       
+                id: `${doctorId}-${date}-${time}`,
                 date,
                 time,
                 entityType: 'doctor',
@@ -61,18 +62,20 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
                 entityName: doctor.name,
                 specialty: doctor.specialty,
                 title: `Khám với ${doctor.name}`,
+                appointmentCode: `${Math.floor(100000 + Math.random() * 900000)}`, // 👈 mã số khám riêng
             });
         });
 
         // Clinic appointments
         Object.entries(data.clinicTimes).forEach(([key, time]) => {
             if (!time) return;
-            const [clinicId, ...dateParts] = key.split('-');
-            const date = dateParts.join('-');
+            const parts = key.split('-');
+            const date = parts.slice(-3).join('-');
+            const clinicId = parts.slice(0, -3).join('-');
             const clinic = data.selectedClinics.find(c => c.id === clinicId);
             if (!clinic) return;
             appointmentsToSave.push({
-                id: clinicId,        
+                id: `${clinicId}-${date}-${time}`,
                 date,
                 time,
                 entityType: 'clinic',
@@ -80,40 +83,21 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
                 entityName: clinic.name,
                 specialty: clinic.specialty,
                 title: `Khám tại ${clinic.name}`,
+                appointmentCode: `${Math.floor(100000 + Math.random() * 900000)}`, // 👈 mã số khám riêng
             });
         });
 
-        // Mã số khám
-        const appointmentCode = `${Math.floor(100000 + Math.random() * 900000)}`;
-
-        // Data hiển thị trong BookingReceipt
+        // Data bệnh nhân chung
         const bookingData = {
             patientName: identity?.fullName || '',
             patientPhone: identity?.phoneNumber || '',
             patientDob: identity?.birthYear ? String(identity.birthYear) : '',
             hospitalName: data.hospital?.name || '',
-            entityType: data.selectedDoctors.length > 0 ? 'doctor' : 'clinic',
-            entityName: (data.selectedDoctors[0]?.name) || (data.selectedClinics[0]?.name) || '',
-            entitySpecialty: data.selectedDoctors[0]?.specialty || data.selectedClinics[0]?.specialty || '',
-            appointmentTime: (() => {
-                const firstDoctorKey = Object.keys(data.doctorTimes)[0];
-                if (firstDoctorKey && data.doctorTimes[firstDoctorKey]) {
-                    const date = firstDoctorKey.substring(firstDoctorKey.indexOf('-') + 1);
-                    return `${data.doctorTimes[firstDoctorKey]} - ${dayjs(date).format('DD/MM/YYYY')}`;
-                }
-                const firstClinicKey = Object.keys(data.clinicTimes)[0];
-                if (firstClinicKey && data.clinicTimes[firstClinicKey]) {
-                    const date = firstClinicKey.substring(firstClinicKey.indexOf('-') + 1);
-                    return `${data.clinicTimes[firstClinicKey]} - ${dayjs(date).format('DD/MM/YYYY')}`;
-                }
-                return '';
-            })(),
             note: data.notes || '',
         };
 
         // 👉 Gom full data để lưu
         const fullBookingData = {
-            appointmentCode,
             bookingData,
             appointments: appointmentsToSave,
             createdAt: new Date().toISOString(),
@@ -124,9 +108,9 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
         } catch (err) {
             console.error('Failed to save booking', err);
         }
-
-        navigation.navigate('BookingReceipt' as any, { bookingData, appointmentCode } as any);
+        navigation.navigate('BookingReceipt' as any, fullBookingData as any);
     };
+
 
     const handleEditEntity = (entity: Entity, date: string) => {
         onBack(entity, date);
@@ -134,34 +118,46 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
 
     const renderEntityAppointments = () => {
         const doctorAppointments = Object.entries(data.doctorTimes).map(([key, time]) => {
-            const firstHyphenIndex = key.indexOf('-');
-            const doctorId = key.substring(0, firstHyphenIndex);
-            const date = key.substring(firstHyphenIndex + 1);
+            if (!time) return null;
+
+            const parts = key.split('-');
+            const date = parts.slice(-3).join('-');
+            const doctorId = parts.slice(0, -3).join('-');
             const doctor = data.selectedDoctors.find(d => d.id === doctorId);
-            if (!doctor || !time) return null;
+            if (!doctor) return null;
+
+            // 👇 Tạo key unique luôn
+            const uniqueKey = `${doctorId}-${date}-${time}`;
+
             return (
                 <EntityCard
-                    key={key}
+                    key={uniqueKey}
                     entity={doctor}
                     variant="summary"
-                    appointmentTime={`${time} - ${dayjs(date).format('DD/MM/YYYY')}`}
+                    appointmentTime={`${time} - ${dayjs(date).format("DD/MM/YYYY")}`}
                     onEditEntity={() => handleEditEntity(doctor, date)}
                 />
             );
         });
 
         const clinicAppointments = Object.entries(data.clinicTimes).map(([key, time]) => {
-            const firstHyphenIndex = key.indexOf('-');
-            const clinicId = key.substring(0, firstHyphenIndex);
-            const date = key.substring(firstHyphenIndex + 1);
+            if (!time) return null;
+
+            const parts = key.split('-');
+            const date = parts.slice(-3).join('-');
+            const clinicId = parts.slice(0, -3).join('-');
             const clinic = data.selectedClinics.find(c => c.id === clinicId);
-            if (!clinic || !time) return null;
+            if (!clinic) return null;
+
+            // 👇 Tạo key unique luôn
+            const uniqueKey = `${clinicId}-${date}-${time}`;
+
             return (
                 <EntityCard
-                    key={key}
+                    key={uniqueKey}
                     entity={clinic}
                     variant="summary"
-                    appointmentTime={`${time} - ${dayjs(date).format('DD/MM/YYYY')}`}
+                    appointmentTime={`${time} - ${dayjs(date).format("DD/MM/YYYY")}`}
                     onEditEntity={() => handleEditEntity(clinic, date)}
                 />
             );
@@ -169,6 +165,7 @@ const Step3_Confirmation: React.FC<Step3Props> = ({ onBack }) => {
 
         return [...doctorAppointments, ...clinicAppointments];
     };
+
 
     const sections = [
         {

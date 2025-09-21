@@ -10,7 +10,7 @@ import { BookingStackParamList } from '@/navigation/types';
 type Props = NativeStackScreenProps<BookingStackParamList, 'BookingReceipt'>;
 
 const BookingReceipt: React.FC<Props> = ({ route, navigation }) => {
-    const { bookingData, appointmentCode } = (route.params as any) || {};
+    const { bookingData, appointments } = (route.params as any) || {};
 
     const renderDetailRow = (label: string, value?: string | null) => (
         <View style={styles.row}>
@@ -30,40 +30,47 @@ const BookingReceipt: React.FC<Props> = ({ route, navigation }) => {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             <ScrollView contentContainerStyle={styles.scroll}>
-                    <View style={styles.badgeRow}>
-                        {/* Icon ngôi nhà bấm được */}
-                        <TouchableOpacity style={styles.leftBadge} onPress={handleDone}>
-                            <Ionicons name="home-outline" size={20} color='black' />
-                        </TouchableOpacity>
-                    </View>
-                <View style={styles.card}>
+                <View style={styles.badgeRow}>
+                    {/* Icon ngôi nhà bấm được */}
+                    <TouchableOpacity style={styles.leftBadge} onPress={handleDone}>
+                        <Ionicons name="home-outline" size={20} color="black" />
+                    </TouchableOpacity>
+                </View>
 
+                <View style={styles.card}>
                     <Text style={styles.headerTitle}>Phiếu đặt lịch khám</Text>
 
+                    {/* Thông tin bệnh nhân */}
                     <View style={styles.infoBlock}>
                         {renderDetailRow('Họ tên', bookingData?.patientName)}
                         {renderDetailRow('SĐT', bookingData?.patientPhone)}
                         {renderDetailRow('Ngày sinh', bookingData?.patientDob)}
                         {renderDetailRow('Bệnh viện', bookingData?.hospitalName)}
-                        {renderDetailRow(
-                            bookingData?.entityType === 'doctor' ? 'Bác sĩ' : 'Phòng khám',
-                            bookingData?.entityName
-                                ? `${bookingData.entityName}${bookingData.entitySpecialty ? ` - chuyên khoa ${bookingData.entitySpecialty}` : ''}`
-                                : null
-                        )}
-                        {renderDetailRow('Thời gian', bookingData?.appointmentTime)}
                         {renderDetailRow('Ghi chú', bookingData?.note)}
                     </View>
 
-                    <View style={styles.codeBlock}>
-                        <Text style={styles.codeLabel}>Mã số khám</Text>
-                        <Text style={styles.code}>{appointmentCode ?? '—'}</Text>
-                        <Text style={styles.codeHint}>
-                            *Mã này sẽ được sử dụng khi đến khám để xác nhận thứ tự
-                        </Text>
-                    </View>
+                    {/* Danh sách lịch khám */}
+                    {appointments?.map((a: any, idx: number) => (
+                        <View key={a.appointmentCode} style={styles.appointmentBox}>
+                            <Text style={styles.subTitle}>Lịch khám {idx + 1}</Text>
+
+                            {renderDetailRow(
+                                a.entityType === 'doctor' ? 'Bác sĩ' : 'Phòng khám',
+                                `${a.entityName}${a.specialty ? ` - ${a.specialty}` : ''}`
+                            )}
+                            {renderDetailRow('Thời gian', `${a.time} - ${a.date}`)}
+
+                            <View style={styles.codeBlock}>
+                                <Text style={styles.codeLabel}>Mã số khám</Text>
+                                <Text style={styles.code}>{a.appointmentCode}</Text>
+                                <Text style={styles.codeHint}>
+                                    *Mã này sẽ được sử dụng khi đến khám để xác nhận thứ tự
+                                </Text>
+                            </View>
+                        </View>
+                    ))}
 
                     {/* Nút hoàn tất */}
                     <TouchableOpacity style={[styles.button, styles.doneButton]} onPress={handleDone}>
@@ -119,20 +126,32 @@ const styles = StyleSheet.create({
     },
     rowLabel: { color: COLORS.text, opacity: 0.8 },
     rowValue: { color: COLORS.text, fontWeight: '700' },
+    appointmentBox: {
+        width: '100%',
+        borderTopWidth: 1,
+        borderTopColor: COLORS.background,
+        marginTop: SIZES.base * 2,
+        paddingTop: SIZES.base,
+    },
+    subTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
     codeBlock: {
         width: '100%',
         alignItems: 'center',
-        marginVertical: SIZES.padding * 1.2,
+        marginTop: SIZES.base,
     },
     codeLabel: { color: COLORS.text, opacity: 0.8 },
-    code: { fontSize: 36, fontWeight: '900', color: COLORS.primary, marginTop: SIZES.base },
-    codeHint: { color: COLORS.text, opacity: 0.7, marginTop: SIZES.base / 2 },
+    code: { fontSize: 28, fontWeight: '900', color: COLORS.primary, marginTop: SIZES.base / 2 },
+    codeHint: { color: COLORS.text, opacity: 0.7, marginTop: SIZES.base / 2, textAlign: 'center' },
     button: {
         width: '100%',
         paddingVertical: 14,
         borderRadius: SIZES.radius,
         alignItems: 'center',
-        marginTop: SIZES.base,
+        marginTop: SIZES.base * 2,
     },
     doneButton: { backgroundColor: COLORS.lightBlue },
     buttonText: { fontSize: 16, fontWeight: '700' },

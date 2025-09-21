@@ -244,7 +244,10 @@ const AppointmentView: React.FC<Props> = ({ appointments }) => {
   return (
     <FlatList
       data={rows}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => {
+    console.log("Render key:", item.id);
+    return item.id;
+  }}
       renderItem={renderRow}
       contentContainerStyle={[
         styles.listContent,
